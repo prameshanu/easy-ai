@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<materialx version="1.38">
+    <nodedef name="ND_realitykit_light_spill_diffuse" node="realitykit_light_spill_diffuse" target="realitykit_surface">
+        <input name="UV" type="vector2" defaultgeomprop="UV0"/>
+        <input name="Default" type="color3" value="0.0,0.0,0.0"/>
+        <output name="out" type="color3" />
+    </nodedef>
+    <nodedef name="ND_realitykit_light_spill_specular" node="realitykit_light_spill_specular" target="realitykit_surface">
+        <input name="UV" type="vector2" defaultgeomprop="UV0"/>
+        <input name="Default" type="color3" value="0.0,0.0,0.0"/>
+        <output name="out" type="color3" />
+    </nodedef>
+
+</materialx>

@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+<materialx version="1.38">
+
+  <!--
+      Node: <constant>
+      A constant value. When exposed as a public parameter, this is a way to create a
+      value that can be accessed in multiple places in the opgraph.
+    -->
+  <nodedef name="ND_constant_matrix22" node="constant" nodegroup="procedural">
+    <input name="value" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <output name="out" type="matrix22" default="1.0,0.0, 0.0,1.0" />
+  </nodedef>
+
+  <!--
+      Node: <divide>
+      Divide an incoming float/color/vector by the "in2" value/stream; dividing a channel
+      value by 0 results in floating-point "NaN".  Or, multiply one matrix by the
+      inverse of a second matrix.
+    -->
+  <nodedef name="ND_divide_matrix22" node="divide" nodegroup="math">
+    <input name="in1" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <input name="in2" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <output name="out" type="matrix22" defaultinput="in1" />
+  </nodedef>
+
+  <!--
+      Node: <multiply>
+      Multiply the incoming float/color/vector by the "in2" value/stream, or multiply
+      two matrices.
+    -->
+  <nodedef name="ND_multiply_matrix22" node="multiply" nodegroup="math">
+    <input name="in1" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <input name="in2" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <output name="out" type="matrix22" defaultinput="in1" />
+  </nodedef>
+
+  <!--
+      Node: <subtract>
+      Subtract "in2" value/stream from the incoming float/color/vector/matrix.
+    -->
+  <nodedef name="ND_subtract_matrix22" node="subtract" nodegroup="math">
+    <input name="in1" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <input name="in2" type="matrix22" value="0.0,0.0, 0.0,0.0" />
+    <output name="out" type="matrix22" defaultinput="in1" />
+  </nodedef>
+  <nodedef name="ND_subtract_matrix22FA" node="subtract" nodegroup="math">
+    <input name="in1" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <input name="in2" type="float" value="0.0" />
+    <output name="out" type="matrix22" defaultinput="in1" />
+  </nodedef>
+
+  <!--
+      Node: <add>
+      Add "in2" value/stream to the incoming float/color/vector/matrix.
+    -->
+  <nodedef name="ND_add_matrix22" node="add" nodegroup="math">
+    <input name="in1" type="matrix22" value="1.0,0.0, 0.0,0.0" />
+    <input name="in2" type="matrix22" value="0.0,0.0, 0.0,0.0" />
+    <output name="out" type="matrix22" defaultinput="in1" />
+  </nodedef>
+  <nodedef name="ND_add_matrix22FA" node="add" nodegroup="math">
+    <input name="in1" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <input name="in2" type="float" value="0.0" />
+    <output name="out" type="matrix22" defaultinput="in1" />
+  </nodedef>
+
+  <!--
+      Node: <determinant>
+      Output the determinant of the incoming matrix.
+    -->
+  <nodedef name="ND_determinant_matrix22" node="determinant" nodegroup="math">
+    <input name="in" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <output name="out" type="float" default="1.0" />
+  </nodedef>
+
+  <!--
+      Node: <transpose>
+      Output the transpose of the incoming matrix.
+    -->
+  <nodedef name="ND_transpose_matrix22" node="transpose" nodegroup="math">
+    <input name="in" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <output name="out" type="matrix22" defaultinput="in" />
+  </nodedef>
+
+  <!--
+      Node: <tile value>
+      Takes a 2x2 matrix and vector2, returns a color3.
+    -->
+  <nodedef name="ND_tile_value_matrix22_color3" node="tile" nodegroup="realitykit_test" target="realitykit_test">
+    <input name="in" type="matrix22" value="0.0,0.0, 0.0,0.0" />
+    <input name="texcoord" type="vector2" defaultgeomprop="UV0" />
+    <output name="out" type="color3" default="0.0, 0.0, 0.0" />
+  </nodedef>
+
+  <!--
+      Node: <invertmatrix>
+      Invert an incoming 2x2 matrix.
+    -->
+  <nodedef name="ND_invertmatrix_matrix22" node="invertmatrix" nodegroup="math">
+    <input name="in" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <output name="out" type="matrix22" defaultinput="in" />
+  </nodedef>
+
+  <!--
+      Node: <transformmatrix>
+      Transform a vector by a matrix.
+    -->
+  <nodedef name="ND_transformmatrix_vector2" node="transformmatrix" nodegroup="math">
+    <input name="in" type="vector2" value="0.0, 0.0" />
+    <input name="mat" type="matrix22" value="1.0,0.0, 0.0,1.0" />
+    <output name="out" type="vector2" defaultinput="in" />
+  </nodedef>
+
+  <!--
+    Node: <geompropvalue>
+    The value of the specified geometric property for the current geometry.
+    -->
+  <nodedef name="ND_geompropvalue_half" node="geompropvalue" nodegroup="geometric">
+    <input name="geomprop" type="string" value="" uniform="true" />
+    <input name="default" type="half" value="0.0" />
+    <output name="out" type="half" default="0.0" />
+  </nodedef>
+
+  <!--
+    Node: <blur>
+    A gaussian-falloff blur.
+    -->
+  <nodedef name="ND_blur_half" node="blur" nodegroup="convolution2d">
+    <input name="in" type="half" value="0.0" />
+    <input name="size" type="half" value="0.0" />
+    <input name="filtertype" type="string" value="box" enum="box,gaussian" uniform="true" />
+    <output name="out" type="half" defaultinput="in" />
+  </nodedef>
+
+  <!--
+    Node: <combine2>
+    Combine the channels from two streams into the same number of channels of a
+    single output stream of a specified compatible type.
+  -->
+  <nodedef name="ND_combine2_integer2" node="combine2" nodegroup="channel">
+    <input name="in1" type="integer" value="0" />
+    <input name="in2" type="integer" value="0" />
+    <output name="out" type="integer2" default="0, 0" />
+  </nodedef>
+
+  <!--
+    Node: <combine3>
+    Combine the channels from three streams into the same number of channels of a
+    single output stream of a specified compatible type.
+  -->
+  <nodedef name="ND_combine3_integer3" node="combine3" nodegroup="channel">
+    <input name="in1" type="integer" value="0" />
+    <input name="in2" type="integer" value="0" />
+    <input name="in3" type="integer" value="0" />
+    <output name="out" type="integer3" default="0, 0, 0" />
+  </nodedef>
+
+  <!--
+    Node: <combine4>
+    Combine the channels from four streams into the same number of channels of a
+    single output stream of a specified compatible type.
+  -->
+  <nodedef name="ND_combine4_integer4" node="combine4" nodegroup="channel">
+    <input name="in1" type="integer" value="0" />
+    <input name="in2" type="integer" value="0" />
+    <input name="in3" type="integer" value="0" />
+    <input name="in4" type="integer" value="0" />
+    <output name="out" type="integer4" default="0, 0, 0, 0" />
+  </nodedef>
+
+  <!--
+    Node: <separate2>, <separate3>, <separate4> Supplemental Nodes
+    Output each of the channels of a color/vector stream as a separate float output.
+  -->
+  <nodedef name="ND_separate2_integer2" node="separate2" nodegroup="channel">
+    <input name="in" type="integer2" value="0, 0" />
+    <output name="outx" type="integer" default="0" />
+    <output name="outy" type="integer" default="0" />
+  </nodedef>
+  <nodedef name="ND_separate3_integer3" node="separate3" nodegroup="channel">
+    <input name="in" type="integer3" value="0, 0, 0" />
+    <output name="outx" type="integer" default="0" />
+    <output name="outy" type="integer" default="0" />
+    <output name="outz" type="integer" default="0" />
+  </nodedef>
+  <nodedef name="ND_separate4_integer4" node="separate4" nodegroup="channel">
+    <input name="in" type="integer4" value="0, 0, 0, 0" />
+    <output name="outx" type="integer" default="0" />
+    <output name="outy" type="integer" default="0" />
+    <output name="outz" type="integer" default="0" />
+    <output name="outw" type="integer" default="0" />
+  </nodedef>
+
+
+  <!--
+  Node: <texcoord>
+  The full 2D or 3D texture coordinates associated with the currently processed data.
+  -->
+  <nodedef name="ND_texcoord_vector4" node="texcoord" nodegroup="geometric">
+    <input name="index" type="integer" value="0" uniform="true" />
+    <output name="out" type="vector4" default="0.0, 0.0, 0.0, 0.0" />
+  </nodedef>
+
+</materialx>

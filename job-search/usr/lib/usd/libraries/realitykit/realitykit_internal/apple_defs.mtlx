@@ -1,0 +1,420 @@
+<?xml version="1.0"?>
+<materialx version="1.38">
+
+    <typedef name="vertex" semantic="shader" context="geometry" />
+
+    <typedef name="float2" />
+    <typedef name="float3" />
+    <typedef name="float4" />
+
+
+    <geompropdef name="GeomColor_Float" type="float" geomprop="geomcolor" index="0" />
+    <geompropdef name="GeomColor_Color3" type="color3" geomprop="geomcolor" index="0" />
+    <geompropdef name="GeomColor_Color4" type="color4" geomprop="geomcolor" index="0" />
+    <geompropdef name="UV1" type="vector2" geomprop="texcoord" index="1" />
+
+    <targetdef name="realitykit" />
+    <targetdef name="realitykit_surface_shader" inherit="realitykit" />
+    <targetdef name="realitykit_geometry_modifier" inherit="realitykit" />
+
+    <!-- Surface nodes -->
+    <nodedef name="ND_realitykit_geometrymodifier_vertexshader" node="realitykit_geometrymodifier_vertexshader" nodegroup="realitykit" target="realitykit">
+        <input name="modelPositionOffset" type="vector3" value="0, 0, 0" />
+        <input name="color" type="color4" defaultgeomprop="GeomColor_Color4" />
+        <input name="normal" type="vector3" defaultgeomprop="Nobject" />
+        <input name="bitangent" type="vector3" defaultgeomprop="Bobject" />
+        <input name="uv0" type="vector2" defaultgeomprop="UV0" />
+        <input name="uv1" type="vector2" defaultgeomprop="UV1" />
+        <input name="userAttribute" type="vector4" value="0, 0, 0, 0" />
+        <input name="userAttributeHalf4_0" type="half4" value="0, 0, 0, 0" />
+        <input name="userAttributeHalf4_1" type="half4" value="0, 0, 0, 0" />
+        <input name="userAttributeHalf4_2" type="half4" value="0, 0, 0, 0" />
+        <input name="userAttributeHalf4_3" type="half4" value="0, 0, 0, 0" />
+        <input name="userAttributeHalf2_0" type="half2" value="0, 0" />
+        <input name="userAttributeHalf2_1" type="half2" value="0, 0" />
+
+        <output name="out" type="vertex" />
+    </nodedef>
+
+    <!-- Hover State -->
+    <nodedef name="ND_realitykit_hover_state" node="realitykit_hover_state" nodegroup="realitykit" target="realitykit,realitykit_surface">
+        <output name="intensity" type="float" />
+        <output name="position" type="vector3" />
+        <output name="timeSinceHoverStart" type="float" />
+        <output name="timeSinceHoverEnd" type="float" />
+        <output name="isActive" type="boolean" />
+    </nodedef>
+
+    <!-- CubeImage nodes -->
+    <nodedef name="ND_realitykit_cubeimage_color3" node="realitykit_cubeimage" nodegroup="realitykit" available="deprecated" availabilityMessage = "Please use RealityKit TextureCube. RealityKit Cube Image Node will be removed in future releases of Reality Composer Pro" target="realitykit">
+        <input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+        <input name="default" type="color3" value="0.0, 0.0, 0.0" uiname="Default Color" />
+        <input name="texcoord" type="vector3" defaultgeomprop="Nworld" uiname="Texture Coordinates" />
+        <!-- <input name="comparefunc" type="string" value="never" enum="never,less,less_equal,greater,greater_equal,equal,not_equal,always" uiname="Compare Function" uniform="true" /> -->
+        <input name="filtertype" type="string" value="closest" enum="closest,linear" uiname="Filter Type" uniform="true" />
+        <output name="out" type="color3" default="0.0, 0.0, 0.0" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_cubeimage_color4" node="realitykit_cubeimage" nodegroup="realitykit" available="deprecated" availabilityMessage = "Please use RealityKit TextureCube. RealityKit Cube Image Node will be removed in future releases of Reality Composer Pro" target="realitykit">
+        <input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+        <input name="default" type="color4" value="0.0, 0.0, 0.0, 0.0" uiname="Default Color" />
+        <input name="texcoord" type="vector3" defaultgeomprop="Nworld" uiname="Texture Coordinates" />
+        <!-- <input name="comparefunc" type="string" value="never" enum="never,less,less_equal,greater,greater_equal,equal,not_equal,always" uiname="Compare Function" uniform="true" /> -->
+        <input name="filtertype" type="string" value="closest" enum="closest,linear" uiname="Filter Type" uniform="true" />
+        <output name="out" type="color4" default="0.0, 0.0, 0.0, 0.0" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_cubeimage_float" node="realitykit_cubeimage" nodegroup="realitykit" available="deprecated" availabilityMessage = "Please use RealityKit TextureCube. RealityKit Cube Image Node will be removed in future releases of Reality Composer Pro" target="realitykit">
+        <input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+        <input name="default" type="float" value="0.0" uiname="Default Color" />
+        <input name="texcoord" type="vector3" defaultgeomprop="Nworld" uiname="Texture Coordinates" />
+        <!-- <input name="comparefunc" type="string" value="never" enum="never,less,less_equal,greater,greater_equal,equal,not_equal,always" uiname="Compare Function" uniform="true" /> -->
+        <input name="filtertype" type="string" value="closest" enum="closest,linear" uiname="Filter Type" uniform="true" />
+        <output name="out" type="float" default="0.0" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_cubeimage_vector2" node="realitykit_cubeimage" nodegroup="realitykit" available="deprecated" availabilityMessage = "Please use RealityKit TextureCube. RealityKit Cube Image Node will be removed in future releases of Reality Composer Pro" target="realitykit">
+        <input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+        <input name="default" type="vector2" value="0.0, 0.0" uiname="Default Color" />
+        <input name="texcoord" type="vector3" defaultgeomprop="Nworld" uiname="Texture Coordinates" />
+        <!-- <input name="comparefunc" type="string" value="never" enum="never,less,less_equal,greater,greater_equal,equal,not_equal,always" uiname="Compare Function" uniform="true" /> -->
+        <input name="filtertype" type="string" value="closest" enum="closest,linear" uiname="Filter Type" uniform="true" />
+        <output name="out" type="vector2" default="0.0, 0.0" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_cubeimage_vector3" node="realitykit_cubeimage" nodegroup="realitykit" available="deprecated" availabilityMessage = "Please use RealityKit TextureCube. RealityKit Cube Image Node will be removed in future releases of Reality Composer Pro" target="realitykit">
+        <input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+        <input name="default" type="vector3" value="0.0, 0.0, 0.0" uiname="Default Color" />
+        <input name="texcoord" type="vector3" defaultgeomprop="Nworld" uiname="Texture Coordinates" />
+        <!-- <input name="comparefunc" type="string" value="never" enum="never,less,less_equal,greater,greater_equal,equal,not_equal,always" uiname="Compare Function" uniform="true" /> -->
+        <input name="filtertype" type="string" value="closest" enum="closest,linear" uiname="Filter Type" uniform="true" />
+        <output name="out" type="vector3" default="0.0, 0.0, 0.0" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_cubeimage_vector4" node="realitykit_cubeimage" nodegroup="realitykit" available="deprecated" availabilityMessage = "Please use RealityKit TextureCube. RealityKit Cube Image Node will be removed in future releases of Reality Composer Pro" target="realitykit">
+        <input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+        <input name="default" type="vector4" value="0.0, 0.0, 0.0, 0.0" uiname="Default Color" />
+        <input name="texcoord" type="vector3" defaultgeomprop="Nworld" uiname="Texture Coordinates" />
+        <!-- <input name="comparefunc" type="string" value="never" enum="never,less,less_equal,greater,greater_equal,equal,not_equal,always" uiname="Compare Function" uniform="true" /> -->
+        <input name="filtertype" type="string" value="closest" enum="closest,linear" uiname="Filter Type" uniform="true" />
+        <output name="out" type="vector4" default="0.0, 0.0, 0.0, 0.0" />
+    </nodedef>
+
+    <!-- Material Parameters -->
+    <nodedef name="ND_realitykit_material_parameters_base_color_tint" node="realitykit_material_parameters_base_color_tint" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="baseColorTint" type="color3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_material_parameters_opacity_scale" node="realitykit_material_parameters_opacity_scale" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="opacityScale" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_material_parameters_opacity_threshold" node="realitykit_material_parameters_opacity_threshold" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="opacityThreshold" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_material_parameters_roughness_scale" node="realitykit_material_parameters_roughness_scale" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="roughnessScale" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_material_parameters_metallic_scale" node="realitykit_material_parameters_metallic_scale" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="metallicScale" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_material_parameters_specular_scale" node="realitykit_material_parameters_specular_scale" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="specularScale" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_material_parameters_emissive_color" node="realitykit_material_parameters_emissive_color" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="emissiveColor" type="color3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_material_parameters_clearcoat_scale" node="realitykit_material_parameters_clearcoat_scale" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="clearcoatScale" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_material_parameters_clearcoat_roughness_scale" node="realitykit_material_parameters_clearcoat_roughness_scale" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="clearcoatRoughnessScale" type="float" />
+    </nodedef>
+
+    <!-- RealityKit material parameter geometry modifier / surface shader -->
+
+    <!-- Geometry Modifier Functions -->
+    <nodedef name="ND_realitykit_geometry_modifier_time" node="realitykit_geometry_modifier_time" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_time is deprecated, please use ND_time_float instead.">
+        <output name="time" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_uv0_offset" node="realitykit_geometry_modifier_uv0_offset" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="uv0Offset" type="vector2" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_uv0_transform" node="realitykit_geometry_modifier_uv0_transform" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="uv0Transform" type="matrix22" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_uv1_offset" node="realitykit_geometry_modifier_uv1_offset" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="uv1Offset" type="vector2" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_uv1_transform" node="realitykit_geometry_modifier_uv1_transform" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="uv1Transform" type="matrix22" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_custom_parameter" node="realitykit_geometry_modifier_custom_parameter" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="customParameter" type="vector4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_model_to_world" node="realitykit_geometry_modifier_model_to_world" nodegroup="realitykit" target="realitykit">
+        <output name="modelToWorld" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_world_to_model" node="realitykit_geometry_modifier_world_to_model" nodegroup="realitykit" target="realitykit">
+        <output name="worldToModel" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_normal_to_world" node="realitykit_geometry_modifier_normal_to_world" nodegroup="realitykit" target="realitykit">
+        <output name="normalToWorld" type="matrix33" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_model_to_view" node="realitykit_geometry_modifier_model_to_view" nodegroup="realitykit" target="realitykit">
+        <output name="modelToView" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_view_to_projection" node="realitykit_geometry_modifier_view_to_projection" nodegroup="realitykit" target="realitykit">
+        <output name="viewToProjection" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_projection_to_view" node="realitykit_geometry_modifier_projection_to_view" nodegroup="realitykit" target="realitykit">
+        <output name="projectionToView" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_vertex_id" node="realitykit_geometry_modifier_vertex_id" nodegroup="realitykit" target="realitykit">
+        <output name="vertexId" type="integer" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_position" node="realitykit_geometry_modifier_position" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_geometry_modifier_position is deprecated, please use ND_position_vector3 instead.">
+        <output name="position" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_model_position_offset" node="realitykit_geometry_modifier_model_position_offset" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="modelPositionOffset" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_color" node="realitykit_geometry_modifier_color" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_geometry_modifier_color is deprecated, please use ND_geomcolor_color4 instead.">
+        <output name="color" type="color4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_normal" node="realitykit_geometry_modifier_normal" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_geometry_modifier_normal is deprecated, please use ND_normal_vector3 instead.">
+        <output name="normal" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_bitangent" node="realitykit_geometry_modifier_bitangent" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_geometry_modifier_bitangent is deprecated, please use ND_bitangent_vector3 instead.">
+        <output name="bitangent" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_uv0" node="realitykit_geometry_modifier_uv0" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_geometry_modifier_uv0 is deprecated, please use ND_texcoord_vector2 instead.">
+        <output name="uv0" type="vector2" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_uv1" node="realitykit_geometry_modifier_uv1" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_geometry_modifier_uv1 is deprecated, please use ND_texcoord_vector2 instead.">
+        <output name="uv1" type="vector2" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_custom_attribute" node="realitykit_geometry_modifier_custom_attribute" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="customAttribute" type="vector4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_custom_attribute_half4_0" node="realitykit_geometry_modifier_custom_attribute_half4_0" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="customAttribute" type="half4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_custom_attribute_half4_1" node="realitykit_geometry_modifier_custom_attribute_half4_1" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="customAttribute" type="half4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_custom_attribute_half4_2" node="realitykit_geometry_modifier_custom_attribute_half4_2" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="customAttribute" type="half4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_custom_attribute_half4_3" node="realitykit_geometry_modifier_custom_attribute_half4_3" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="customAttribute" type="half4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_custom_attribute_half2_0" node="realitykit_geometry_modifier_custom_attribute_half2_0" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="customAttribute" type="half2" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_geometry_modifier_custom_attribute_half2_1" node="realitykit_geometry_modifier_custom_attribute_half2_1" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="customAttribute" type="half2" />
+    </nodedef>
+
+    <!-- Surface Functions -->
+    <nodedef name="ND_realitykit_surface_time" node="realitykit_surface_time" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_time is deprecated, please use ND_time_float instead.">
+        <output name="time" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_custom_parameter" node="realitykit_surface_custom_parameter" nodegroup="realitykit" available="unsupported" target="realitykit">
+        <output name="customParameter" type="vector4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_model_to_world" node="realitykit_surface_model_to_world" nodegroup="realitykit" target="realitykit">
+        <output name="modelToWorld" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_model_to_view" node="realitykit_surface_model_to_view" nodegroup="realitykit" target="realitykit">
+        <output name="modelToView" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_world_to_view" node="realitykit_surface_world_to_view" nodegroup="realitykit" target="realitykit">
+        <output name="worldToView" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_view_to_projection" node="realitykit_surface_view_to_projection" nodegroup="realitykit" target="realitykit">
+        <output name="viewToProjection" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_projection_to_view" node="realitykit_surface_projection_to_view" nodegroup="realitykit" target="realitykit">
+        <output name="projectionToView" type="matrix44" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_model_position" node="realitykit_surface_model_position" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_model_position is deprecated, please use ND_position_vector3 instead.">
+        <output name="modelPosition" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_screen_position" node="realitykit_surface_screen_position" nodegroup="realitykit" target="realitykit">
+        <output name="screenPosition" type="vector4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_world_position" node="realitykit_surface_world_position" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_world_position is deprecated, please use ND_position_vector3 instead.">
+        <output name="worldPosition" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_view_direction" node="realitykit_surface_view_direction" nodegroup="realitykit" target="realitykit">
+        <output name="viewDirection" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_color" node="realitykit_surface_color" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_color is deprecated, please use ND_geomcolor_color4 instead.">
+        <output name="color" type="color4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_geometry_normal" node="realitykit_surface_geometry_normal" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_geometry_normal is deprecated, please use ND_normal_vector3 instead.">
+        <output name="geometryNormal" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_geometry_tangent" node="realitykit_surface_geometry_tangent" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_geometry_tangent is deprecated, please use ND_tangent_vector3 instead.">
+        <output name="geometryTangent" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_geometry_bitangent" node="realitykit_surface_geometry_bitangent" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_geometry_bitangent is deprecated, please use ND_bitangent_vector3 instead.">
+        <output name="geometryBitangent" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_uv0" node="realitykit_surface_uv0" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_uv0 is deprecated, please use ND_texcoord_vector2 instead.">
+        <output name="uv0" type="vector2" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_uv1" node="realitykit_surface_uv1" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_uv1 is deprecated, please use ND_texcoord_vector2 instead.">
+        <output name="uv1" type="vector2" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_custom_attribute" node="realitykit_surface_custom_attribute" nodegroup="realitykit" target="realitykit">
+        <output name="customAttribute" type="vector4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_custom_attribute_half4_0" node="realitykit_surface_custom_attribute_half4_0" nodegroup="realitykit" target="realitykit">
+        <output name="customAttribute" type="half4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_custom_attribute_half4_1" node="realitykit_surface_custom_attribute_half4_1" nodegroup="realitykit" target="realitykit">
+        <output name="customAttribute" type="half4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_custom_attribute_half4_2" node="realitykit_surface_custom_attribute_half4_2" nodegroup="realitykit" target="realitykit">
+        <output name="customAttribute" type="half4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_custom_attribute_half4_3" node="realitykit_surface_custom_attribute_half4_3" nodegroup="realitykit" target="realitykit">
+        <output name="customAttribute" type="half4" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_custom_attribute_half2_0" node="realitykit_surface_custom_attribute_half2_0" nodegroup="realitykit" target="realitykit">
+        <output name="customAttribute" type="half2" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_custom_attribute_half2_1" node="realitykit_surface_custom_attribute_half2_1" nodegroup="realitykit" target="realitykit">
+        <output name="customAttribute" type="half2" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_base_color" node="realitykit_surface_base_color" nodegroup="realitykit" target="realitykit" available="unsupported">
+        <output name="baseColor" type="color3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_tangent_space_normal" node="realitykit_surface_tangent_space_normal" nodegroup="realitykit" target="realitykit" available="deprecated" available_message="ND_realitykit_surface_tangent_space_normal is deprecated, please use ND_normal_vector3 instead.">
+        <output name="tangentSpaceNormal" type="vector3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_emissive_color" node="realitykit_surface_emissive_color" nodegroup="realitykit" target="realitykit" available="unsupported">
+        <output name="emissiveColor" type="color3" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_roughness" node="realitykit_surface_roughness" nodegroup="realitykit" target="realitykit" available="unsupported">
+        <output name="roughness" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_metallic" node="realitykit_surface_metallic" nodegroup="realitykit" target="realitykit" available="unsupported">
+        <output name="metallic" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_ambient_occlusion" node="realitykit_surface_ambient_occlusion" nodegroup="realitykit" target="realitykit" available="unsupported">
+        <output name="ambientOcclusion" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_specular" node="realitykit_surface_specular" nodegroup="realitykit" target="realitykit" available="unsupported">
+        <output name="specular" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_opacity" node="realitykit_surface_opacity" nodegroup="realitykit" target="realitykit" available="unsupported">
+        <output name="opacity" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_clearcoat" node="realitykit_surface_clearcoat" nodegroup="realitykit" target="realitykit" available="unsupported">
+        <output name="clearcoat" type="float" />
+    </nodedef>
+
+    <nodedef name="ND_realitykit_surface_clearcoat_roughness" node="realitykit_surface_clearcoat_roughness" nodegroup="realitykit" target="realitykit" available="unsupported">
+        <output name="clearcoatRoughness" type="float" />
+    </nodedef>
+
+    <!-- Construct matrix with n columns and m rows, from n vectors with m components. -->
+    <nodedef name="ND_realitykit_combine3_matrix33" node="combine3" nodegroup="channel">
+        <input name="in1" type="vector3" value="1.0,0.0,0.0" />
+        <input name="in2" type="vector3" value="0.0,1.0,0.0" />
+        <input name="in3" type="vector3" value="0.0,0.0,1.0" />
+        <output name="out" type="matrix33" default="1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0" />
+    </nodedef>
+    <nodedef name="ND_realitykit_combine4_matrix44" node="combine4" nodegroup="channel">
+        <input name="in1" type="vector4" value="1.0, 0.0, 0.0, 0.0" />
+        <input name="in2" type="vector4" value="0.0, 1.0, 0.0, 0.0" />
+        <input name="in3" type="vector4" value="0.0, 0.0, 1.0, 0.0" />
+        <input name="in4" type="vector4" value="0.0, 0.0, 0.0, 1.0" />
+      <output name="out" type="matrix44" default="1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0, 0.0,0.0,0.0,1.0" />
+    </nodedef>
+    <nodedef name="ND_realitykit_combine2_matrix22" node="combine2" nodegroup="channel">
+        <input name="in1" type="vector2" value="1.0,0.0" />
+        <input name="in2" type="vector2" value="0.0,1.0" />
+        <output name="out" type="matrix22" default="1.0,0.0, 0.0,1.0" />
+    </nodedef>
+
+    <!-- RealityKit background blur functions -->
+    <!--
+     Node: <blur>
+     Returns a blurred background color.
+    -->
+    <nodedef name="ND_realitykit_background_blur_color3" node="realitykit_surface_background_blur_color3" nodegroup="realitykit" target="realitykit">
+        <output name="out" type="color3" />
+    </nodedef>
+    <nodedef name="ND_realitykit_background_blur_color4" node="realitykit_surface_background_blur_color4" nodegroup="realitykit" target="realitykit">
+        <output name="out" type="color4" />
+    </nodedef>
+    
+</materialx>

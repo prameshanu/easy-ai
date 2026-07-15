@@ -1,0 +1,70 @@
+.\" Copyright (c) 2013 Apple Inc.  All rights reserved.
+.\"
+.Dd January 11, 2026
+.Dt TIMERFIRES 1
+.Os "OS X"
+.Sh NAME
+.Nm timerfires
+.Nd analyze timers as they fire
+.Sh SYNOPSIS
+.Nm
+.Op Fl s
+.Op Fl v
+.Op Fl g
+.Op Fl t Ar timeout-secs
+.Fl a | Fl p Ar pid | Fl n Ar process-name
+.Sh DESCRIPTION
+The
+.Nm
+utility lists timers as they fire.
+.Pp
+The options are as follows:
+.Bl -tag -width "            "
+.It Fl s
+Show call stacks for "sleep"-type timers.
+.It Fl v
+Show verbose output where applicable (e.g., additional details for CoreFoundation timers).
+.It Fl g
+Aggregate timer output, showing counts instead of individual timer fires.
+.It Fl t Ar timeout-secs
+Run only for
+.Ar timeout-secs
+seconds; then exit.
+.It Fl a
+Analyze all timers without filtering by process.
+It is an error to specify
+.Fl a
+with either
+.Fl p
+or
+.Fl n .
+.It Fl p Ar pid
+Analyze only timers from the process with process ID
+.Ar pid .
+It is an error to specify
+.Fl p
+with either
+.Fl a
+or
+.Fl n .
+.It Fl n Ar process-name
+Analyze only timers from processes with name
+.Ar process-name .
+It is an error to specify
+.Fl n
+with either
+.Fl a
+or
+.Fl p .
+.El
+.Sh SAMPLE USAGE
+.Pp
+.Nm
+.Fl n
+MyApp
+.Fl s
+.Fl t
+10
+.Pp
+.Nm
+will run for ten seconds, displaying timer data for all instances of processes named "MyApp", including stacks.

@@ -93,8 +93,14 @@ Vue.createApp({
         const ins = await sb.from("profiles")
           .insert({ name: "My job search", email_to: [this.userEmail], email_enabled: true })
           .select("*, searches(*)").single();
-        if (ins.error) { this.errorMsg = ins.error.message; return; }
-        data = ins.data;
+        if (ins.error) {
+          // a row already exists (e.g. another tab created it first) -> just load it
+          const re = await sb.from("profiles").select("*, searches(*)").maybeSingle();
+          if (re.error || !re.data) { this.errorMsg = ins.error.message; return; }
+          data = re.data;
+        } else {
+          data = ins.data;
+        }
       }
       this.mapDbToState(data);
     },

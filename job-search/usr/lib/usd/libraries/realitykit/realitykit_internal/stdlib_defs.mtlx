@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<materialx version="1.38">
+  <!--
+    TM & (c) 2019 Lucasfilm Entertainment Company Ltd. and Lucasfilm Ltd.
+    All rights reserved.  See LICENSE.txt for license.
+
+    Declarations of standard data types and nodes included in the MaterialX specification.
+  -->
+
+
+  <!--
+    Node: <updirection>
+    The current scene "up vector" direction, as defined by the shading environment.
+    (Default values is (0, 1, 0))
+  -->
+  <nodedef name="ND_updirection_vector3" node="updirection" nodegroup="application">
+    <input name="space" type="string" enum="model,object,world,tangent" value="world" />
+    <output name="out" type="vector3" default="0.0, 1.0 ,0.0" />
+  </nodedef>
+
+  <!-- ======================================================================== -->
+  <!-- Math nodes                                                               -->
+  <!-- ======================================================================== -->
+
+  <!--
+    Node: <add>
+    Add "in2" value/stream to the incoming float/color/vector/matrix.
+  -->
+
+  <nodedef name="ND_add_surfaceshader" node="add" nodegroup="math">
+    <input name="in1" type="surfaceshader" value="" />
+    <input name="in2" type="surfaceshader" value="" />
+    <output name="out" type="surfaceshader" defaultinput="in1" />
+  </nodedef>
+  <nodedef name="ND_add_displacementshader" node="add" nodegroup="math">
+    <input name="in1" type="displacementshader" value="" />
+    <input name="in2" type="displacementshader" value="" />
+    <output name="out" type="displacementshader" defaultinput="in1" />
+  </nodedef>
+  <nodedef name="ND_add_volumeshader" node="add" nodegroup="math">
+    <input name="in1" type="volumeshader" value="" />
+    <input name="in2" type="volumeshader" value="" />
+    <output name="out" type="volumeshader" defaultinput="in1" />
+  </nodedef>
+
+  <!--
+    Node: <multiply>
+    Multiply the incoming float/color/vector by the "in2" value/stream, or multiply
+    two matrices.
+  -->
+
+  <nodedef name="ND_multiply_surfaceshaderF" node="multiply" nodegroup="math">
+    <input name="in1" type="surfaceshader" value="" />
+    <input name="in2" type="float" value="1.0" />
+    <output name="out" type="surfaceshader" defaultinput="in1" />
+  </nodedef>
+  <nodedef name="ND_multiply_displacementshaderF" node="multiply" nodegroup="math">
+    <input name="in1" type="displacementshader" value="" />
+    <input name="in2" type="float" value="1.0" />
+    <output name="out" type="displacementshader" defaultinput="in1" />
+  </nodedef>
+  <nodedef name="ND_multiply_volumeshaderF" node="multiply" nodegroup="math">
+    <input name="in1" type="volumeshader" value="" />
+    <input name="in2" type="float" value="1.0" />
+    <output name="out" type="volumeshader" defaultinput="in1" />
+  </nodedef>
+  <nodedef name="ND_multiply_surfaceshaderC" node="multiply" nodegroup="math">
+    <input name="in1" type="surfaceshader" value="" />
+    <input name="in2" type="color3" value="1.0, 1.0, 1.0" />
+    <output name="out" type="surfaceshader" defaultinput="in1" />
+  </nodedef>
+  <nodedef name="ND_multiply_volumeshaderC" node="multiply" nodegroup="math">
+    <input name="in1" type="volumeshader" value="" />
+    <input name="in2" type="color3" value="1.0, 1.0, 1.0" />
+    <output name="out" type="volumeshader" defaultinput="in1" />
+  </nodedef>
+  <nodedef name="ND_multiply_displacementshaderV" node="multiply" nodegroup="math">
+    <input name="in1" type="displacementshader" value="" />
+    <input name="in2" type="vector3" value="1.0, 1.0, 1.0" />
+    <output name="out" type="displacementshader" defaultinput="in1" />
+  </nodedef>
+
+
+  <!--
+    Node: <curvelookup>
+    Output a float, color or vector value smoothly interpolated between a
+    number of knotvalue values, using the position of in within knots as the
+    knotvalues interpolant.
+  -->
+  <nodedef name="ND_curvelookup_float" node="curvelookup" nodegroup="adjustment">
+    <input name="in" type="float" value="0.0" />
+    <input name="knots" type="floatarray" value="" />
+    <input name="knotvalues" type="floatarray" value="" />
+    <output name="out" type="float" defaultinput="in" />
+  </nodedef>
+  <nodedef name="ND_curvelookup_color3" node="curvelookup" nodegroup="adjustment">
+    <input name="in" type="float" value="0.0" />
+    <input name="knots" type="floatarray" value="" />
+    <input name="knotvalues" type="color3array" value="" />
+    <output name="out" type="color3" defaultinput="in" />
+  </nodedef>
+  <nodedef name="ND_curvelookup_color4" node="curvelookup" nodegroup="adjustment">
+    <input name="in" type="float" value="0.0" />
+    <input name="knots" type="floatarray" value="" />
+    <input name="knotvalues" type="color4array" value="" />
+    <output name="out" type="color4" defaultinput="in" />
+  </nodedef>
+  <nodedef name="ND_curvelookup_vector2" node="curvelookup" nodegroup="adjustment">
+    <input name="in" type="float" value="0.0" />
+    <input name="knots" type="floatarray" value="" />
+    <input name="knotvalues" type="vector2array" value="" />
+    <output name="out" type="vector2" defaultinput="in" />
+  </nodedef>
+  <nodedef name="ND_curvelookup_vector3" node="curvelookup" nodegroup="adjustment">
+    <input name="in" type="float" value="0.0" />
+    <input name="knots" type="floatarray" value="" />
+    <input name="knotvalues" type="vector3array" value="" />
+    <output name="out" type="vector3" defaultinput="in" />
+  </nodedef>
+  <nodedef name="ND_curvelookup_vector4" node="curvelookup" nodegroup="adjustment">
+    <input name="in" type="float" value="0.0" />
+    <input name="knots" type="floatarray" value="" />
+    <input name="knotvalues" type="vector4array" value="" />
+    <output name="out" type="vector4" defaultinput="in" />
+  </nodedef>
+
+</materialx>

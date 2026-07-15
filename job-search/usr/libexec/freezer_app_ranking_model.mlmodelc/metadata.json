@@ -1,0 +1,139 @@
+[
+  {
+    "metadataOutputVersion" : "3.0",
+    "outputSchema" : [
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "target",
+        "shortDescription" : ""
+      }
+    ],
+    "modelParameters" : [
+
+    ],
+    "specificationVersion" : 1,
+    "isUpdatable" : "0",
+    "stateSchema" : [
+
+    ],
+    "availability" : {
+      "macOS" : "10.13",
+      "tvOS" : "11.0",
+      "visionOS" : "1.0",
+      "watchOS" : "4.0",
+      "iOS" : "11.0",
+      "macCatalyst" : "11.0"
+    },
+    "modelType" : {
+      "name" : "MLModelType_treeEnsembleRegressor"
+    },
+    "userDefinedMetadata" : {
+      "com.github.apple.coremltools.version" : "8.3.2",
+      "com.github.apple.coremltools.source" : "xgboost==3.0.2"
+    },
+    "inputSchema" : [
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "activation_count",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "time_since_last",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "lru_score",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "mru_score",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "suspended_memory_mb",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "mean_duration",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "launch_resume_ratio",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "time_benefit",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "foreground_session_count",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "foreground_duration",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "user_kill_count",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "time_since_user_kill",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "system_kill_count",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "formattedType" : "Double",
+        "type" : "Double",
+        "name" : "time_since_system_kill",
+        "shortDescription" : ""
+      }
+    ],
+    "generatedClassName" : "freezer_app_ranking_model",
+    "method" : "predict"
+  }
+]

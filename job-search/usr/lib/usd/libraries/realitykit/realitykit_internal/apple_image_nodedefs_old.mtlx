@@ -1,0 +1,1883 @@
+<?xml version="1.0"?>
+<materialx version="1.38">
+
+	<nodedef name="ND_realitykit_image_half" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_lod_half" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="level" type="float" value="0" uiname="Mipmap Level" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_half" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_half" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_min_lod_clamp_half" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_min_lod_clamp_half" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_min_lod_clamp_half" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_float" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="float" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="float" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_lod_float" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="float" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="level" type="float" value="0" uiname="Mipmap Level" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="float" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_float" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="float" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="float" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_float" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="float" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="float" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_min_lod_clamp_float" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="float" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="float" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_min_lod_clamp_float" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="float" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="float" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_min_lod_clamp_float" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="float" value="0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="float" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_vector2" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_lod_vector2" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="level" type="float" value="0" uiname="Mipmap Level" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_vector2" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_vector2" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_min_lod_clamp_vector2" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_min_lod_clamp_vector2" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_min_lod_clamp_vector2" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_vector3" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_lod_vector3" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="level" type="float" value="0" uiname="Mipmap Level" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_vector3" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_vector3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_min_lod_clamp_vector3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_min_lod_clamp_vector3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_min_lod_clamp_vector3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="vector3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="vector3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_half2" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_lod_half2" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="level" type="float" value="0" uiname="Mipmap Level" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_half2" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_half2" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_min_lod_clamp_half2" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_min_lod_clamp_half2" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_min_lod_clamp_half2" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half2" value="0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half2" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_half3" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_lod_half3" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="level" type="float" value="0" uiname="Mipmap Level" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_half3" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_half3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_min_lod_clamp_half3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_min_lod_clamp_half3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_min_lod_clamp_half3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="half3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="half3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_color3" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_lod_color3" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="level" type="float" value="0" uiname="Mipmap Level" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_color3" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_color3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_min_lod_clamp_color3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_min_lod_clamp_color3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_min_lod_clamp_color3" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color3" value="0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color3" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_color4" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color4" value="0,0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color4" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_lod_color4" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color4" value="0,0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="level" type="float" value="0" uiname="Mipmap Level" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color4" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_color4" node="realitykit_image" nodegroup="realitykit"
+		available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color4" value="0,0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color4" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_color4" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color4" value="0,0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color4" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_min_lod_clamp_color4" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color4" value="0,0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color4" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_bias_min_lod_clamp_color4" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color4" value="0,0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="bias" type="float" value="0" uiname="Mipmap Level Bias" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color4" />
+	</nodedef>
+
+	<nodedef name="ND_realitykit_image_gradient2d_min_lod_clamp_color4" node="realitykit_image"
+		nodegroup="realitykit" available="deprecated"
+		availabilityMessage="RealityKit Image Node will be removed in future releases of Reality Composer Pro"
+		target="realitykit">
+		<input name="file" type="filename" value="" uiname="Filename" uniform="true" />
+		<input name="default" type="color4" value="0,0,0,0" uiname="Default Color" />
+		<input name="texcoord" type="vector2" defaultgeomprop="UV0" uiname="Texture Coordinates" />
+		<!-- sample() parameters -->
+		<input name="gradient2d_x" type="float2" value="0,0" uiname="Gradient X" />
+		<input name="gradient2d_y" type="float2" value="0,0" uiname="Gradient Y" />
+		<input name="min_lod_clamp" type="float" value="0" uiname="Lowest Mipmap Level Clamp" />
+		<!-- sampler parameters -->
+		<input name="coord" type="string" enum="normalized,pixel" value="normalized"
+			uiname="Coordinate Normalization" uniform="true" />
+		<input name="s_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="S Addressing Mode" uniform="true" />
+		<input name="t_address" type="string"
+			enum="repeat,mirrored_repeat,clamp_to_edge,clamp_to_zero,clamp_to_border" value="repeat"
+			uiname="T Addressing Mode" uniform="true" />
+		<input name="border_color" type="string" enum="transparent_black,opaque_black,opaque_white"
+			value="transparent_black" uiname="Border Color" uniform="true" />
+		<input name="mag_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Magnification Filter" uniform="true" />
+		<input name="min_filter" type="string" enum="nearest,linear" value="linear"
+			uiname="Minification Filter" uniform="true" />
+		<input name="mip_filter" type="string" enum="none,nearest,linear" value="linear"
+			uiname="Mipmap Filter Mode" uniform="true" />
+		<input name="max_anisotropy" type="integer" uniform="true" />
+		<input name="lod_min" type="float" uniform="true" />
+		<input name="lod_max" type="float" uniform="true" />
+
+		<output name="out" type="color4" />
+	</nodedef>
+</materialx>
