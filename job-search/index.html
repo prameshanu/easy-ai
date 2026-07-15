@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Job Alerts — Easyy AI</title>
+  <meta name="description" content="Set up personalised job alerts on Telegram and email. Free." />
+  <style>
+    :root {
+      --bg: #f6f7fb; --card: #ffffff; --text: #14161c; --muted: #5b6472;
+      --border: #e4e7ee; --accent: #4f46e5; --accent-ink: #ffffff;
+      --danger: #dc2626; --ok: #16a34a; --field: #ffffff; --shadow: 0 1px 3px rgba(20,22,28,.08), 0 8px 24px rgba(20,22,28,.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d0f14; --card: #161922; --text: #eef0f5; --muted: #9aa3b2;
+        --border: #262b36; --accent: #7c74ff; --accent-ink: #0d0f14;
+        --field: #10131a; --shadow: 0 1px 3px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5; -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -.01em; }
+    .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+    .lede { color: var(--muted); margin: 6px 0 26px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 22px; margin: 0 0 18px; box-shadow: var(--shadow);
+    }
+    .card h2 { margin: 0 0 4px; font-size: 17px; letter-spacing: -.01em; }
+    .card .hint { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
+    label .opt { font-weight: 400; color: var(--muted); }
+    input[type=text], input[type=email], input[type=number], select, textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--field); color: var(--text); font: inherit; font-size: 14.5px;
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+    textarea { min-height: 60px; resize: vertical; }
+    .row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .row > div { flex: 1 1 220px; }
+    .checks { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+    .check { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; }
+    .check input { width: auto; }
+    .btn {
+      appearance: none; border: 0; border-radius: 10px; padding: 11px 18px; font: inherit;
+      font-weight: 600; font-size: 14.5px; cursor: pointer; background: var(--accent); color: var(--accent-ink);
+    }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn.ghost { background: transparent; color: var(--accent); padding: 6px 8px; }
+    .btn.tiny { padding: 6px 10px; font-size: 13px; }
+    .search {
+      border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; background: var(--bg);
+    }
+    .search-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .search-head h3 { margin: 0; font-size: 14px; color: var(--muted); font-weight: 600; }
+    details.adv { margin-top: 12px; }
+    details.adv summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--accent); }
+    details.adv .body { margin-top: 10px; }
+    .err { color: var(--danger); font-size: 13px; margin-top: 6px; }
+    .msg { padding: 12px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; }
+    .msg.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+    .msg.info { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+    .msg.warn { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+    .who { color: var(--muted); font-size: 13px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600;
+      padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); }
+    .pill.linked { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--border)); }
+    .actions { display: flex; gap: 12px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    .foot { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 26px; }
+    .spinner { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .center { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 40px 0; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div id="app" class="wrap" v-cloak>
+
+    <!-- loading -->
+    <div v-if="booting" class="center"><div class="spinner"></div> Loading…</div>
+
+    <!-- signed out -->
+    <template v-else-if="!session">
+      <div class="brand"><span class="dot"></span> Easyy AI · Job Alerts</div>
+      <p class="lede">Get newly-posted jobs matching your searches, delivered to Telegram and email. Free.</p>
+      <div class="card">
+        <h2>Sign in</h2>
+        <p class="hint">Enter your email and we'll send a magic link — no password. This email is also where job digests go.</p>
+        <div v-if="authMsg" class="msg ok">{{ authMsg }}</div>
+        <label>Email</label>
+        <input type="email" v-model.trim="authEmail" placeholder="you@example.com" @keyup.enter="sendMagicLink" />
+        <div class="actions">
+          <button class="btn" :disabled="sending || !authEmail" @click="sendMagicLink">
+            {{ sending ? 'Sending…' : 'Send magic link' }}
+          </button>
+        </div>
+      </div>
+      <p class="foot">By continuing you agree to receive job-alert messages you configure here. You can pause or delete anytime.</p>
+    </template>
+
+    <!-- signed in -->
+    <template v-else>
+      <div class="topbar">
+        <div class="brand"><span class="dot"></span> Job Alerts</div>
+        <div class="who">{{ userEmail }} · <a href="#" @click.prevent="signOut">Sign out</a></div>
+      </div>
+
+      <div v-if="saveMsg" class="msg ok">{{ saveMsg }}</div>
+      <div v-if="errorMsg" class="msg warn">{{ errorMsg }}</div>
+
+      <!-- profile -->
+      <div class="card">
+        <h2>Your profile</h2>
+        <p class="hint">Global preferences that apply to every search below.</p>
+        <div class="row">
+          <div>
+            <label>Profile name</label>
+            <input type="text" v-model.trim="profile.name" maxlength="120" placeholder="My job search" />
+          </div>
+          <div>
+            <label>Indeed country</label>
+            <select v-model="profile.country_indeed">
+              <option v-for="c in countries" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Minimum salary <span class="opt">— optional, AED / month</span></label>
+            <input type="number" min="0" step="500" v-model.number="salaryInput" placeholder="e.g. 25000" />
+          </div>
+        </div>
+        <label>Exclude jobs whose title contains <span class="opt">— comma-separated, optional</span></label>
+        <input type="text" v-model="excludeInput" placeholder="intern, junior, graduate" />
+        <div class="checks">
+          <label class="check"><input type="checkbox" v-model="profile.email_enabled" /> Email me digests ({{ userEmail }})</label>
+          <label class="check"><input type="checkbox" v-model="profile.notify_when_empty" /> Ping me even when nothing new</label>
+          <label class="check"><input type="checkbox" v-model="profile.is_active" /> Alerts active</label>
+        </div>
+      </div>
+
+      <!-- telegram -->
+      <div class="card">
+        <h2>Telegram <span v-if="telegramLinked" class="pill linked">✓ Connected</span></h2>
+        <p class="hint" v-if="telegramLinked">This chat is linked. You'll receive alerts on Telegram.</p>
+        <p class="hint" v-else>Connect Telegram to get instant alerts. Save first, then tap connect and press <b>Start</b> in the bot.</p>
+        <div class="actions" v-if="!telegramLinked">
+          <button class="btn secondary" :disabled="!profile.id" @click="connectTelegram">Connect Telegram</button>
+          <span v-if="polling" class="who"><span class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></span> waiting for you to press Start…</span>
+        </div>
+      </div>
+
+      <!-- searches -->
+      <div class="card">
+        <h2>Searches <span class="opt" style="font-weight:400;color:var(--muted)">({{ searches.length }}/5)</span></h2>
+        <p class="hint">Each search runs hourly. Add up to 5.</p>
+
+        <div class="search" v-for="(s, i) in searches" :key="i">
+          <div class="search-head">
+            <h3>Search {{ i + 1 }}</h3>
+            <button class="btn ghost tiny" @click="removeSearch(i)">Remove</button>
+          </div>
+          <label>Label</label>
+          <input type="text" v-model.trim="s.name" placeholder="e.g. Data Scientist — Dubai" />
+          <div class="row">
+            <div>
+              <label>Search query</label>
+              <input type="text" v-model.trim="s.query" placeholder='"data scientist" NOT intern' />
+            </div>
+            <div>
+              <label>Location</label>
+              <input type="text" v-model.trim="s.location" placeholder="United Arab Emirates" />
+            </div>
+          </div>
+          <div class="checks">
+            <label class="check"><input type="checkbox" value="linkedin" v-model="s.sites" /> LinkedIn</label>
+            <label class="check"><input type="checkbox" value="indeed" v-model="s.sites" /> Indeed</label>
+            <label class="check"><input type="checkbox" value="google" v-model="s.sites" /> Google Jobs</label>
+            <label class="check"><input type="checkbox" v-model="s.is_remote" /> Remote only</label>
+          </div>
+
+          <div v-if="s.sites.includes('google')" style="margin-top:12px">
+            <label>Google Jobs search phrase <span class="opt">— required for Google</span></label>
+            <input type="text" v-model.trim="s.google_search_term" placeholder="data scientist jobs in Dubai since yesterday" />
+            <p class="hint" style="margin:6px 0 0">Google has no boolean search — paste the exact phrase you'd type into the Google Jobs box, and include freshness (e.g. "since yesterday").</p>
+          </div>
+
+          <details class="adv">
+            <summary>Advanced</summary>
+            <div class="body">
+              <label>Keep only titles containing <span class="opt">— comma-separated, optional</span></label>
+              <input type="text" v-model="s.require_kw_input" placeholder="data scientist, machine learning" />
+              <div class="row">
+                <div>
+                  <label>LinkedIn query override <span class="opt">— optional</span></label>
+                  <input type="text" v-model.trim="s.linkedin_query" />
+                </div>
+                <div>
+                  <label>Indeed query override <span class="opt">— optional</span></label>
+                  <input type="text" v-model.trim="s.indeed_query" />
+                </div>
+              </div>
+            </div>
+          </details>
+          <div class="err" v-if="s._err">{{ s._err }}</div>
+        </div>
+
+        <button class="btn secondary tiny" :disabled="searches.length >= 5" @click="addSearch">+ Add search</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn" :disabled="saving" @click="save">{{ saving ? 'Saving…' : 'Save changes' }}</button>
+        <span class="who" v-if="!telegramLinked && profile.email_enabled">Alerts will go to your email; connect Telegram for instant pings.</span>
+      </div>
+      <p class="foot">Alerts start within the hour after you save. Powered by Easyy AI.</p>
+    </template>
+  </div>
+
+  <style>[v-cloak]{display:none}</style>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
