@@ -37,7 +37,7 @@
     .card .hint { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; }
     label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
     label .opt { font-weight: 400; color: var(--muted); }
-    input[type=text], input[type=email], input[type=number], select, textarea {
+    input[type=text], input[type=email], input[type=password], input[type=tel], input[type=number], select, textarea {
       width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
       background: var(--field); color: var(--text); font: inherit; font-size: 14.5px;
     }
@@ -75,6 +75,47 @@
       padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); }
     .pill.linked { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--border)); }
     .actions { display: flex; gap: 12px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    .authlink { margin-left: auto; font-size: 13.5px; font-weight: 600; }
+    .authalt { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 13.5px; }
+    .authalt a { font-weight: 500; }
+    .authalt .sep { color: var(--muted); margin: 0 9px; }
+    .check.terms { align-items: flex-start; margin-top: 16px; font-weight: 400; line-height: 1.45; }
+    .check.terms input { margin-top: 2px; }
+    /* international phone input */
+    .phone { position: relative; display: flex; gap: 8px; }
+    .phone-cc {
+      display: inline-flex; align-items: center; gap: 7px; cursor: pointer; white-space: nowrap;
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--field);
+      font-size: 14.5px; user-select: none;
+    }
+    .phone-cc:hover { border-color: var(--muted); }
+    .phone-cc .flag { font-size: 17px; line-height: 1; }
+    .phone-cc .caret { color: var(--muted); font-size: 11px; }
+    .phone-num { flex: 1 1 auto; }
+    .cc-backdrop { position: fixed; inset: 0; z-index: 40; }
+    .cc-menu {
+      position: absolute; z-index: 41; top: calc(100% + 6px); left: 0; width: min(360px, 100%);
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .cc-search-wrap { padding: 10px; border-bottom: 1px solid var(--border); }
+    .cc-search { width: 100%; }
+    .cc-list { max-height: 260px; overflow-y: auto; }
+    .cc-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; font-size: 14px;
+    }
+    .cc-item:hover { background: var(--bg); }
+    .cc-item.sel { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+    .cc-item .flag { font-size: 17px; line-height: 1; width: 22px; }
+    .cc-item .cc-name { flex: 1 1 auto; }
+    .cc-item .cc-dial { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .cc-empty { padding: 14px 12px; color: var(--muted); font-size: 13.5px; }
+    /* password show/hide toggle beside the label */
+    .labrow { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .pw-link {
+      background: transparent; border: 0; color: var(--accent); font: inherit; font-size: 13px;
+      font-weight: 600; cursor: pointer; padding: 0;
+    }
     .foot { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 26px; }
     .spinner { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--accent);
       border-radius: 50%; animation: spin .8s linear infinite; }
@@ -88,23 +129,140 @@
     <!-- loading -->
     <div v-if="booting" class="center"><div class="spinner"></div> Loading…</div>
 
-    <!-- signed out -->
-    <template v-else-if="!session">
+    <!-- signed out / password recovery -->
+    <template v-else-if="!session || recoveryMode">
       <div class="brand"><span class="dot"></span> Easyy AI · Job Alerts</div>
       <p class="lede">Get newly-posted jobs matching your searches, delivered to Telegram and email. Free.</p>
+
       <div class="card">
-        <h2>Sign in</h2>
-        <p class="hint">Enter your email and we'll send a magic link — no password. This email is also where job digests go.</p>
-        <div v-if="authMsg" class="msg ok">{{ authMsg }}</div>
-        <label>Email</label>
-        <input type="email" v-model.trim="authEmail" placeholder="you@example.com" @keyup.enter="sendMagicLink" />
-        <div class="actions">
-          <button class="btn" :disabled="sending || !authEmail" @click="sendMagicLink">
-            {{ sending ? 'Sending…' : 'Send magic link' }}
-          </button>
-        </div>
+        <div v-if="authMsg" class="msg" :class="authMsgType">{{ authMsg }}</div>
+
+        <!-- sign in -->
+        <template v-if="authView === 'signin'">
+          <h2>Sign in</h2>
+          <p class="hint">Welcome back. Enter your email and password.</p>
+          <label>Email</label>
+          <input type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="signIn" />
+          <label>Password</label>
+          <input type="password" v-model="authPassword" placeholder="Your password" autocomplete="current-password" @keyup.enter="signIn" />
+          <div class="actions">
+            <button class="btn" :disabled="sending || !authEmail || !authPassword" @click="signIn">
+              {{ sending ? 'Signing in…' : 'Sign in' }}
+            </button>
+            <a href="#" class="authlink" @click.prevent="go('forgot')">Forgot password?</a>
+          </div>
+          <div class="authalt">
+            <a href="#" @click.prevent="go('signup')">Create an account</a>
+            <span class="sep">·</span>
+            <a href="#" @click.prevent="go('magic')">Email me a sign-in link instead</a>
+          </div>
+        </template>
+
+        <!-- sign up -->
+        <template v-else-if="authView === 'signup'">
+          <h2>Create your account</h2>
+          <p class="hint">A few details to set up your job alerts. Your email is also where digests go.</p>
+          <label>Full name</label>
+          <input type="text" v-model.trim="signup.full_name" placeholder="e.g. Pramesh Anuragi" autocomplete="name" />
+
+          <label>Mobile number</label>
+          <div class="phone">
+            <div class="phone-cc" role="button" tabindex="0" @click="toggleCountry" @keyup.enter="toggleCountry">
+              <span class="flag">{{ flagOf(dialIso) }}</span>
+              <span class="dial">+{{ selectedDial }}</span>
+              <span class="caret">▾</span>
+            </div>
+            <input type="tel" class="phone-num" v-model.trim="phoneLocal" placeholder="50 123 4567" autocomplete="tel-national" @keyup.enter="signUp" />
+            <div v-if="countryOpen" class="cc-backdrop" @click="countryOpen = false"></div>
+            <div v-if="countryOpen" class="cc-menu">
+              <div class="cc-search-wrap">
+                <input type="text" class="cc-search" v-model="countryQuery" ref="ccSearch" placeholder="Search country or code…" @click.stop />
+              </div>
+              <div class="cc-list">
+                <div v-for="c in filteredCountries" :key="c.i" class="cc-item" :class="{ sel: c.i === dialIso }" @click="selectCountry(c.i)">
+                  <span class="flag">{{ flagOf(c.i) }}</span>
+                  <span class="cc-name">{{ c.n }}</span>
+                  <span class="cc-dial">+{{ c.d }}</span>
+                </div>
+                <div v-if="!filteredCountries.length" class="cc-empty">No match — try another spelling or code.</div>
+              </div>
+            </div>
+          </div>
+
+          <label>Email</label>
+          <input type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" />
+
+          <div class="labrow">
+            <label>Password <span class="opt">— at least 8 characters</span></label>
+            <button type="button" class="pw-link" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button>
+          </div>
+          <input :type="showPw ? 'text' : 'password'" v-model="authPassword" placeholder="Choose a password" autocomplete="new-password" />
+          <label>Confirm password</label>
+          <input :type="showPw ? 'text' : 'password'" v-model="authPassword2" placeholder="Re-enter password" autocomplete="new-password" @keyup.enter="signUp" />
+
+          <label class="check terms">
+            <input type="checkbox" v-model="signup.agree" />
+            <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+          </label>
+          <div class="actions">
+            <button class="btn" :disabled="sending" @click="signUp">
+              {{ sending ? 'Creating…' : 'Create account' }}
+            </button>
+          </div>
+          <div class="authalt">
+            <a href="#" @click.prevent="go('signin')">Already have an account? Sign in</a>
+          </div>
+        </template>
+
+        <!-- magic link -->
+        <template v-else-if="authView === 'magic'">
+          <h2>Email me a sign-in link</h2>
+          <p class="hint">We'll email a one-tap link — no password needed.</p>
+          <label>Email</label>
+          <input type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="sendMagicLink" />
+          <div class="actions">
+            <button class="btn" :disabled="sending || !authEmail" @click="sendMagicLink">
+              {{ sending ? 'Sending…' : 'Send sign-in link' }}
+            </button>
+          </div>
+          <div class="authalt">
+            <a href="#" @click.prevent="go('signin')">Back to sign in</a>
+          </div>
+        </template>
+
+        <!-- forgot password -->
+        <template v-else-if="authView === 'forgot'">
+          <h2>Reset your password</h2>
+          <p class="hint">Enter your email and we'll send a link to set a new password.</p>
+          <label>Email</label>
+          <input type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="sendReset" />
+          <div class="actions">
+            <button class="btn" :disabled="sending || !authEmail" @click="sendReset">
+              {{ sending ? 'Sending…' : 'Send reset link' }}
+            </button>
+          </div>
+          <div class="authalt">
+            <a href="#" @click.prevent="go('signin')">Back to sign in</a>
+          </div>
+        </template>
+
+        <!-- set new password (after clicking reset link) -->
+        <template v-else-if="authView === 'reset'">
+          <h2>Set a new password</h2>
+          <p class="hint">Choose a new password for your account.</p>
+          <label>New password <span class="opt">— at least 8 characters</span></label>
+          <input type="password" v-model="authPassword" placeholder="New password" autocomplete="new-password" />
+          <label>Confirm password</label>
+          <input type="password" v-model="authPassword2" placeholder="Re-enter password" autocomplete="new-password" @keyup.enter="setNewPassword" />
+          <div class="actions">
+            <button class="btn" :disabled="sending || !authPassword || !authPassword2" @click="setNewPassword">
+              {{ sending ? 'Saving…' : 'Set new password' }}
+            </button>
+          </div>
+        </template>
       </div>
-      <p class="foot">By continuing you agree to receive job-alert messages you configure here. You can pause or delete anytime.</p>
+
+      <p class="foot" v-if="authView === 'signup'">By continuing you agree to receive job-alert messages you configure here. You can pause or delete anytime.</p>
     </template>
 
     <!-- signed in -->
@@ -121,6 +279,16 @@
       <div class="card">
         <h2>Your profile</h2>
         <p class="hint">Global preferences that apply to every search below.</p>
+        <div class="row">
+          <div>
+            <label>Your name</label>
+            <input type="text" v-model.trim="profile.full_name" maxlength="120" placeholder="Your full name" />
+          </div>
+          <div>
+            <label>Mobile number</label>
+            <input type="tel" v-model.trim="profile.phone" placeholder="+971 50 123 4567" />
+          </div>
+        </div>
         <div class="row">
           <div>
             <label>Profile name</label>
@@ -229,6 +397,7 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
+  <script src="countries.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

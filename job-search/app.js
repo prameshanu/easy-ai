@@ -2,6 +2,16 @@
 const CFG = window.EASYY_CONFIG;
 const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
 
+// Capture the URL hash at load, before supabase-js consumes it, so we can
+// surface expired/invalid auth-link errors to the user.
+const URL_HASH = window.location.hash || "";
+function parseHashError(hash) {
+  if (!hash || hash.indexOf("error") === -1) return null;
+  const p = new URLSearchParams(hash.replace(/^#/, ""));
+  const desc = p.get("error_description") || p.get("error");
+  return desc ? desc.replace(/\+/g, " ") : null;
+}
+
 const COUNTRIES = [
   "united arab emirates", "india", "usa", "united kingdom", "singapore",
   "saudi arabia", "qatar", "canada", "australia", "germany",
@@ -24,10 +34,16 @@ Vue.createApp({
       session: null,
       countries: COUNTRIES,
       // auth
-      authEmail: "", sending: false, authMsg: "",
+      authView: "signin", authEmail: "", authPassword: "", authPassword2: "",
+      sending: false, authMsg: "", authMsgType: "warn", recoveryMode: false,
+      signup: { full_name: "", agree: false },
+      showPw: false,
+      // phone country picker
+      dialCountries: window.EASYY_DIAL_COUNTRIES || [],
+      dialIso: "AE", phoneLocal: "", countryQuery: "", countryOpen: false,
       // profile
       profile: { id: null, telegram_link_code: null, telegram_linked_at: null, telegram_chat_id: null,
-                 name: "My job search", country_indeed: "united arab emirates",
+                 name: "My job search", full_name: "", phone: "", country_indeed: "united arab emirates",
                  email_enabled: true, notify_when_empty: false, is_active: true },
       salaryInput: "", excludeInput: "",
       searches: [],
@@ -41,45 +57,199 @@ Vue.createApp({
   computed: {
     userEmail() { return this.session?.user?.email || ""; },
     telegramLinked() { return !!this.profile.telegram_linked_at; },
+    selectedDial() {
+      const c = this.dialCountries.find((x) => x.i === this.dialIso);
+      return c ? c.d : "";
+    },
+    filteredCountries() {
+      const q = (this.countryQuery || "").trim().toLowerCase().replace(/^\+/, "");
+      if (!q) return this.dialCountries;
+      return this.dialCountries.filter(
+        (c) => c.n.toLowerCase().includes(q) || c.d.includes(q) || c.i.toLowerCase() === q
+      );
+    },
   },
 
   async mounted() {
-    const { data } = await sb.auth.getSession();
-    this.session = data.session;
-    sb.auth.onAuthStateChange((_evt, sess) => {
-      const had = !!this.session;
-      this.session = sess;
-      if (sess && !had) {
-        // clean magic-link tokens out of the URL
-        history.replaceState(null, "", location.pathname + location.search);
-        this.loadProfile();
+    sb.auth.onAuthStateChange((evt, sess) => {
+      if (evt === "PASSWORD_RECOVERY") {
+        // Arrived via a reset link — show the "set new password" form,
+        // not the config page, even though a session now exists.
+        this.session = sess;
+        this.recoveryMode = true;
+        this.authView = "reset";
+        this.authMsg = "";
+        this.booting = false;
+        return;
       }
-      if (!sess) this.resetProfile();
+      if (evt === "SIGNED_IN") {
+        this.session = sess;
+        if (!this.recoveryMode) {
+          // clean auth tokens out of the URL
+          history.replaceState(null, "", location.pathname + location.search);
+          this.loadProfile();
+        }
+      } else if (evt === "SIGNED_OUT") {
+        this.session = null;
+        this.resetProfile();
+      } else if (evt === "USER_UPDATED" || evt === "TOKEN_REFRESHED") {
+        this.session = sess;
+      }
     });
-    if (this.session) await this.loadProfile();
+
+    const { data } = await sb.auth.getSession();
+    if (!this.recoveryMode) {
+      this.session = data.session;
+      if (this.session) await this.loadProfile();
+    }
+
+    // Surface an expired/invalid link that landed us back here signed-out.
+    const hashErr = parseHashError(URL_HASH);
+    if (hashErr && !this.session) {
+      this.authMsg = /expired|invalid/i.test(hashErr)
+        ? "That link has expired or was already used. Request a new one below."
+        : hashErr;
+      this.authMsgType = "warn";
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+
     this.booting = false;
   },
 
   methods: {
+    // ---- auth ----
+    go(view) {
+      this.authView = view;
+      this.authMsg = "";
+      this.authPassword = ""; this.authPassword2 = "";
+      this.countryOpen = false;
+    },
+
+    // ---- phone country picker ----
+    flagOf(iso) {
+      if (!iso || iso.length !== 2) return "🏳️";
+      const base = 0x1f1e6; // regional indicator "A"
+      const cc = iso.toUpperCase();
+      return String.fromCodePoint(base + (cc.charCodeAt(0) - 65), base + (cc.charCodeAt(1) - 65));
+    },
+    countryName(iso) {
+      const c = this.dialCountries.find((x) => x.i === iso);
+      return c ? c.n : "";
+    },
+    selectCountry(iso) {
+      this.dialIso = iso;
+      this.countryOpen = false;
+      this.countryQuery = "";
+    },
+    toggleCountry() {
+      this.countryOpen = !this.countryOpen;
+      if (this.countryOpen) {
+        this.$nextTick(() => { if (this.$refs.ccSearch) this.$refs.ccSearch.focus(); });
+      }
+    },
+
+    authRedirect() { return location.origin + location.pathname; },
+
+    friendlyAuthError(error) {
+      const m = ((error && error.message) || "").toLowerCase();
+      if (m.includes("invalid login")) return "That email or password doesn't match. Try again, or reset your password.";
+      if (m.includes("email not confirmed")) return "Please confirm your email first — check your inbox for the confirmation link.";
+      if (m.includes("already registered") || m.includes("already been registered")) return "You already have an account with that email — try signing in instead.";
+      if (m.includes("rate limit")) return "Too many attempts just now. Please wait a minute and try again.";
+      if (m.includes("password should be") || m.includes("at least")) return "Password must be at least 8 characters.";
+      return (error && error.message) || "Something went wrong. Please try again.";
+    },
+
+    authErr(msg) { this.authMsg = msg; this.authMsgType = "warn"; },
+
+    async signIn() {
+      if (!this.authEmail || !this.authPassword) return;
+      this.sending = true; this.authMsg = "";
+      const { error } = await sb.auth.signInWithPassword({ email: this.authEmail, password: this.authPassword });
+      this.sending = false;
+      if (error) { this.authMsg = this.friendlyAuthError(error); this.authMsgType = "warn"; }
+      // success → onAuthStateChange('SIGNED_IN') loads the profile
+    },
+
+    async signUp() {
+      const s = this.signup;
+      const digits = (this.phoneLocal || "").replace(/\D/g, "");
+      if (!s.full_name) return this.authErr("Please enter your full name.");
+      if (digits.length < 5) return this.authErr("Please enter a valid mobile number.");
+      if (!this.authEmail) return this.authErr("Please enter your email.");
+      if (!this.authPassword || this.authPassword.length < 8) return this.authErr("Password must be at least 8 characters.");
+      if (this.authPassword !== this.authPassword2) return this.authErr("Those passwords don't match.");
+      if (!s.agree) return this.authErr("Please agree to the Terms and Privacy Policy to continue.");
+      const phone = "+" + this.selectedDial + digits;
+      const country = this.countryName(this.dialIso);
+      this.sending = true; this.authMsg = "";
+      const { data, error } = await sb.auth.signUp({
+        email: this.authEmail, password: this.authPassword,
+        options: {
+          emailRedirectTo: this.authRedirect(),
+          data: { full_name: s.full_name, phone, country },
+        },
+      });
+      this.sending = false;
+      if (error) { this.authMsg = this.friendlyAuthError(error); this.authMsgType = "warn"; return; }
+      if (!data.session) {
+        // Email confirmation required — no session yet.
+        this.authView = "signin";
+        this.authPassword = ""; this.authPassword2 = "";
+        this.authMsg = "Account created — check your inbox and click the link to confirm your email, then sign in.";
+        this.authMsgType = "ok";
+      }
+      // else onAuthStateChange('SIGNED_IN') takes over
+    },
+
     async sendMagicLink() {
       if (!this.authEmail) return;
       this.sending = true; this.authMsg = "";
-      const redirect = location.origin + location.pathname;
       const { error } = await sb.auth.signInWithOtp({
         email: this.authEmail,
-        options: { emailRedirectTo: redirect },
+        options: { emailRedirectTo: this.authRedirect() },
       });
       this.sending = false;
-      this.authMsg = error
-        ? "Couldn't send: " + error.message
-        : "Check your inbox — we sent a sign-in link to " + this.authEmail + ".";
+      if (error) { this.authMsg = this.friendlyAuthError(error); this.authMsgType = "warn"; }
+      else { this.authMsg = "Check your inbox — we sent a sign-in link to " + this.authEmail + "."; this.authMsgType = "ok"; }
     },
 
-    async signOut() { this.stopPolling(); await sb.auth.signOut(); this.resetProfile(); },
+    async sendReset() {
+      if (!this.authEmail) return;
+      this.sending = true; this.authMsg = "";
+      const { error } = await sb.auth.resetPasswordForEmail(this.authEmail, { redirectTo: this.authRedirect() });
+      this.sending = false;
+      if (error) { this.authMsg = this.friendlyAuthError(error); this.authMsgType = "warn"; }
+      // Don't reveal whether the email exists.
+      else { this.authMsg = "If that email has an account, we've sent a password-reset link. Check your inbox."; this.authMsgType = "ok"; }
+    },
+
+    async setNewPassword() {
+      if (!this.authPassword || !this.authPassword2) return;
+      if (this.authPassword.length < 8) { this.authMsg = "Password must be at least 8 characters."; this.authMsgType = "warn"; return; }
+      if (this.authPassword !== this.authPassword2) { this.authMsg = "Those passwords don't match."; this.authMsgType = "warn"; return; }
+      this.sending = true; this.authMsg = "";
+      const { error } = await sb.auth.updateUser({ password: this.authPassword });
+      this.sending = false;
+      if (error) { this.authMsg = this.friendlyAuthError(error); this.authMsgType = "warn"; return; }
+      this.recoveryMode = false;
+      this.authPassword = ""; this.authPassword2 = "";
+      history.replaceState(null, "", location.pathname + location.search);
+      this.saveMsg = "Password updated ✓";
+      await this.loadProfile();
+    },
+
+    async signOut() {
+      this.stopPolling();
+      await sb.auth.signOut();
+      this.resetProfile();
+      this.authView = "signin"; this.authEmail = ""; this.authPassword = ""; this.authPassword2 = "";
+      this.authMsg = ""; this.recoveryMode = false;
+    },
 
     resetProfile() {
       this.profile = { id: null, telegram_link_code: null, telegram_linked_at: null, telegram_chat_id: null,
-        name: "My job search", country_indeed: "united arab emirates",
+        name: "My job search", full_name: "", phone: "", country_indeed: "united arab emirates",
         email_enabled: true, notify_when_empty: false, is_active: true };
       this.salaryInput = ""; this.excludeInput = ""; this.searches = []; this._dbSearchIds = [];
       this.saveMsg = ""; this.errorMsg = "";
@@ -90,8 +260,15 @@ Vue.createApp({
       let { data, error } = await sb.from("profiles").select("*, searches(*)").maybeSingle();
       if (error) { this.errorMsg = error.message; return; }
       if (!data) {
+        const md = (this.session && this.session.user && this.session.user.user_metadata) || {};
         const ins = await sb.from("profiles")
-          .insert({ name: "My job search", email_to: [this.userEmail], email_enabled: true })
+          .insert({
+            name: "My job search",
+            full_name: md.full_name || null,
+            phone: md.phone || null,
+            country_indeed: md.country || "united arab emirates",
+            email_to: [this.userEmail], email_enabled: true,
+          })
           .select("*, searches(*)").single();
         if (ins.error) {
           // a row already exists (e.g. another tab created it first) -> just load it
@@ -108,6 +285,7 @@ Vue.createApp({
     mapDbToState(row) {
       this.profile = {
         id: row.id, name: row.name, country_indeed: row.country_indeed,
+        full_name: row.full_name || "", phone: row.phone || "",
         telegram_chat_id: row.telegram_chat_id, telegram_link_code: row.telegram_link_code,
         telegram_linked_at: row.telegram_linked_at,
         email_enabled: row.email_enabled, notify_when_empty: row.notify_when_empty,
@@ -152,6 +330,8 @@ Vue.createApp({
       try {
         const payload = {
           name: this.profile.name || "My job search",
+          full_name: this.profile.full_name || null,
+          phone: this.profile.phone || null,
           country_indeed: this.profile.country_indeed,
           min_salary_monthly_aed:
             this.salaryInput === "" || this.salaryInput == null ? null : Number(this.salaryInput),
