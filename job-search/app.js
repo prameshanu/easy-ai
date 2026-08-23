@@ -12,10 +12,22 @@ function parseHashError(hash) {
   return desc ? desc.replace(/\+/g, " ") : null;
 }
 
+// Indeed country options. `v` is the value the jobs backend expects (must stay
+// lowercase — do not change); `l` is the capitalized label shown to the user.
 const COUNTRIES = [
-  "united arab emirates", "india", "usa", "united kingdom", "singapore",
-  "saudi arabia", "qatar", "canada", "australia", "germany",
-  "netherlands", "ireland", "worldwide",
+  { v: "united arab emirates", l: "United Arab Emirates" },
+  { v: "india", l: "India" },
+  { v: "usa", l: "United States" },
+  { v: "united kingdom", l: "United Kingdom" },
+  { v: "singapore", l: "Singapore" },
+  { v: "saudi arabia", l: "Saudi Arabia" },
+  { v: "qatar", l: "Qatar" },
+  { v: "canada", l: "Canada" },
+  { v: "australia", l: "Australia" },
+  { v: "germany", l: "Germany" },
+  { v: "netherlands", l: "Netherlands" },
+  { v: "ireland", l: "Ireland" },
+  { v: "worldwide", l: "Worldwide" },
 ];
 
 const blankSearch = () => ({
@@ -27,7 +39,90 @@ const blankSearch = () => ({
 
 const parseList = (str) => (str || "").split(",").map((x) => x.trim()).filter(Boolean);
 
-Vue.createApp({
+// Reusable international phone input: a searchable country picker (flag + dial
+// code) next to the local number. v-model is the full "+<code><digits>" string.
+const IntlPhone = {
+  props: {
+    modelValue: { type: String, default: "" },
+    countries: { type: Array, default: () => [] },
+  },
+  data() {
+    return { open: false, query: "", iso: "AE", local: "", _lastEmit: null };
+  },
+  computed: {
+    dial() {
+      const c = this.countries.find((x) => x.i === this.iso);
+      return c ? c.d : "";
+    },
+    filtered() {
+      const q = (this.query || "").trim().toLowerCase().replace(/^\+/, "");
+      if (!q) return this.countries;
+      return this.countries.filter(
+        (c) => c.n.toLowerCase().includes(q) || c.d.includes(q) || c.i.toLowerCase() === q
+      );
+    },
+  },
+  watch: {
+    modelValue(v) { if (v !== this._lastEmit) this.parse(v); },
+  },
+  created() { this.parse(this.modelValue); },
+  methods: {
+    parse(v) {
+      const digits = (v || "").replace(/[^\d]/g, "");
+      if (!digits) { this.local = ""; return; }
+      let best = null;
+      for (const c of this.countries) {
+        if (digits.startsWith(c.d) && (!best || c.d.length > best.d.length)) best = c;
+      }
+      if (best) { this.iso = best.i; this.local = digits.slice(best.d.length); }
+      else { this.local = digits; }
+    },
+    flagOf(iso) {
+      if (!iso || iso.length !== 2) return "🏳️";
+      const base = 0x1f1e6;
+      const cc = iso.toUpperCase();
+      return String.fromCodePoint(base + (cc.charCodeAt(0) - 65), base + (cc.charCodeAt(1) - 65));
+    },
+    emit() {
+      const digits = (this.local || "").replace(/\D/g, "");
+      const val = digits ? "+" + this.dial + digits : "";
+      this._lastEmit = val;
+      this.$emit("update:modelValue", val);
+    },
+    onLocal(e) { this.local = e.target.value; this.emit(); },
+    select(iso) { this.iso = iso; this.open = false; this.query = ""; this.emit(); },
+    toggle() {
+      this.open = !this.open;
+      if (this.open) this.$nextTick(() => { if (this.$refs.s) this.$refs.s.focus(); });
+    },
+  },
+  template: `
+    <div class="phone">
+      <div class="phone-cc" role="button" tabindex="0" @click="toggle" @keyup.enter="toggle">
+        <span class="flag">{{ flagOf(iso) }}</span>
+        <span class="dial">+{{ dial }}</span>
+        <span class="caret">▾</span>
+      </div>
+      <input type="tel" class="phone-num" :value="local" @input="onLocal" placeholder="50 123 4567" autocomplete="tel-national" />
+      <div v-if="open" class="cc-backdrop" @click="open = false"></div>
+      <div v-if="open" class="cc-menu">
+        <div class="cc-search-wrap">
+          <input type="text" class="cc-search" v-model="query" ref="s" placeholder="Search country or code…" @click.stop />
+        </div>
+        <div class="cc-list">
+          <div v-for="c in filtered" :key="c.i" class="cc-item" :class="{ sel: c.i === iso }" @click="select(c.i)">
+            <span class="flag">{{ flagOf(c.i) }}</span>
+            <span class="cc-name">{{ c.n }}</span>
+            <span class="cc-dial">+{{ c.d }}</span>
+          </div>
+          <div v-if="!filtered.length" class="cc-empty">No match — try another spelling or code.</div>
+        </div>
+      </div>
+    </div>
+  `,
+};
+
+const app = Vue.createApp({
   data() {
     return {
       booting: true,
@@ -37,10 +132,9 @@ Vue.createApp({
       authView: "signin", authEmail: "", authPassword: "", authPassword2: "",
       sending: false, authMsg: "", authMsgType: "warn", recoveryMode: false,
       signup: { full_name: "", agree: false },
+      signupPhone: "",
       showPw: false,
-      // phone country picker
       dialCountries: window.EASYY_DIAL_COUNTRIES || [],
-      dialIso: "AE", phoneLocal: "", countryQuery: "", countryOpen: false,
       // profile
       profile: { id: null, telegram_link_code: null, telegram_linked_at: null, telegram_chat_id: null,
                  name: "My job search", full_name: "", phone: "", country_indeed: "united arab emirates",
@@ -57,17 +151,6 @@ Vue.createApp({
   computed: {
     userEmail() { return this.session?.user?.email || ""; },
     telegramLinked() { return !!this.profile.telegram_linked_at; },
-    selectedDial() {
-      const c = this.dialCountries.find((x) => x.i === this.dialIso);
-      return c ? c.d : "";
-    },
-    filteredCountries() {
-      const q = (this.countryQuery || "").trim().toLowerCase().replace(/^\+/, "");
-      if (!q) return this.dialCountries;
-      return this.dialCountries.filter(
-        (c) => c.n.toLowerCase().includes(q) || c.d.includes(q) || c.i.toLowerCase() === q
-      );
-    },
   },
 
   async mounted() {
@@ -122,30 +205,6 @@ Vue.createApp({
       this.authView = view;
       this.authMsg = "";
       this.authPassword = ""; this.authPassword2 = "";
-      this.countryOpen = false;
-    },
-
-    // ---- phone country picker ----
-    flagOf(iso) {
-      if (!iso || iso.length !== 2) return "🏳️";
-      const base = 0x1f1e6; // regional indicator "A"
-      const cc = iso.toUpperCase();
-      return String.fromCodePoint(base + (cc.charCodeAt(0) - 65), base + (cc.charCodeAt(1) - 65));
-    },
-    countryName(iso) {
-      const c = this.dialCountries.find((x) => x.i === iso);
-      return c ? c.n : "";
-    },
-    selectCountry(iso) {
-      this.dialIso = iso;
-      this.countryOpen = false;
-      this.countryQuery = "";
-    },
-    toggleCountry() {
-      this.countryOpen = !this.countryOpen;
-      if (this.countryOpen) {
-        this.$nextTick(() => { if (this.$refs.ccSearch) this.$refs.ccSearch.focus(); });
-      }
     },
 
     authRedirect() { return location.origin + location.pathname; },
@@ -173,21 +232,19 @@ Vue.createApp({
 
     async signUp() {
       const s = this.signup;
-      const digits = (this.phoneLocal || "").replace(/\D/g, "");
+      const phone = this.signupPhone || "";
       if (!s.full_name) return this.authErr("Please enter your full name.");
-      if (digits.length < 5) return this.authErr("Please enter a valid mobile number.");
+      if (phone.replace(/\D/g, "").length < 7) return this.authErr("Please enter a valid mobile number.");
       if (!this.authEmail) return this.authErr("Please enter your email.");
       if (!this.authPassword || this.authPassword.length < 8) return this.authErr("Password must be at least 8 characters.");
       if (this.authPassword !== this.authPassword2) return this.authErr("Those passwords don't match.");
       if (!s.agree) return this.authErr("Please agree to the Terms and Privacy Policy to continue.");
-      const phone = "+" + this.selectedDial + digits;
-      const country = this.countryName(this.dialIso);
       this.sending = true; this.authMsg = "";
       const { data, error } = await sb.auth.signUp({
         email: this.authEmail, password: this.authPassword,
         options: {
           emailRedirectTo: this.authRedirect(),
-          data: { full_name: s.full_name, phone, country },
+          data: { full_name: s.full_name, phone },
         },
       });
       this.sending = false;
@@ -266,7 +323,7 @@ Vue.createApp({
             name: "My job search",
             full_name: md.full_name || null,
             phone: md.phone || null,
-            country_indeed: md.country || "united arab emirates",
+            country_indeed: "united arab emirates",
             email_to: [this.userEmail], email_enabled: true,
           })
           .select("*, searches(*)").single();
@@ -406,4 +463,6 @@ Vue.createApp({
       this.pollTimer = null; this.polling = false;
     },
   },
-}).mount("#app");
+});
+app.component("intl-phone", IntlPhone);
+app.mount("#app");

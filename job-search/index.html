@@ -166,28 +166,7 @@
           <input type="text" v-model.trim="signup.full_name" placeholder="e.g. Pramesh Anuragi" autocomplete="name" />
 
           <label>Mobile number</label>
-          <div class="phone">
-            <div class="phone-cc" role="button" tabindex="0" @click="toggleCountry" @keyup.enter="toggleCountry">
-              <span class="flag">{{ flagOf(dialIso) }}</span>
-              <span class="dial">+{{ selectedDial }}</span>
-              <span class="caret">▾</span>
-            </div>
-            <input type="tel" class="phone-num" v-model.trim="phoneLocal" placeholder="50 123 4567" autocomplete="tel-national" @keyup.enter="signUp" />
-            <div v-if="countryOpen" class="cc-backdrop" @click="countryOpen = false"></div>
-            <div v-if="countryOpen" class="cc-menu">
-              <div class="cc-search-wrap">
-                <input type="text" class="cc-search" v-model="countryQuery" ref="ccSearch" placeholder="Search country or code…" @click.stop />
-              </div>
-              <div class="cc-list">
-                <div v-for="c in filteredCountries" :key="c.i" class="cc-item" :class="{ sel: c.i === dialIso }" @click="selectCountry(c.i)">
-                  <span class="flag">{{ flagOf(c.i) }}</span>
-                  <span class="cc-name">{{ c.n }}</span>
-                  <span class="cc-dial">+{{ c.d }}</span>
-                </div>
-                <div v-if="!filteredCountries.length" class="cc-empty">No match — try another spelling or code.</div>
-              </div>
-            </div>
-          </div>
+          <intl-phone v-model="signupPhone" :countries="dialCountries"></intl-phone>
 
           <label>Email</label>
           <input type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" />
@@ -286,7 +265,7 @@
           </div>
           <div>
             <label>Mobile number</label>
-            <input type="tel" v-model.trim="profile.phone" placeholder="+971 50 123 4567" />
+            <intl-phone v-model="profile.phone" :countries="dialCountries"></intl-phone>
           </div>
         </div>
         <div class="row">
@@ -297,7 +276,7 @@
           <div>
             <label>Indeed country</label>
             <select v-model="profile.country_indeed">
-              <option v-for="c in countries" :key="c" :value="c">{{ c }}</option>
+              <option v-for="c in countries" :key="c.v" :value="c.v">{{ c.l }}</option>
             </select>
           </div>
         </div>
