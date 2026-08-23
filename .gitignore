@@ -1,0 +1,6 @@
+# macOS
+.DS_Store
+
+# Accidentally-captured system paths — never commit these
+job-search/usr/
+job-search/home
