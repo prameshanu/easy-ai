@@ -13,6 +13,10 @@ window.EASYY_CONFIG = {
   FEATURES: {
     // Per-search "Paused" switch; writes searches.is_active.
     // true only after (a) the Phase 2a runbook added the column AND (b) Phase 2b made the runner skip inactive searches.
-    searchPause: false,
+    searchPause: true,
+    // Settings → "Delete my account…" calls the `delete-account` Edge Function.
+    // true only after that function is deployed to the Supabase project (see the
+    // delete-account runbook in easyy-job-alerts / docs).
+    deleteAccount: false,
   },
 };

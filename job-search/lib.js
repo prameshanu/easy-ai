@@ -111,7 +111,7 @@
     return "";
   }
 
-  // s = { loading, savedSearchCount, isActive, telegramLinked, emailEnabled, lastRunAt: Date|null }
+  // s = { loading, savedSearchCount, isActive, telegramLinked, emailEnabled, lastRunAt: Date|null, activeSearchCount: number|null }
   // Priority order is the spec's table (§9.1). "no-channel" mirrors the runner's
   // own skip rule: no Telegram chat AND no email → the profile is never run.
   function statusFor(s) {
@@ -122,12 +122,18 @@
     if (!s.isActive) {
       return { key: "paused", title: "Your alerts are paused", line: "Turn them back on when you're ready — your searches are saved." };
     }
+    const active = s.activeSearchCount == null ? s.savedSearchCount : s.activeSearchCount;
+    if (active === 0) {
+      return { key: "paused", title: "Your alerts are paused", line: "All your searches are paused — turn one back on to resume." };
+    }
     if (!s.telegramLinked && !s.emailEnabled) {
       return { key: "no-channel", title: "Not running yet", line: "Connect Telegram or turn on email digests so alerts have somewhere to go." };
     }
     const n = s.savedSearchCount;
+    const paused = n - active;
     let line = n + " " + (n === 1 ? "search" : "searches") + " · checked every hour · sent to " + channelsText(s.telegramLinked, s.emailEnabled);
     if (s.lastRunAt instanceof Date && !isNaN(s.lastRunAt.getTime())) line += " · last check " + formatTime(s.lastRunAt);
+    if (paused > 0) line += " · " + paused + " paused";
     return { key: "on", title: "Your alerts are on", line };
   }
 
@@ -231,31 +237,55 @@
     return { at, time: formatTime(at), status, note };
   }
 
-  // jobs = the RPC's `jobs` array. One event = every job sharing a notified_at
-  // (one deliver() = one Telegram message + one email with a single timestamp).
-  // Returns { pending, days:[{key,label,events:[{key,at,time,jobs,searches}]}], total, searches }
+  // jobs = the RPC's `jobs` array; opts.alerts = the RPC's `alerts` array (Phase 2b) or undefined.
+  // With alerts: one event per alert row (hourly or daily digest), jobs attached by alert_id
+  // (hourly) or job_ids (daily re-lists). Without: one event per distinct notified_at (Phase 2a).
+  // Returns { pending, days:[{key,label,events:[{key,at,time,kind,channels,jobs,jobCount,searches}]}], total, searches }
   function groupHistory(jobs, opts) {
     opts = opts || {};
     const now = opts.now || new Date();
     const filter = opts.filterSearch || "";
     const all = jobs || [];
     const list = all.filter((j) => !filter || j.search === filter);
+    const byId = new Map(all.map((j) => [j.id, j]));
 
-    const byEvent = new Map();
-    const pendingJobs = [];
-    for (const j of list) {
-      if (!j.notified_at) { pendingJobs.push(j); continue; }
-      if (!byEvent.has(j.notified_at)) byEvent.set(j.notified_at, []);
-      byEvent.get(j.notified_at).push(j);
-    }
-
+    const pendingJobs = list.filter((j) => !j.notified_at);
     const events = [];
-    byEvent.forEach((evJobs, key) => {
-      const at = parseIsoZ(key);
-      if (!at) return;
-      evJobs.sort((a, b) => String(b.matched_at || "").localeCompare(String(a.matched_at || "")));
-      events.push({ key, at, time: formatTime(at), jobs: evJobs, searches: uniq(evJobs.map((j) => j.search)) });
-    });
+
+    if (opts.alerts && opts.alerts.length) {
+      const byAlert = new Map();
+      for (const j of list) {
+        if (j.alert_id == null) continue;
+        if (!byAlert.has(j.alert_id)) byAlert.set(j.alert_id, []);
+        byAlert.get(j.alert_id).push(j);
+      }
+      for (const a of opts.alerts) {
+        const at = parseIsoZ(a.sent_at);
+        if (!at) continue;
+        let evJobs = byAlert.get(a.id) || [];
+        if (!evJobs.length && a.job_ids) evJobs = a.job_ids.map((id) => byId.get(id)).filter((j) => j && (!filter || j.search === filter));
+        if (filter && !evJobs.length) continue;
+        evJobs.sort((x, y) => String(y.matched_at || "").localeCompare(String(x.matched_at || "")));
+        events.push({
+          key: "a" + a.id, at, time: formatTime(at), kind: a.kind === "daily" ? "daily" : "hourly",
+          channels: a.channels && a.channels.length ? a.channels.slice() : null,
+          jobs: evJobs, jobCount: evJobs.length || a.job_count || 0, searches: uniq(evJobs.map((j) => j.search)),
+        });
+      }
+    } else {
+      const byEvent = new Map();
+      for (const j of list) {
+        if (!j.notified_at) continue;
+        if (!byEvent.has(j.notified_at)) byEvent.set(j.notified_at, []);
+        byEvent.get(j.notified_at).push(j);
+      }
+      byEvent.forEach((evJobs, key) => {
+        const at = parseIsoZ(key);
+        if (!at) return;
+        evJobs.sort((a, b) => String(b.matched_at || "").localeCompare(String(a.matched_at || "")));
+        events.push({ key, at, time: formatTime(at), kind: "hourly", channels: null, jobs: evJobs, jobCount: evJobs.length, searches: uniq(evJobs.map((j) => j.search)) });
+      });
+    }
     events.sort((a, b) => b.at - a.at);
 
     const days = [];
@@ -273,6 +303,13 @@
     }
 
     return { pending, days, total: list.length, searches: uniq(all.map((j) => j.search)).sort() };
+  }
+
+  const CHANNEL_LABELS = { telegram: "Telegram", email: "email" };
+  // [{channel,status}] → [{label,status}] for the History event row; null when unknown.
+  function channelParts(channels) {
+    if (!channels || !channels.length) return null;
+    return channels.map((c) => ({ label: CHANNEL_LABELS[c.channel] || c.channel, status: c.status }));
   }
 
   // ------------------------------------------------------------ auth errors
@@ -298,12 +335,27 @@
     return error.message || "Something went wrong. Please try again.";
   }
 
+  // ---------------------------------------------------------- delete account
+  // Failures from `sb.functions.invoke('delete-account')` → plain English.
+  // `error` is a FunctionsFetchError / FunctionsRelayError / FunctionsHttpError
+  // (the latter carries the Response as `context`); `body` is the function's
+  // parsed JSON ({ error }) when the caller managed to read it, else null.
+  function deleteAccountError(error, body) {
+    const support = " Email support@easyy-ai.com and we'll do it for you.";
+    if (!error) return "Couldn't delete your account." + support;
+    if (error.name === "FunctionsFetchError") return "Couldn't reach the server — check your connection and try again.";
+    const status = error.context && error.context.status;
+    if (status === 401) return "Your session has expired — sign out, sign in again, then retry.";
+    const reason = (body && body.error) || error.message || "";
+    return "Couldn't delete your account" + (reason ? " — " + reason : "") + "." + support;
+  }
+
   return {
     ROUTES, parseRoute, routeHash, parseHashError,
     parseIsoZ, formatTime, dayLabel, dayKey, formatSalary, initials, maskPhone, cleanList, parseList, uniq,
     channelsText, statusFor, shortStatus,
     validate, buildPayload,
-    isRpcMissing, lastRunInfo, groupHistory,
-    friendlyAuthError,
+    isRpcMissing, lastRunInfo, groupHistory, channelParts,
+    friendlyAuthError, deleteAccountError,
   };
 });

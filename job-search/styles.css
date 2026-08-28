@@ -161,6 +161,9 @@ textarea { min-height: 120px; resize: vertical; }
 .tag .x { border: 0; background: transparent; color: inherit; opacity: .7; cursor: pointer; padding: 0 2px; font-size: 14px; line-height: 1; }
 .tags input[type=text] { flex: 1 1 120px; min-width: 80px; width: auto; border: 0; background: transparent; padding: 4px 2px; font-size: 14px; }
 .tags input[type=text]:focus { outline: none; }
+.chan { display: inline-block; margin-right: 8px; font-size: 13px; color: var(--mut); }
+.chan.sent { color: var(--ok); }
+.chan.failed { color: var(--warn); font-weight: 600; }
 
 /* ---------- home ---------- */
 .status { display: flex; align-items: center; gap: 16px; padding: 18px 20px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); box-shadow: var(--shadow); }

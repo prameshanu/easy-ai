@@ -387,14 +387,18 @@
           <div class="event" v-for="ev in day.events" :key="ev.key">
             <div class="ev-row">
               <span class="tm">{{ ev.time }}</span>
-              <span class="ic" aria-hidden="true">{{ ev.jobs.length }}</span>
+              <span class="ic" aria-hidden="true">{{ ev.jobCount }}</span>
               <div class="t">
-                <b>{{ ev.jobs.length }} new {{ ev.jobs.length === 1 ? 'job' : 'jobs' }}</b>
-                <span>sent to {{ channels }}<span class="tag" v-for="s in ev.searches" :key="s">{{ s }}</span></span>
+                <b>{{ eventTitle(ev) }}</b>
+                <span>
+                  <template v-if="chanParts(ev)"><span v-for="c in chanParts(ev)" :key="c.label" class="chan" :class="c.status">{{ c.label }} {{ c.status === 'sent' ? '✓' : 'failed' }}</span></template>
+                  <template v-else>sent to {{ channels }}</template>
+                  <span class="tag" v-for="s in ev.searches" :key="s">{{ s }}</span>
+                </span>
               </div>
-              <button type="button" class="btn ghost tiny" :aria-expanded="String(isOpen(ev.key))" @click="toggle(ev.key)">{{ isOpen(ev.key) ? 'Hide ▴' : 'Show ▾' }}</button>
+              <button type="button" class="btn ghost tiny" v-if="ev.jobs.length" :aria-expanded="String(isOpen(ev.key))" @click="toggle(ev.key)">{{ isOpen(ev.key) ? 'Hide ▴' : 'Show ▾' }}</button>
             </div>
-            <div v-if="isOpen(ev.key)" class="jobs">
+            <div v-if="isOpen(ev.key) && ev.jobs.length" class="jobs">
               <div class="job" v-for="j in ev.jobs" :key="j.id">
                 <div class="jt"><a :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
                 <span class="src">{{ siteLabel(j.site) }}</span>
@@ -404,7 +408,7 @@
             </div>
           </div>
         </template>
-        <p class="foot">Showing the last 14 days.</p>
+        <p class="foot">Showing the last 90 days.</p>
       </section>
     </div>
   </template>
@@ -494,8 +498,9 @@
       <section class="card danger-zone">
         <h2>Delete account</h2>
         <p class="hint" style="margin-top:6px">Removes your searches, alert history and account. Telegram stops immediately. This can't be undone.</p>
-        <button type="button" class="btn danger" disabled>Delete my account…</button>
-        <p class="hint" style="margin-top:8px">Account deletion is being connected.</p>
+        <div v-if="store.deleteError" class="msg warn" role="alert" style="margin-bottom:10px">{{ store.deleteError }}</div>
+        <button type="button" class="btn danger" :disabled="!features.deleteAccount || store.deleting" @click="actions.deleteAccount()">{{ store.deleting ? 'Deleting…' : 'Delete my account…' }}</button>
+        <p class="hint" style="margin-top:8px" v-if="!features.deleteAccount">Account deletion is being connected.</p>
       </section>
     </div>
   </template>

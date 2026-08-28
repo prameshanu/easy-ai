@@ -2,7 +2,7 @@
    Pure functions live in lib.js (window.EasyyLib); views in views.js (window.EasyyViews).
    No build step: Vue 3 + supabase-js from CDN (pinned in index.html). */
 const CFG = window.EASYY_CONFIG;
-const FEATURES = Object.assign({ searchPause: false }, CFG.FEATURES || {});
+const FEATURES = Object.assign({ searchPause: false, deleteAccount: false }, CFG.FEATURES || {});
 const L = window.EasyyLib;
 const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
 
@@ -156,6 +156,8 @@ const store = Vue.reactive({
   history: emptyHistory(),
   checklistDismissed: false,
   dialog: null,
+  deleting: false, deleteError: "",
+  signedOutNotice: "",   // shown on the sign-in panel after a sign-out we caused (e.g. account deleted)
   get userEmail() { return (this.session && this.session.user && this.session.user.email) || ""; },
   get telegramLinked() { return !!this.profile.telegram_linked_at; },
   get payloadJson() { return JSON.stringify(L.buildPayload(payloadState(this), FEATURES)); },
@@ -166,6 +168,7 @@ const store = Vue.reactive({
       loading: !this.profile.id, savedSearchCount: this.dbSearchIds.length, isActive: this.profile.is_active,
       telegramLinked: this.telegramLinked, emailEnabled: this.profile.email_enabled,
       lastRunAt: this.lastRun ? this.lastRun.at : null,
+      activeSearchCount: ((this.lastRow && this.lastRow.searches) || []).filter((x) => x.is_active !== false).length,
     });
   },
   get showChecklist() {
@@ -188,6 +191,7 @@ const actions = {
     store.salaryInput = ""; store.excludeList = []; store.searches = []; store.dbSearchIds = []; store.lastRow = null;
     store.snapshot = ""; store.saveState = "idle"; store.saveError = ""; store.fieldErrors = noFieldErrors(); store.loadError = "";
     store.history = emptyHistory(); store.checklistDismissed = false; store.dialog = null;
+    store.deleting = false; store.deleteError = "";
     loadPromise = null;
   },
 
@@ -351,6 +355,41 @@ const actions = {
     history.replaceState(null, "", location.pathname + location.search + "#/");
   },
 
+  // ---- delete account (Edge Function `delete-account`, gated by FEATURES.deleteAccount) ----
+  deleteAccount() {
+    if (!FEATURES.deleteAccount || store.deleting) return;
+    store.deleteError = "";
+    store.dialog = {
+      title: "Delete your account?",
+      body: "Your searches, alert history and account will be removed and Telegram alerts will stop. This can't be undone.",
+      confirmLabel: "Delete my account", cancelLabel: "Keep my account", danger: true,
+      onConfirm: () => actions.runDeleteAccount(),
+    };
+  },
+  async runDeleteAccount() {
+    store.deleting = true;
+    try {
+      const { error } = await sb.functions.invoke("delete-account", { method: "POST" });
+      if (error) {
+        let body = null;
+        try { body = error.context && typeof error.context.json === "function" ? await error.context.json() : null; } catch (e) { body = null; }
+        store.deleteError = L.deleteAccountError(error, body);
+        return;
+      }
+      // The user no longer exists server-side; clear the local session. supabase-js
+      // drops the session even when /logout answers 401/403/404 for a vanished user.
+      actions.stopPolling();
+      store.signedOutNotice = "Your account has been deleted.";
+      await sb.auth.signOut();
+      store.session = null;
+      actions.resetProfile();
+      store.route = "home";
+      history.replaceState(null, "", location.pathname + location.search + "#/");
+    } finally {
+      store.deleting = false;
+    }
+  },
+
   // ---- dialog ----
   confirmLeave(onConfirm) {
     store.dialog = {
@@ -430,7 +469,11 @@ const app = Vue.createApp({
   watch: {
     "store.session"(s) {
       if (!s) {
-        this.authView = "signin"; this.authEmail = ""; this.authPassword = ""; this.authMsg = ""; this.showPw = false; this.menuOpen = false;
+        this.authView = "signin"; this.authEmail = ""; this.authPassword = ""; this.showPw = false; this.menuOpen = false;
+        // A sign-out we caused (account deleted) leaves a one-shot notice for the sign-in panel.
+        this.authMsg = store.signedOutNotice || "";
+        this.authMsgType = store.signedOutNotice ? "ok" : "warn";
+        store.signedOutNotice = "";
       }
     },
   },

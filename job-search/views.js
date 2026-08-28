@@ -106,7 +106,7 @@
       const nav = inject("nav");
       const filter = ref("");
       const h = computed(() => store.history);
-      const grouped = computed(() => L.groupHistory((store.history.data && store.history.data.jobs) || [], { filterSearch: filter.value }));
+      const grouped = computed(() => L.groupHistory((store.history.data && store.history.data.jobs) || [], { filterSearch: filter.value, alerts: (store.history.data && store.history.data.alerts) || null }));
       const lastRun = computed(() => store.lastRun);
       const channels = computed(() => L.channelsText(store.telegramLinked, store.profile.email_enabled) || "you");
       const opened = ref({});
@@ -125,6 +125,10 @@
         salary: (j) => L.formatSalary(j.salary_min, j.salary_max, j.currency),
         siteLabel: (s) => SITES[s] || (s || ""),
         meta: (j) => [j.company, j.location, L.formatSalary(j.salary_min, j.salary_max, j.currency)].filter(Boolean).join(" · "),
+        chanParts: (ev) => L.channelParts(ev.channels),
+        eventTitle: (ev) => ev.kind === "daily"
+          ? "Daily digest · " + ev.jobCount + " " + (ev.jobCount === 1 ? "job" : "jobs")
+          : ev.jobCount + " new " + (ev.jobCount === 1 ? "job" : "jobs"),
       };
     },
   };
@@ -152,7 +156,7 @@
         pw.value = ""; pwOpen.value = false;
       }
       function cancelPw() { pwOpen.value = false; pw.value = ""; pwMsg.value = ""; }
-      return { store, actions, pwOpen, pw, showPw, pwBusy, pwMsg, pwMsgType, submitPw, cancelPw, dialCountries: window.EASYY_DIAL_COUNTRIES || [] };
+      return { store, actions, features: store.features, pwOpen, pw, showPw, pwBusy, pwMsg, pwMsgType, submitPw, cancelPw, dialCountries: window.EASYY_DIAL_COUNTRIES || [] };
     },
   };
 

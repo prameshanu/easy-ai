@@ -257,3 +257,104 @@ test("friendlyAuthError: existing mappings still hold", () => {
   assert.equal(L.friendlyAuthError({ message: "Something odd" }), "Something odd");
   assert.equal(L.friendlyAuthError(null), "Something went wrong. Please try again.");
 });
+
+// ---- delete account (Edge Function call) → plain-English error ----
+test("deleteAccountError: network failure asks to check the connection", () => {
+  const msg = L.deleteAccountError({ name: "FunctionsFetchError", message: "Failed to send a request to the Edge Function" }, null);
+  assert.match(msg, /connection/i);
+  assert.doesNotMatch(msg, /Failed to send/);
+});
+test("deleteAccountError: 401 means the session is stale", () => {
+  const msg = L.deleteAccountError({ name: "FunctionsHttpError", message: "Edge Function returned a non-2xx status code", context: { status: 401 } }, { error: "not signed in" });
+  assert.match(msg, /sign in again/i);
+});
+test("deleteAccountError: other failures carry the server's reason and the support address", () => {
+  const msg = L.deleteAccountError({ name: "FunctionsHttpError", message: "Edge Function returned a non-2xx status code", context: { status: 500 } }, { error: "could not delete the account" });
+  assert.match(msg, /could not delete the account/);
+  assert.match(msg, /support@easyy-ai\.com/);
+  // no parsed body → fall back to the error message
+  const msg2 = L.deleteAccountError({ name: "FunctionsRelayError", message: "relay down" }, null);
+  assert.match(msg2, /relay down/);
+  assert.match(msg2, /support@easyy-ai\.com/);
+});
+test("deleteAccountError: nothing → generic", () => {
+  assert.match(L.deleteAccountError(null, null), /support@easyy-ai\.com/);
+});
+
+// ---- Phase 2b groupHistory v2 & channelParts ----
+const rpcJobs = [
+  { id: "li-1", title: "DS 1", search: "DS", matched_at: "2026-08-28T17:59:53+00:00", notified_at: "2026-08-28T17:59:54+00:00", alert_id: 7 },
+  { id: "li-2", title: "DS 2", search: "DS", matched_at: "2026-08-28T17:59:53+00:00", notified_at: "2026-08-28T17:59:54+00:00", alert_id: 7 },
+  { id: "li-3", title: "ML 1", search: "ML", matched_at: "2026-08-28T19:00:20+00:00", notified_at: null, alert_id: null },
+];
+const rpcAlerts = [
+  { id: 8, kind: "daily", sent_at: "2026-08-29T04:37:00+00:00", job_count: 2, channels: [{ channel: "email", status: "sent", error: null }], job_ids: ["li-1", "li-2"] },
+  { id: 7, kind: "hourly", sent_at: "2026-08-28T17:59:54+00:00", job_count: 2,
+    channels: [{ channel: "email", status: "failed", error: "brevo 401" }, { channel: "telegram", status: "sent", error: null }], job_ids: ["li-1", "li-2"] },
+  { id: 3, kind: "hourly", sent_at: "2026-08-20T10:00:05+00:00", job_count: 1, channels: [], job_ids: ["gone"] },   // backfilled, job pruned
+];
+
+test("groupHistory v2: events come from alerts, newest first, with channels and kind", () => {
+  const g = L.groupHistory(rpcJobs, { alerts: rpcAlerts, now: new Date("2026-08-29T10:00:00Z") });
+  const events = g.days.flatMap((d) => d.events);
+  assert.deepEqual(events.map((e) => e.key), ["a8", "a7", "a3"]);
+  assert.equal(events[0].kind, "daily");
+  assert.deepEqual(events[0].jobs.map((j) => j.id), ["li-1", "li-2"]);          // daily re-lists via job_ids
+  assert.equal(events[1].kind, "hourly");
+  assert.deepEqual(events[1].channels.map((c) => c.channel + ":" + c.status), ["email:failed", "telegram:sent"]);
+  assert.deepEqual(events[1].searches, ["DS"]);
+  assert.equal(events[2].channels, null);                                          // backfilled → unknown
+  assert.equal(events[2].jobs.length, 0);
+  assert.equal(events[2].jobCount, 1);                                             // header still says 1 job
+  assert.equal(g.pending.jobs[0].id, "li-3");
+});
+
+test("groupHistory v2: search filter drops events with no matching jobs", () => {
+  const g = L.groupHistory(rpcJobs, { alerts: rpcAlerts, filterSearch: "ML" });
+  assert.equal(g.days.length, 0);
+  assert.equal(g.pending.jobs.length, 1);
+  assert.deepEqual(g.searches, ["DS", "ML"]);
+});
+
+test("groupHistory v2: without alerts falls back to notified_at grouping", () => {
+  const g = L.groupHistory(rpcJobs, {});
+  const ev = g.days[0].events[0];
+  assert.equal(ev.key, "2026-08-28T17:59:54+00:00");
+  assert.equal(ev.kind, "hourly");
+  assert.equal(ev.channels, null);
+  assert.equal(ev.jobCount, 2);
+});
+
+test("channelParts: labels and order as given; null stays null", () => {
+  assert.deepEqual(L.channelParts([{ channel: "telegram", status: "sent" }, { channel: "email", status: "failed" }]),
+    [{ label: "Telegram", status: "sent" }, { label: "email", status: "failed" }]);
+  assert.equal(L.channelParts(null), null);
+  assert.equal(L.channelParts([]), null);
+});
+
+test("statusFor: all searches paused reads as paused; some paused is counted", () => {
+  const base = { loading: false, savedSearchCount: 2, isActive: true, telegramLinked: true, emailEnabled: true, lastRunAt: null };
+  const allPaused = L.statusFor(Object.assign({}, base, { activeSearchCount: 0 }));
+  assert.equal(allPaused.key, "paused");
+  assert.match(allPaused.line, /All your searches are paused/);
+  const some = L.statusFor(Object.assign({}, base, { activeSearchCount: 1 }));
+  assert.equal(some.key, "on");
+  assert.match(some.line, /2 searches · checked every hour · sent to Telegram and email · 1 paused$/);
+  const none = L.statusFor(base);                                   // activeSearchCount omitted → all active
+  assert.doesNotMatch(none.line, /paused/);
+});
+
+test("groupHistory v2: alert event survives filter with jobs narrowed to the search", () => {
+  const jobs = [
+    { id: "j1", title: "DS", search: "DS", matched_at: "2026-08-28T10:00:00+00:00", notified_at: "2026-08-28T12:00:00+00:00", alert_id: 5 },
+    { id: "j2", title: "ML", search: "ML", matched_at: "2026-08-28T10:00:00+00:00", notified_at: "2026-08-28T12:00:00+00:00", alert_id: 5 },
+  ];
+  const alerts = [{ id: 5, kind: "daily", sent_at: "2026-08-28T12:00:00+00:00", job_count: 2, channels: [{channel:"email",status:"sent",error:null}], job_ids: ["j1", "j2"] }];
+  const all = L.groupHistory(jobs, { alerts });
+  assert.equal(all.days[0].events[0].jobs.length, 2);
+  const filtered = L.groupHistory(jobs, { alerts, filterSearch: "DS" });
+  const ev = filtered.days[0].events[0];
+  assert.equal(ev.key, "a5");
+  assert.deepEqual(ev.jobs.map((j) => j.id), ["j1"]);   // narrowed to the DS job, event kept
+  assert.deepEqual(ev.searches, ["DS"]);
+});
