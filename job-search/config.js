@@ -17,6 +17,6 @@ window.EASYY_CONFIG = {
     // Settings → "Delete my account…" calls the `delete-account` Edge Function.
     // true only after that function is deployed to the Supabase project (see the
     // delete-account runbook in easyy-job-alerts / docs).
-    deleteAccount: false,
+    deleteAccount: true,
   },
 };
