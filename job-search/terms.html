@@ -1,90 +1,109 @@
 <!DOCTYPE html>
-<!-- STARTER DRAFT — reviewed by a lawyer before relying on it for a paid product. -->
+<!-- STARTER DRAFT — to be reviewed by a lawyer before Easyy charges for anything. -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Terms of Service — Easyy AI</title>
-  <meta name="description" content="The terms that govern your use of Easyy AI Job Alerts." />
+  <title>Terms of Service — Easyy</title>
+  <meta name="description" content="The terms that govern your use of Easyy Job Alerts and the Easyy Resume builder." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
   <style>
     :root {
-      --bg: #f6f7fb; --card: #ffffff; --text: #14161c; --muted: #5b6472;
-      --border: #e4e7ee; --accent: #4f46e5;
+      --bg: #F6F5F1; --card: #FFFFFF; --ink: #1B1D22; --mut: #666D78; --line: #E1E0DA;
+      --acc: #0E7C6B; --acc-soft: #E3F1EE;
     }
     @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0d0f14; --card: #161922; --text: #eef0f5; --muted: #9aa3b2;
-        --border: #262b36; --accent: #7c74ff;
+      :root:not([data-theme="light"]) {
+        --bg: #15171B; --card: #1E2127; --ink: #ECEDEF; --mut: #9AA1AB; --line: #2C3038;
+        --acc: #4FC3AE; --acc-soft: #1B2F2B;
       }
+    }
+    :root[data-theme="dark"] {
+      --bg: #15171B; --card: #1E2127; --ink: #ECEDEF; --mut: #9AA1AB; --line: #2C3038;
+      --acc: #4FC3AE; --acc-soft: #1B2F2B;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0; background: var(--bg); color: var(--ink);
+      font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.65; -webkit-font-smoothing: antialiased;
     }
-    a { color: var(--accent); }
+    a { color: var(--acc); }
     .wrap { max-width: 760px; margin: 0 auto; padding: 32px 22px 80px; }
     .back { display: inline-block; font-size: 13.5px; font-weight: 600; text-decoration: none; margin-bottom: 22px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
-    .brand .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
-    h1 { font-size: 30px; letter-spacing: -.02em; margin: 20px 0 6px; }
-    .updated { color: var(--muted); font-size: 13.5px; margin: 0 0 8px; }
-    .intro { color: var(--muted); font-size: 15px; border-bottom: 1px solid var(--border); padding-bottom: 22px; margin-bottom: 8px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
+    .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--acc); }
+    h1 { font-size: 30px; letter-spacing: -.02em; margin: 20px 0 6px; text-wrap: balance; }
+    .updated { color: var(--mut); font-size: 13.5px; margin: 0 0 8px; }
+    .intro { color: var(--mut); font-size: 15px; border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 8px; }
     h2 { font-size: 18px; letter-spacing: -.01em; margin: 30px 0 8px; }
-    p, li { font-size: 15px; color: var(--text); }
+    p, li { font-size: 15px; color: var(--ink); }
     ul { padding-left: 22px; margin: 8px 0; }
     li { margin-bottom: 6px; }
-    .muted { color: var(--muted); }
-    footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+    .muted { color: var(--mut); }
+    footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--mut); font-size: 14px; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <a class="back" href="index.html">← Back to Easyy AI</a>
-    <div class="brand"><span class="dot"></span> Easyy AI</div>
+    <a class="back" href="index.html">← Back to Easyy</a>
+    <div class="brand"><span class="dot"></span> easyy</div>
     <h1>Terms of Service</h1>
-    <p class="updated">Last updated: 23 August 2026</p>
-    <p class="intro">These terms are an agreement between you and Easyy AI ("Easyy", "we", "us") and govern your use of the Easyy AI Job Alerts service (the "Service"). By creating an account or using the Service, you agree to these terms. If you don't agree, please don't use the Service.</p>
+    <p class="updated">Last updated: 29 August 2026</p>
+    <p class="intro">These terms are an agreement between you and Easyy ("Easyy", "we", "us") and govern your use of Easyy Job Alerts and the Easyy Resume builder (together, the "Service"). By creating an account or using the Service you agree to these terms and to our <a href="privacy.html">Privacy Policy</a>. If you don't agree, please don't use the Service.</p>
 
     <h2>1. What Easyy does</h2>
-    <p>Easyy runs the job searches you configure against third-party job sources such as LinkedIn, Indeed, and Google Jobs, and sends you newly-posted matches by email and, if you connect it, Telegram. Easyy is a notification tool. We are not an employer, a recruiter, or a party to any job listing, and we don't submit applications on your behalf.</p>
+    <p>Easyy runs the job searches you configure against third-party job sources such as LinkedIn, Indeed and Google Jobs, and sends you newly posted matches by email and, if you connect it, Telegram. The Resume builder, where available, produces a version of your resume tailored to a job description you choose. Easyy is a tool that finds and drafts. We are not an employer, a recruiter, a careers adviser or a party to any job listing, and we don't submit applications on your behalf.</p>
 
     <h2>2. Eligibility and your account</h2>
     <ul>
       <li>You must be at least 18 years old to use the Service.</li>
-      <li>You agree to provide accurate information (name, email, mobile number, and search preferences) and to keep it up to date.</li>
-      <li>You are responsible for keeping your password confidential and for all activity under your account. Tell us promptly if you suspect unauthorized use.</li>
+      <li>One account per person. You agree to provide accurate information — your name, email address and mobile number — and to keep it up to date. Our <a href="privacy.html#phone">Privacy Policy</a> explains why the mobile number is required.</li>
+      <li>You are responsible for keeping your password confidential and for all activity under your account. Tell us promptly at <a href="mailto:support@easyy-ai.com">support@easyy-ai.com</a> if you suspect unauthorised use.</li>
+      <li>Alerts are sent to the email address and Telegram chat you connect. Keep them reachable; we are not responsible for alerts you don't receive because a channel you control is unavailable.</li>
     </ul>
 
     <h2>3. Acceptable use</h2>
     <p>You agree not to misuse the Service. In particular, you will not:</p>
     <ul>
       <li>use the Service for any unlawful purpose or to violate the terms of the job sources we query;</li>
-      <li>attempt to disrupt, overload, reverse-engineer, or gain unauthorized access to the Service or its infrastructure;</li>
-      <li>resell or redistribute alerts or data obtained through the Service without our permission.</li>
+      <li>create multiple accounts, share an account, or use the Service to search on behalf of other people or a business without our written permission;</li>
+      <li>attempt to disrupt, overload, scrape, reverse-engineer or gain unauthorised access to the Service or its infrastructure, or to other users' data;</li>
+      <li>resell or redistribute alerts, listings or data obtained through the Service;</li>
+      <li>upload resume content that is unlawful, that you don't have the right to use, or that contains another person's personal data without their permission.</li>
     </ul>
 
-    <h2>4. Third-party listings</h2>
-    <p>Job listings come from third parties we don't control. We don't guarantee that any listing is accurate, current, genuine, or still open, and we aren't responsible for the content of listings or for anything that happens between you and an employer or recruiter. Always verify a role with its original source before acting on it.</p>
+    <h2>4. Your content and the Resume builder</h2>
+    <ul>
+      <li><strong>You own your content.</strong> Your resume, the job descriptions you paste and the searches you configure remain yours. You give us a limited licence to store and process them solely to provide the Service to you, as described in the Privacy Policy. We claim no rights in the tailored resumes we produce for you — they are yours to use.</li>
+      <li><strong>AI-generated drafts can be wrong.</strong> Tailored resumes and related drafts are produced with the help of AI models. They may misstate, omit or over-emphasise details. You are responsible for reviewing every document before you use it, and for making sure it is truthful and accurate. Do not send a resume that claims experience or qualifications you don't have.</li>
+      <li><strong>No outcome is promised.</strong> We don't guarantee that a tailored resume will lead to an interview, an offer, or any particular result.</li>
+      <li>You may delete your resume content at any time; deleting it stops us using it for future drafts.</li>
+    </ul>
 
-    <h2>5. Availability and changes</h2>
-    <p>The Service is provided on an "as is" and "as available" basis. We may add, change, pause, or remove features, and searches may occasionally be delayed or miss results due to factors outside our control (for example, changes at a job source). We'll try to give reasonable notice of significant changes.</p>
+    <h2>5. Third-party listings</h2>
+    <p>Job listings come from third parties we don't control. We don't guarantee that any listing is accurate, current, genuine or still open, and we aren't responsible for the content of listings or for anything that happens between you and an employer or recruiter. Always verify a role with its original source before acting on it.</p>
 
-    <h2>6. Fees</h2>
-    <p>The Service is currently free. If we introduce paid plans, we'll make the pricing clear before you're charged, and paid features will be described at the point of purchase. Continuing to use a paid feature after a price change means you accept the new price.</p>
+    <h2>6. Availability and changes</h2>
+    <p>The Service is provided on an "as is" and "as available" basis. We may add, change, pause or remove features, and searches may occasionally be delayed or miss results because of factors outside our control (for example, changes or rate limits at a job source). We'll try to give reasonable notice of significant changes.</p>
 
-    <h2>7. Termination</h2>
-    <p>You can stop using the Service and delete your account at any time from your settings. We may suspend or terminate access if you breach these terms or use the Service in a way that could harm Easyy or others.</p>
+    <h2>7. Fees</h2>
+    <p>The Service is currently free while in beta. If we introduce paid plans, we'll make the pricing clear before you're charged, describe paid features at the point of purchase, and keep a free option for basic alerts unless we tell you otherwise in advance. Continuing to use a paid feature after a price change means you accept the new price.</p>
 
-    <h2>8. Disclaimers and limitation of liability</h2>
-    <p>To the fullest extent permitted by law, Easyy is not liable for any indirect, incidental, or consequential losses, or for lost opportunities, arising from your use of (or inability to use) the Service, including any reliance on a job listing. Nothing in these terms limits liability that cannot be limited by law.</p>
+    <h2>8. Termination</h2>
+    <p>You can stop using the Service and delete your account at any time from <strong>Profile &amp; settings</strong>, or by emailing us. We may suspend or terminate access if you breach these terms, if your account is inactive for a long period, or if your use could harm Easyy, the job sources, or others. Sections 4, 9 and 10 survive termination.</p>
 
-    <h2>9. Changes to these terms</h2>
-    <p>We may update these terms from time to time. When we do, we'll change the "last updated" date above, and significant changes will be communicated to you. Continued use after an update means you accept the revised terms.</p>
+    <h2>9. Disclaimers and limitation of liability</h2>
+    <p>To the fullest extent permitted by law, Easyy is not liable for any indirect, incidental or consequential losses, or for lost opportunities, income or employment, arising from your use of (or inability to use) the Service, including reliance on a job listing or on a document the Resume builder produced. Our total liability to you for any claim is limited to the amount you paid us in the twelve months before the claim (which, while the Service is free, is nil). Nothing in these terms limits liability that cannot be limited by law.</p>
 
     <h2>10. Governing law</h2>
-    <p>These terms are governed by the laws of the United Arab Emirates, without regard to its conflict-of-laws rules. <span class="muted">(Confirm the jurisdiction that applies to your business.)</span></p>
+    <p>These terms are governed by the laws of the United Arab Emirates, without regard to its conflict-of-laws rules. <span class="muted">(Confirm the jurisdiction and dispute-resolution forum with your lawyer.)</span></p>
+
+    <h2>11. Changes to these terms</h2>
+    <p>We may update these terms from time to time. When we do, we'll change the date above, and significant changes will be communicated to you by email or in the app before they take effect. Continued use after an update means you accept the revised terms.</p>
 
     <footer>
       Questions about these terms? Contact us at <a href="mailto:support@easyy-ai.com">support@easyy-ai.com</a>.<br />

@@ -1,103 +1,148 @@
 <!DOCTYPE html>
-<!-- STARTER DRAFT — reviewed by a lawyer before relying on it for a paid product. -->
+<!-- STARTER DRAFT — to be reviewed by a lawyer before Easyy charges for anything. -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Privacy Policy — Easyy AI</title>
-  <meta name="description" content="How Easyy AI collects, uses, and protects your data." />
+  <title>Privacy Policy — Easyy</title>
+  <meta name="description" content="What Easyy collects when you use Job Alerts and the Resume builder, why, who sees it, and how to delete it." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
   <style>
     :root {
-      --bg: #f6f7fb; --card: #ffffff; --text: #14161c; --muted: #5b6472;
-      --border: #e4e7ee; --accent: #4f46e5;
+      --bg: #F6F5F1; --card: #FFFFFF; --ink: #1B1D22; --mut: #666D78; --line: #E1E0DA;
+      --acc: #0E7C6B; --acc-soft: #E3F1EE; --warn: #B7791F; --warn-bg: #FBF3E4;
     }
     @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0d0f14; --card: #161922; --text: #eef0f5; --muted: #9aa3b2;
-        --border: #262b36; --accent: #7c74ff;
+      :root:not([data-theme="light"]) {
+        --bg: #15171B; --card: #1E2127; --ink: #ECEDEF; --mut: #9AA1AB; --line: #2C3038;
+        --acc: #4FC3AE; --acc-soft: #1B2F2B; --warn: #E2B04A; --warn-bg: #2F2712;
       }
+    }
+    :root[data-theme="dark"] {
+      --bg: #15171B; --card: #1E2127; --ink: #ECEDEF; --mut: #9AA1AB; --line: #2C3038;
+      --acc: #4FC3AE; --acc-soft: #1B2F2B; --warn: #E2B04A; --warn-bg: #2F2712;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0; background: var(--bg); color: var(--ink);
+      font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.65; -webkit-font-smoothing: antialiased;
     }
-    a { color: var(--accent); }
+    a { color: var(--acc); }
     .wrap { max-width: 760px; margin: 0 auto; padding: 32px 22px 80px; }
     .back { display: inline-block; font-size: 13.5px; font-weight: 600; text-decoration: none; margin-bottom: 22px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
-    .brand .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
-    h1 { font-size: 30px; letter-spacing: -.02em; margin: 20px 0 6px; }
-    .updated { color: var(--muted); font-size: 13.5px; margin: 0 0 8px; }
-    .intro { color: var(--muted); font-size: 15px; border-bottom: 1px solid var(--border); padding-bottom: 22px; margin-bottom: 8px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
+    .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--acc); }
+    h1 { font-size: 30px; letter-spacing: -.02em; margin: 20px 0 6px; text-wrap: balance; }
+    .updated { color: var(--mut); font-size: 13.5px; margin: 0 0 8px; }
+    .intro { color: var(--mut); font-size: 15px; border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 8px; }
     h2 { font-size: 18px; letter-spacing: -.01em; margin: 30px 0 8px; }
-    p, li { font-size: 15px; color: var(--text); }
+    h3 { font-size: 15.5px; margin: 18px 0 6px; }
+    p, li { font-size: 15px; color: var(--ink); }
     ul { padding-left: 22px; margin: 8px 0; }
     li { margin-bottom: 6px; }
     table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14.5px; }
-    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    th { color: var(--muted); font-weight: 600; }
-    .muted { color: var(--muted); }
-    footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--mut); font-weight: 600; }
+    .muted { color: var(--mut); }
+    .note { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin: 10px 0; }
+    footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--mut); font-size: 14px; }
+    @media (max-width: 600px) { table, thead, tbody, tr, th, td { display: block; } th { display: none; } td { border: 0; padding: 4px 0; } tr { border-bottom: 1px solid var(--line); padding: 8px 0; } td:first-child { font-weight: 600; } }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <a class="back" href="index.html">← Back to Easyy AI</a>
-    <div class="brand"><span class="dot"></span> Easyy AI</div>
+    <a class="back" href="index.html">← Back to Easyy</a>
+    <div class="brand"><span class="dot"></span> easyy</div>
     <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: 23 August 2026</p>
-    <p class="intro">This policy explains what personal data Easyy AI ("Easyy", "we", "us") collects when you use Easyy AI Job Alerts (the "Service"), why we collect it, and the choices you have. We collect only what we need to run your job alerts.</p>
+    <p class="updated">Last updated: 29 August 2026</p>
+    <p class="intro">This policy explains what personal data Easyy ("Easyy", "we", "us") collects when you use Easyy Job Alerts and the Easyy Resume builder (together, the "Service"), why we collect it, who else sees it, and the choices you have. We collect only what we need to find jobs for you and tell you about them.</p>
 
-    <h2>1. Data we collect</h2>
+    <h2>1. Data we collect and why</h2>
     <table>
-      <tr><th>Data</th><th>Why we collect it</th></tr>
-      <tr><td>Name</td><td>To personalize your alerts and communications.</td></tr>
-      <tr><td>Email address</td><td>To sign you in and to deliver job digests and account emails.</td></tr>
-      <tr><td>Mobile number &amp; country</td><td>To contact you about your account and, if offered, send alerts; the country sets sensible search defaults.</td></tr>
-      <tr><td>Search preferences</td><td>The job titles, locations, salary, and filters you configure — needed to find your matches.</td></tr>
-      <tr><td>Telegram chat ID</td><td>Only if you connect Telegram, so we can send alerts to your chat.</td></tr>
-      <tr><td>Basic usage data</td><td>To keep the Service secure and working.</td></tr>
+      <thead><tr><th>Data</th><th>Why we collect it</th><th>Required?</th></tr></thead>
+      <tbody>
+        <tr><td>Full name</td><td>To address you in alerts and account emails, and to put your name on tailored resumes.</td><td>Yes</td></tr>
+        <tr><td>Email address</td><td>To sign you in and to send job digests, password resets and essential account notices.</td><td>Yes</td></tr>
+        <tr><td>Mobile number</td><td>See <a href="#phone">"Why we ask for your mobile number"</a> below.</td><td>Yes</td></tr>
+        <tr><td>Password</td><td>To secure your account. It is stored only as a salted hash by our authentication provider; we never see it.</td><td>Yes</td></tr>
+        <tr><td>Search settings</td><td>The job titles, search terms, locations, sites, salary floor, excluded words and country you configure — these are the searches we run for you.</td><td>Yes (at least one search)</td></tr>
+        <tr><td>Telegram chat ID</td><td>Only if you connect Telegram, so we can send alerts to your chat. We do not receive your Telegram phone number or contacts.</td><td>Optional</td></tr>
+        <tr><td>Job matches and alert history</td><td>Which job postings matched your searches, when we sent them to you, and whether each channel (Telegram, email) succeeded — so History is accurate and we never send the same job twice.</td><td>Created by the Service</td></tr>
+        <tr><td>Resume content</td><td>See <a href="#resume">"Your resume content"</a> below. Only if you use the Resume builder.</td><td>Optional</td></tr>
+        <tr><td>Technical data</td><td>Sign-in timestamps, IP address and browser type held in our authentication provider's logs, used to keep accounts secure and to debug problems. We run no analytics or advertising trackers.</td><td>Created by the Service</td></tr>
+      </tbody>
     </table>
+
+    <h3 id="phone">Why we ask for your mobile number</h3>
+    <p>A mobile number is required to create an account. We use it for three things:</p>
+    <ul>
+      <li><strong>One person, one account.</strong> The Service is free and runs real searches against job sites every hour; requiring a number lets us keep the Service fair and stop automated sign-ups.</li>
+      <li><strong>Reaching you about your account.</strong> If your alerts stop working — for example your email bounces or Telegram disconnects — a number gives us a second way to tell you.</li>
+      <li><strong>Alerts by SMS or WhatsApp, when we offer them.</strong> We will ask before turning any new channel on; adding a number does not opt you in.</li>
+    </ul>
+    <p>We never sell your number, never share it with employers or job sites, and never use it for marketing. In the app your number is shown with the middle digits masked.</p>
+
+    <h3 id="resume">Your resume content</h3>
+    <p>If you use the Resume builder you may give us your <strong>master resume</strong> (work history, education, skills, contact details) and <strong>job descriptions</strong> you paste or pick from your alerts. We use this content for one purpose: to produce tailored resumes and related drafts (such as a referral note) <em>for you</em>, on your request.</p>
+    <ul>
+      <li>Resume content is processed by an AI model provider on our behalf. We choose providers whose commercial terms prohibit them from training their models on our customers' content. <span class="muted">(Lawyer: confirm the named provider and DPA before launch.)</span></li>
+      <li>We keep your master resume and the tailored versions so you can reuse and download them. You can delete any of them, or all of them, at any time in the app.</li>
+      <li>Tailored resumes can contain mistakes. Always review a document before you send it to an employer.</li>
+      <li>Resume content may include sensitive details you choose to write (nationality, date of birth, photo). We recommend leaving those out; we do not require or use them.</li>
+    </ul>
 
     <h2>2. How we use your data</h2>
     <ul>
-      <li>To run the job searches you set up and deliver matching results by email and Telegram.</li>
-      <li>To authenticate you and secure your account.</li>
-      <li>To respond to support requests and send essential service notices.</li>
-      <li>We do <strong>not</strong> sell your personal data, and we don't use it for advertising.</li>
+      <li>To run the job searches you set up and deliver matching results by email and, if connected, Telegram.</li>
+      <li>To keep an accurate History of what we sent you and avoid repeat alerts.</li>
+      <li>To produce tailored resumes when you ask for them.</li>
+      <li>To authenticate you, secure your account, and respond to support requests.</li>
+      <li>To send essential service notices (for example a change to these terms). We do not send marketing emails.</li>
     </ul>
+    <p>We do <strong>not</strong> sell personal data, share it with advertisers, or build profiles of you for anyone else. Where the law asks for a legal basis: running your searches, storing your history and tailoring resumes are necessary to provide the Service you asked for; security and abuse prevention are our legitimate interest; anything optional (Telegram, SMS/WhatsApp alerts) runs on your consent, which you can withdraw in the app.</p>
 
     <h2>3. Who we share it with</h2>
-    <p>We share data only with the service providers that make Easyy work, under their own security and privacy terms:</p>
+    <p>Only the providers that make Easyy work, each under its own security and privacy terms and only for the purpose listed:</p>
     <ul>
-      <li><strong>Supabase</strong> — stores your account and preferences (our database and authentication).</li>
-      <li><strong>Resend</strong> — sends account and digest emails on our behalf.</li>
-      <li><strong>Telegram</strong> — delivers alerts, only if you connect it.</li>
-      <li><strong>Job sources</strong> (LinkedIn, Indeed, Google Jobs) — we send them your search terms to find listings; we don't share your identity with them.</li>
+      <li><strong>Supabase</strong> — hosts our database and authentication (your account, settings, matches, alert history, resumes).</li>
+      <li><strong>Resend</strong> — sends account emails such as sign-in links and password resets.</li>
+      <li><strong>Brevo</strong> — sends your job-alert emails and daily digests.</li>
+      <li><strong>Telegram</strong> — delivers alerts to your chat, only if you connect it.</li>
+      <li><strong>AI model provider</strong> — processes resume content to produce tailored resumes, only if you use the Resume builder.</li>
+      <li><strong>Job sources</strong> (LinkedIn, Indeed, Google Jobs) — we send them your <em>search terms and location</em> to find listings. We never send them your name, email, number or resume.</li>
     </ul>
+    <p>We may also disclose data if the law requires it, or to protect the rights and safety of Easyy or our users.</p>
 
-    <h2>4. Retention and deletion</h2>
-    <p>We keep your data for as long as your account is active. You can delete your searches or your entire account at any time from your settings; when you delete your account, we remove your personal data from our systems, except where we must keep limited records to meet legal obligations. You can also email us to request deletion.</p>
+    <h2>4. How long we keep it</h2>
+    <ul>
+      <li><strong>Account, settings, resumes:</strong> for as long as your account exists.</li>
+      <li><strong>Job matches and alert history:</strong> up to 90 days, then deleted automatically.</li>
+      <li><strong>Job postings themselves</strong> (title, company, link) are public listings and are not personal data; we keep them briefly for de-duplication.</li>
+      <li><strong>Authentication logs:</strong> retained by our provider for a limited period for security.</li>
+    </ul>
+    <p>When you delete your account we remove your profile, searches, matches, alert history, Telegram link and resumes from our systems. Telegram alerts stop immediately. We may keep the minimum records the law requires (for example, that a deletion request was received).</p>
 
-    <h2>5. Security</h2>
-    <p>Data is transmitted over encrypted connections (HTTPS) and stored with our database provider using row-level security so that you can only access your own records. No system is perfectly secure, but we take reasonable measures to protect your information.</p>
+    <h2>5. Deleting your account and other rights</h2>
+    <p>You can delete your searches, your resumes, or your entire account from <strong>Profile &amp; settings</strong> in the app, or by emailing <a href="mailto:support@easyy-ai.com">support@easyy-ai.com</a> from your account address. Depending on where you live you may also have the right to access, correct, export or restrict your data, to object to processing, and to complain to a data-protection authority. Email us and we will respond within 30 days.</p>
 
-    <h2>6. Cookies and local storage</h2>
-    <p>We use only what's necessary to keep you signed in (a session stored by your browser). We don't use third-party advertising or tracking cookies.</p>
+    <h2>6. Security</h2>
+    <p>Data travels over encrypted connections (HTTPS). It is stored with our database provider using row-level security so that your browser can only ever read your own records; the worker that runs searches uses separate server-side credentials that never reach the browser. Passwords are hashed. No system is perfectly secure, but we take reasonable technical and organisational measures to protect your information, and we will tell you if a breach affects you.</p>
 
-    <h2>7. Your rights</h2>
-    <p>Depending on where you live, you may have the right to access, correct, export, or delete your personal data, and to withdraw consent. You can exercise most of these directly in your settings, or by contacting us. We'll respond within a reasonable time.</p>
+    <h2>7. Cookies and local storage</h2>
+    <p>We use only what is needed to keep you signed in (a session your browser stores) and to remember small preferences such as a dismissed checklist. We use no advertising or tracking cookies and no third-party analytics.</p>
 
     <h2>8. International transfers</h2>
-    <p>Our providers may process data in countries other than yours. Where that happens, we rely on providers that offer appropriate safeguards for international transfers.</p>
+    <p>Our providers may store or process data in countries other than yours. Where that happens we rely on providers that offer recognised safeguards for international transfers (such as standard contractual clauses).</p>
 
     <h2>9. Children</h2>
-    <p>The Service is not intended for anyone under 18, and we don't knowingly collect data from children.</p>
+    <p>The Service is for people aged 18 or over. We do not knowingly collect data from anyone younger; if you believe a child has created an account, email us and we will delete it.</p>
 
     <h2>10. Changes to this policy</h2>
-    <p>We may update this policy from time to time. We'll change the "last updated" date above and, for significant changes, notify you.</p>
+    <p>We may update this policy as the Service grows — for example when a new alert channel or the Resume builder launches. We will change the date above and, for significant changes, tell you by email or in the app before they take effect.</p>
 
     <footer>
       Privacy questions or requests? Contact us at <a href="mailto:support@easyy-ai.com">support@easyy-ai.com</a>.<br />
