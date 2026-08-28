@@ -2,158 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Job Alerts — Easyy AI</title>
-  <meta name="description" content="Set up personalised job alerts on Telegram and email. Free." />
-  <style>
-    :root {
-      --bg: #f6f7fb; --card: #ffffff; --text: #14161c; --muted: #5b6472;
-      --border: #e4e7ee; --accent: #4f46e5; --accent-ink: #ffffff;
-      --danger: #dc2626; --ok: #16a34a; --field: #ffffff; --shadow: 0 1px 3px rgba(20,22,28,.08), 0 8px 24px rgba(20,22,28,.06);
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0d0f14; --card: #161922; --text: #eef0f5; --muted: #9aa3b2;
-        --border: #262b36; --accent: #7c74ff; --accent-ink: #0d0f14;
-        --field: #10131a; --shadow: 0 1px 3px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
-      }
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.5; -webkit-font-smoothing: antialiased;
-    }
-    a { color: var(--accent); }
-    .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -.01em; }
-    .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
-    .lede { color: var(--muted); margin: 6px 0 26px; }
-    .card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-      padding: 22px; margin: 0 0 18px; box-shadow: var(--shadow);
-    }
-    .card h2 { margin: 0 0 4px; font-size: 17px; letter-spacing: -.01em; }
-    .card .hint { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
-    label .opt { font-weight: 400; color: var(--muted); }
-    input[type=text], input[type=email], input[type=password], input[type=tel], input[type=number], select, textarea {
-      width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
-      background: var(--field); color: var(--text); font: inherit; font-size: 14.5px;
-    }
-    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
-    textarea { min-height: 60px; resize: vertical; }
-    .row { display: flex; gap: 14px; flex-wrap: wrap; }
-    .row > div { flex: 1 1 220px; }
-    .checks { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
-    .check { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; }
-    .check input { width: auto; }
-    .btn {
-      appearance: none; border: 0; border-radius: 10px; padding: 11px 18px; font: inherit;
-      font-weight: 600; font-size: 14.5px; cursor: pointer; background: var(--accent); color: var(--accent-ink);
-    }
-    .btn:disabled { opacity: .55; cursor: not-allowed; }
-    .btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-    .btn.ghost { background: transparent; color: var(--accent); padding: 6px 8px; }
-    .btn.tiny { padding: 6px 10px; font-size: 13px; }
-    .search {
-      border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; background: var(--bg);
-    }
-    .search-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .search-head h3 { margin: 0; font-size: 14px; color: var(--muted); font-weight: 600; }
-    details.adv { margin-top: 12px; }
-    details.adv summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--accent); }
-    details.adv .body { margin-top: 10px; }
-    .err { color: var(--danger); font-size: 13px; margin-top: 6px; }
-    .msg { padding: 12px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; }
-    .msg.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
-    .msg.info { background: color-mix(in srgb, var(--accent) 12%, transparent); }
-    .msg.warn { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
-    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-    .who { color: var(--muted); font-size: 13px; }
-    .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600;
-      padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); }
-    .pill.linked { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--border)); }
-    .actions { display: flex; gap: 12px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
-    .authlink { margin-left: auto; font-size: 13.5px; font-weight: 600; }
-    .authalt { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 13.5px; }
-    .authalt a { font-weight: 500; }
-    .authalt .sep { color: var(--muted); margin: 0 9px; }
-    .check.terms { align-items: flex-start; margin-top: 16px; font-weight: 400; line-height: 1.45; }
-    .check.terms input { margin-top: 2px; }
-    /* international phone input */
-    .phone { position: relative; display: flex; gap: 8px; }
-    .phone-cc {
-      display: inline-flex; align-items: center; gap: 7px; cursor: pointer; white-space: nowrap;
-      padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--field);
-      font-size: 14.5px; user-select: none;
-    }
-    .phone-cc:hover { border-color: var(--muted); }
-    .phone-cc .flag { font-size: 17px; line-height: 1; }
-    .phone-cc .caret { color: var(--muted); font-size: 11px; }
-    .phone-num { flex: 1 1 auto; }
-    .cc-backdrop { position: fixed; inset: 0; z-index: 40; }
-    .cc-menu {
-      position: absolute; z-index: 41; top: calc(100% + 6px); left: 0; width: min(360px, 100%);
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      box-shadow: var(--shadow); overflow: hidden;
-    }
-    .cc-search-wrap { padding: 10px; border-bottom: 1px solid var(--border); }
-    .cc-search { width: 100%; }
-    .cc-list { max-height: 260px; overflow-y: auto; }
-    .cc-item {
-      display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; font-size: 14px;
-    }
-    .cc-item:hover { background: var(--bg); }
-    .cc-item.sel { background: color-mix(in srgb, var(--accent) 16%, transparent); }
-    .cc-item .flag { font-size: 17px; line-height: 1; width: 22px; }
-    .cc-item .cc-name { flex: 1 1 auto; }
-    .cc-item .cc-dial { color: var(--muted); font-variant-numeric: tabular-nums; }
-    .cc-empty { padding: 14px 12px; color: var(--muted); font-size: 13.5px; }
-    /* password show/hide toggle beside the label */
-    .labrow { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-    .pw-link {
-      background: transparent; border: 0; color: var(--accent); font: inherit; font-size: 13px;
-      font-weight: 600; cursor: pointer; padding: 0;
-    }
-    .foot { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 26px; }
-    .spinner { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--accent);
-      border-radius: 50%; animation: spin .8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .center { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 40px 0; color: var(--muted); }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Easyy — Job Alerts</title>
+  <meta name="description" content="Job alerts on Telegram and email, and — soon — a tailored resume for every job. Free." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="app" class="wrap" v-cloak>
+  <div id="app" v-cloak>
 
     <!-- loading -->
-    <div v-if="booting" class="center"><div class="spinner"></div> Loading…</div>
+    <div v-if="store.booting" class="boot"><div class="spinner" role="status" aria-label="Loading"></div></div>
 
     <!-- signed out / password recovery -->
-    <template v-else-if="!session || recoveryMode">
-      <div class="brand"><span class="dot"></span> Easyy AI · Job Alerts</div>
-      <p class="lede">Get newly-posted jobs matching your searches, delivered to Telegram and email. Free.</p>
+    <div v-else-if="!store.session || store.recoveryMode" class="auth">
+      <div class="auth-brand"><span class="dot"></span>easyy <small>Job Alerts</small></div>
 
-      <div class="card">
-        <div v-if="authMsg" class="msg" :class="authMsgType">{{ authMsg }}</div>
+      <div class="card auth-card">
+        <div v-if="authMsg" class="msg" :class="authMsgType" role="status">{{ authMsg }}</div>
 
         <!-- sign in -->
         <template v-if="authView === 'signin'">
           <h2>Sign in</h2>
-          <p class="hint">Welcome back. Enter your email and password.</p>
-          <label>Email</label>
-          <input type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="signIn" />
-          <label>Password</label>
-          <input type="password" v-model="authPassword" placeholder="Your password" autocomplete="current-password" @keyup.enter="signIn" />
-          <div class="actions">
-            <button class="btn" :disabled="sending || !authEmail || !authPassword" @click="signIn">
-              {{ sending ? 'Signing in…' : 'Sign in' }}
-            </button>
-            <a href="#" class="authlink" @click.prevent="go('forgot')">Forgot password?</a>
+          <p class="lede">Your searches and alert settings live here.</p>
+          <div class="field">
+            <label for="si-email">Email</label>
+            <input id="si-email" type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="signIn" />
           </div>
-          <div class="authalt">
-            <a href="#" @click.prevent="go('signup')">Create an account</a>
-            <span class="sep">·</span>
+          <div class="field">
+            <div class="labrow"><label for="si-pw">Password</label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
+            <input id="si-pw" :type="showPw ? 'text' : 'password'" v-model="authPassword" placeholder="Your password" autocomplete="current-password" @keyup.enter="signIn" />
+          </div>
+          <div class="actions">
+            <button type="button" class="btn wide" :disabled="sending || !authEmail || !authPassword" @click="signIn">{{ sending ? 'Signing in…' : 'Sign in' }}</button>
+          </div>
+          <div class="center-link"><a href="#" @click.prevent="go('forgot')">Forgot password?</a></div>
+          <div class="auth-alt">
+            <button type="button" class="btn secondary wide" @click="go('signup')">Create an account</button>
             <a href="#" @click.prevent="go('magic')">Email me a sign-in link instead</a>
           </div>
         </template>
@@ -161,222 +49,463 @@
         <!-- sign up -->
         <template v-else-if="authView === 'signup'">
           <h2>Create your account</h2>
-          <p class="hint">A few details to set up your job alerts. Your email is also where digests go.</p>
-          <label>Full name</label>
-          <input type="text" v-model.trim="signup.full_name" placeholder="e.g. Pramesh Anuragi" autocomplete="name" />
-
-          <label>Mobile number</label>
-          <intl-phone v-model="signupPhone" :countries="dialCountries"></intl-phone>
-
-          <label>Email</label>
-          <input type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" />
-
-          <div class="labrow">
-            <label>Password <span class="opt">— at least 8 characters</span></label>
-            <button type="button" class="pw-link" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button>
+          <p class="lede">Takes a minute. Your first search is next.</p>
+          <div class="field">
+            <label for="su-name">Full name</label>
+            <input id="su-name" type="text" v-model.trim="signup.full_name" placeholder="Your full name" autocomplete="name" />
           </div>
-          <input :type="showPw ? 'text' : 'password'" v-model="authPassword" placeholder="Choose a password" autocomplete="new-password" />
-          <label>Confirm password</label>
-          <input :type="showPw ? 'text' : 'password'" v-model="authPassword2" placeholder="Re-enter password" autocomplete="new-password" @keyup.enter="signUp" />
-
-          <label class="check terms">
+          <div class="field">
+            <label for="su-email">Email <span class="opt">— digests go here</span></label>
+            <input id="su-email" type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="field">
+            <div class="labrow"><label for="su-pw">Password <span class="opt">— 8+ characters</span></label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
+            <input id="su-pw" :type="showPw ? 'text' : 'password'" v-model="authPassword" placeholder="Choose a password" autocomplete="new-password" />
+          </div>
+          <div class="field">
+            <label>Mobile</label>
+            <intl-phone :model-value="signupPhone" @update:model-value="v => signupPhone = v" :countries="dialCountries"></intl-phone>
+          </div>
+          <label class="check">
             <input type="checkbox" v-model="signup.agree" />
             <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span>
           </label>
           <div class="actions">
-            <button class="btn" :disabled="sending" @click="signUp">
-              {{ sending ? 'Creating…' : 'Create account' }}
-            </button>
+            <button type="button" class="btn wide" :disabled="sending" @click="signUp">{{ sending ? 'Creating…' : 'Create account' }}</button>
           </div>
-          <div class="authalt">
-            <a href="#" @click.prevent="go('signin')">Already have an account? Sign in</a>
-          </div>
+          <div class="auth-alt"><a href="#" @click.prevent="go('signin')">Already have an account? Sign in</a></div>
         </template>
 
         <!-- magic link -->
         <template v-else-if="authView === 'magic'">
           <h2>Email me a sign-in link</h2>
-          <p class="hint">We'll email a one-tap link — no password needed.</p>
-          <label>Email</label>
-          <input type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="sendMagicLink" />
+          <p class="lede">We'll email a one-tap link — no password needed.</p>
+          <div class="field">
+            <label for="ml-email">Email</label>
+            <input id="ml-email" type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="sendMagicLink" />
+          </div>
           <div class="actions">
-            <button class="btn" :disabled="sending || !authEmail" @click="sendMagicLink">
-              {{ sending ? 'Sending…' : 'Send sign-in link' }}
-            </button>
+            <button type="button" class="btn wide" :disabled="sending || !authEmail" @click="sendMagicLink">{{ sending ? 'Sending…' : 'Send sign-in link' }}</button>
           </div>
-          <div class="authalt">
-            <a href="#" @click.prevent="go('signin')">Back to sign in</a>
-          </div>
+          <div class="auth-alt"><a href="#" @click.prevent="go('signin')">Back to sign in</a></div>
         </template>
 
         <!-- forgot password -->
         <template v-else-if="authView === 'forgot'">
           <h2>Reset your password</h2>
-          <p class="hint">Enter your email and we'll send a link to set a new password.</p>
-          <label>Email</label>
-          <input type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="sendReset" />
+          <p class="lede">Enter your email and we'll send a link to set a new password.</p>
+          <div class="field">
+            <label for="fp-email">Email</label>
+            <input id="fp-email" type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="sendReset" />
+          </div>
           <div class="actions">
-            <button class="btn" :disabled="sending || !authEmail" @click="sendReset">
-              {{ sending ? 'Sending…' : 'Send reset link' }}
-            </button>
+            <button type="button" class="btn wide" :disabled="sending || !authEmail" @click="sendReset">{{ sending ? 'Sending…' : 'Send reset link' }}</button>
           </div>
-          <div class="authalt">
-            <a href="#" @click.prevent="go('signin')">Back to sign in</a>
-          </div>
+          <div class="auth-alt"><a href="#" @click.prevent="go('signin')">Back to sign in</a></div>
         </template>
 
         <!-- set new password (after clicking reset link) -->
         <template v-else-if="authView === 'reset'">
           <h2>Set a new password</h2>
-          <p class="hint">Choose a new password for your account.</p>
-          <label>New password <span class="opt">— at least 8 characters</span></label>
-          <input type="password" v-model="authPassword" placeholder="New password" autocomplete="new-password" />
-          <label>Confirm password</label>
-          <input type="password" v-model="authPassword2" placeholder="Re-enter password" autocomplete="new-password" @keyup.enter="setNewPassword" />
+          <p class="lede">Choose a new password for your account.</p>
+          <div class="field">
+            <div class="labrow"><label for="rp-pw">New password <span class="opt">— 8+ characters</span></label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
+            <input id="rp-pw" :type="showPw ? 'text' : 'password'" v-model="authPassword" placeholder="New password" autocomplete="new-password" @keyup.enter="setNewPassword" />
+          </div>
           <div class="actions">
-            <button class="btn" :disabled="sending || !authPassword || !authPassword2" @click="setNewPassword">
-              {{ sending ? 'Saving…' : 'Set new password' }}
-            </button>
+            <button type="button" class="btn wide" :disabled="sending || authPassword.length < 8" @click="setNewPassword">{{ sending ? 'Saving…' : 'Set new password' }}</button>
           </div>
         </template>
       </div>
 
-      <p class="foot" v-if="authView === 'signup'">By continuing you agree to receive job-alert messages you configure here. You can pause or delete anytime.</p>
-    </template>
+      <p class="auth-foot">Free · alerts on Telegram and email</p>
+    </div>
 
-    <!-- signed in -->
-    <template v-else>
-      <div class="topbar">
-        <div class="brand"><span class="dot"></span> Job Alerts</div>
-        <div class="who">{{ userEmail }} · <a href="#" @click.prevent="signOut">Sign out</a></div>
-      </div>
-
-      <div v-if="saveMsg" class="msg ok">{{ saveMsg }}</div>
-      <div v-if="errorMsg" class="msg warn">{{ errorMsg }}</div>
-
-      <!-- profile -->
-      <div class="card">
-        <h2>Your profile</h2>
-        <p class="hint">Global preferences that apply to every search below.</p>
-        <div class="row">
-          <div>
-            <label>Your name</label>
-            <input type="text" v-model.trim="profile.full_name" maxlength="120" placeholder="Your full name" />
-          </div>
-          <div>
-            <label>Mobile number</label>
-            <intl-phone v-model="profile.phone" :countries="dialCountries"></intl-phone>
-          </div>
+    <!-- signed in: app shell -->
+    <div v-else class="shell">
+      <aside class="side">
+        <div class="side-top">
+          <a class="brand" href="#/" @click.prevent="nav.go('home')"><span class="dot"></span><span class="brand-text">easyy</span></a>
+          <div class="side-status" :class="'is-' + store.status.key" :title="shortStatus"><span class="sdot"></span><span class="side-status-text">{{ shortStatus }}</span></div>
         </div>
-        <div class="row">
-          <div>
-            <label>Profile name</label>
-            <input type="text" v-model.trim="profile.name" maxlength="120" placeholder="My job search" />
-          </div>
-          <div>
-            <label>Indeed country</label>
-            <select v-model="profile.country_indeed">
-              <option v-for="c in countries" :key="c.v" :value="c.v">{{ c.l }}</option>
-            </select>
+        <nav class="nav" aria-label="Main">
+          <a v-for="it in navItems" :key="it.name" :href="it.hash" class="nav-item" :class="{ on: store.route === it.name }"
+             :aria-current="store.route === it.name ? 'page' : null" :title="it.label" @click.prevent="nav.go(it.name)">
+            <span class="nav-ic" v-html="it.icon"></span><span class="nav-label">{{ it.label }}</span>
+          </a>
+        </nav>
+        <div class="side-bottom">
+          <button type="button" class="usercard" :aria-expanded="String(menuOpen)" aria-haspopup="menu" @click="menuOpen = !menuOpen">
+            <span class="avatar" aria-hidden="true">{{ initials }}</span>
+            <span class="meta"><span class="uname">{{ store.profile.full_name || 'Your account' }}</span><span class="uemail">{{ store.userEmail }}</span></span>
+          </button>
+          <div v-if="menuOpen" class="menu-backdrop" @click="menuOpen = false"></div>
+          <div v-if="menuOpen" class="menu" role="menu" @keydown.esc="menuOpen = false">
+            <a href="#/settings" role="menuitem" @click.prevent="menuOpen = false; nav.go('settings')">Profile &amp; settings</a>
+            <a href="terms.html" role="menuitem" target="_blank" rel="noopener">Terms</a>
+            <a href="privacy.html" role="menuitem" target="_blank" rel="noopener">Privacy</a>
+            <hr />
+            <button type="button" role="menuitem" class="danger" @click="menuOpen = false; actions.signOut()">Sign out</button>
           </div>
         </div>
-        <div class="row">
-          <div>
-            <label>Minimum salary <span class="opt">— optional, AED / month</span></label>
-            <input type="number" min="0" step="500" v-model.number="salaryInput" placeholder="e.g. 25000" />
+      </aside>
+
+      <header class="topbar">
+        <a class="brand" href="#/" @click.prevent="nav.go('home')"><span class="dot"></span><span class="brand-text">easyy</span></a>
+        <a href="#/settings" class="avatar" aria-label="Profile and settings" @click.prevent="nav.go('settings')">{{ initials }}</a>
+      </header>
+
+      <main class="content">
+        <div class="content-inner">
+          <div v-if="store.loadError" class="card">
+            <h2>Couldn't load your settings</h2>
+            <p class="hint">{{ store.loadError }}</p>
+            <div class="actions"><button type="button" class="btn secondary" @click="actions.loadProfile()">Try again</button></div>
+          </div>
+          <component v-else :is="'view-' + store.route"></component>
+        </div>
+
+        <div class="savebar" v-if="store.isDirty || store.saveState !== 'idle'" role="status">
+          <div class="savebar-inner">
+            <span v-if="store.saveState === 'saved'" class="ok">Saved ✓ Alerts will start within the hour.</span>
+            <span v-else-if="store.saveState === 'error'" class="err">Couldn't save — {{ store.saveError }}</span>
+            <span v-else-if="store.saveState === 'invalid'" class="err">{{ store.saveError }}</span>
+            <span v-else class="dirty">Unsaved changes</span>
+            <span class="grow"></span>
+            <template v-if="store.saveState !== 'saved'">
+              <button type="button" class="btn ghost" :disabled="store.saving" @click="actions.discard()">Discard</button>
+              <button type="button" class="btn" :disabled="store.saving" @click="actions.save()">{{ store.saving ? 'Saving…' : (store.saveState === 'error' ? 'Try again' : saveLabel) }}</button>
+            </template>
           </div>
         </div>
-        <label>Exclude jobs whose title contains <span class="opt">— comma-separated, optional</span></label>
-        <input type="text" v-model="excludeInput" placeholder="intern, junior, graduate" />
-        <div class="checks">
-          <label class="check"><input type="checkbox" v-model="profile.email_enabled" /> Email me digests ({{ userEmail }})</label>
-          <label class="check"><input type="checkbox" v-model="profile.notify_when_empty" /> Ping me even when nothing new</label>
-          <label class="check"><input type="checkbox" v-model="profile.is_active" /> Alerts active</label>
+      </main>
+
+      <nav class="tabbar" aria-label="Main">
+        <a v-for="it in navItems" :key="it.name" :href="it.hash" class="tab" :class="{ on: store.route === it.name }"
+           :aria-current="store.route === it.name ? 'page' : null" @click.prevent="nav.go(it.name)">
+          <span class="nav-ic" v-html="it.icon"></span><span>{{ it.short }}</span>
+        </a>
+      </nav>
+
+      <ui-dialog :open="!!store.dialog" :title="store.dialog ? store.dialog.title : ''" :body="store.dialog ? store.dialog.body : ''"
+                 :confirm-label="store.dialog ? store.dialog.confirmLabel : 'Confirm'" :cancel-label="store.dialog ? store.dialog.cancelLabel : 'Cancel'"
+                 :danger="!!(store.dialog && store.dialog.danger)" @confirm="actions.dialogConfirm()" @cancel="actions.dialogCancel()"></ui-dialog>
+    </div>
+  </div>
+
+  <p id="boot-fail">Couldn't load the app. Check your connection and reload.</p>
+
+  <!-- ============ view templates (in-DOM; compiled by Vue at runtime) ============ -->
+
+  <template id="tpl-home">
+    <div class="view">
+      <section class="status" :class="'is-' + status.key">
+        <template v-if="status.key === 'loading'">
+          <div style="flex:1"><div class="skeleton" style="width:40%;height:22px"></div><div class="skeleton" style="width:70%;margin-top:8px"></div></div>
+        </template>
+        <template v-else>
+          <div class="status-text">
+            <h1>{{ status.title }}</h1>
+            <p class="hint">{{ status.line }}<a v-if="status.key === 'on'" href="#/history" @click.prevent="nav.go('history')">See what we've sent →</a></p>
+          </div>
+          <ui-switch size="lg" label="Alerts on" :model-value="store.profile.is_active" @update:model-value="v => store.profile.is_active = v"></ui-switch>
+        </template>
+      </section>
+
+      <section v-if="showChecklist" class="card checklist" aria-label="Getting started">
+        <div class="step done"><span class="n">✓</span><div class="t"><b>Create your account</b></div></div>
+        <div class="step" :class="{ done: hasSavedSearch, now: !hasSavedSearch }">
+          <span class="n">{{ hasSavedSearch ? '✓' : '2' }}</span>
+          <div class="t"><b>Add your first search</b><span>What job, where, and which sites</span></div>
         </div>
-      </div>
-
-      <!-- telegram -->
-      <div class="card">
-        <h2>Telegram <span v-if="telegramLinked" class="pill linked">✓ Connected</span></h2>
-        <p class="hint" v-if="telegramLinked">This chat is linked. You'll receive alerts on Telegram.</p>
-        <p class="hint" v-else>Connect Telegram to get instant alerts. Save first, then tap connect and press <b>Start</b> in the bot.</p>
-        <div class="actions" v-if="!telegramLinked">
-          <button class="btn secondary" :disabled="!profile.id" @click="connectTelegram">Connect Telegram</button>
-          <span v-if="polling" class="who"><span class="spinner" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></span> waiting for you to press Start…</span>
+        <div class="step" :class="{ now: hasSavedSearch }">
+          <span class="n">3</span>
+          <div class="t"><b>Connect Telegram</b><span v-if="!hasSavedSearch">Enabled after your first save</span><span v-else>Instant messages the moment a job matches — or keep email only</span></div>
+          <div class="step-actions" v-if="hasSavedSearch">
+            <button type="button" class="btn secondary tiny" @click="actions.connectTelegram()">Connect</button>
+            <button type="button" class="btn ghost tiny" @click="actions.dismissChecklist()">Not now — email is enough</button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <!-- searches -->
-      <div class="card">
-        <h2>Searches <span class="opt" style="font-weight:400;color:var(--muted)">({{ searches.length }}/5)</span></h2>
-        <p class="hint">Each search runs hourly. Add up to 5.</p>
+      <section class="card">
+        <div class="card-head"><h2>{{ showChecklist ? 'Your first search' : 'Searches' }}</h2><span class="sub" v-if="!showChecklist">{{ store.searches.length }} of 5</span></div>
 
-        <div class="search" v-for="(s, i) in searches" :key="i">
+        <div v-for="(s, i) in store.searches" :key="s._key" class="search" :class="{ invalid: s._err }">
           <div class="search-head">
-            <h3>Search {{ i + 1 }}</h3>
-            <button class="btn ghost tiny" @click="removeSearch(i)">Remove</button>
+            <input type="text" class="search-title" v-model.trim="s.name" placeholder="Give it a name — e.g. Data Scientist — Dubai" aria-label="Search name" maxlength="120" />
+            <div class="search-tools">
+              <label v-if="features.searchPause" class="inline-switch"><span>{{ s.is_active === false ? 'Paused' : 'On' }}</span><ui-switch :model-value="s.is_active !== false" @update:model-value="v => s.is_active = v" label="Search on"></ui-switch></label>
+              <button type="button" class="btn ghost tiny" @click="actions.removeSearch(i)">Remove</button>
+            </div>
           </div>
-          <label>Label</label>
-          <input type="text" v-model.trim="s.name" placeholder="e.g. Data Scientist — Dubai" />
           <div class="row">
-            <div>
-              <label>Search query</label>
-              <input type="text" v-model.trim="s.query" placeholder='"data scientist" NOT intern' />
+            <div class="field">
+              <label :for="'q' + i">Search terms</label>
+              <input :id="'q' + i" type="text" v-model.trim="s.query" placeholder='"data scientist" NOT intern' maxlength="500" />
+              <p class="hint">Quotes for exact phrases · NOT to exclude · OR for either</p>
             </div>
-            <div>
-              <label>Location</label>
-              <input type="text" v-model.trim="s.location" placeholder="United Arab Emirates" />
+            <div class="field">
+              <label :for="'loc' + i">Location</label>
+              <input :id="'loc' + i" type="text" v-model.trim="s.location" placeholder="City or country" maxlength="200" />
             </div>
           </div>
-          <div class="checks">
-            <label class="check"><input type="checkbox" value="linkedin" v-model="s.sites" /> LinkedIn</label>
-            <label class="check"><input type="checkbox" value="indeed" v-model="s.sites" /> Indeed</label>
-            <label class="check"><input type="checkbox" value="google" v-model="s.sites" /> Google Jobs</label>
-            <label class="check"><input type="checkbox" v-model="s.is_remote" /> Remote only</label>
+          <div class="field">
+            <label>Look on</label>
+            <div class="chips">
+              <ui-chip :model-value="s.sites" @update:model-value="v => s.sites = v" value="linkedin" label="LinkedIn"></ui-chip>
+              <ui-chip :model-value="s.sites" @update:model-value="v => s.sites = v" value="indeed" label="Indeed"></ui-chip>
+              <ui-chip :model-value="s.sites" @update:model-value="v => s.sites = v" value="google" label="Google Jobs"></ui-chip>
+              <label class="inline-switch push"><span>Remote only</span><ui-switch :model-value="s.is_remote" @update:model-value="v => s.is_remote = v" label="Remote only"></ui-switch></label>
+            </div>
           </div>
-
-          <div v-if="s.sites.includes('google')" style="margin-top:12px">
-            <label>Google Jobs search phrase <span class="opt">— required for Google</span></label>
-            <input type="text" v-model.trim="s.google_search_term" placeholder="data scientist jobs in Dubai since yesterday" />
-            <p class="hint" style="margin:6px 0 0">Google has no boolean search — paste the exact phrase you'd type into the Google Jobs box, and include freshness (e.g. "since yesterday").</p>
+          <div v-if="s.sites.includes('google')" class="field">
+            <label :for="'g' + i">Google Jobs phrase <span class="opt">— exactly what you'd type into Google</span></label>
+            <input :id="'g' + i" type="text" v-model.trim="s.google_search_term" placeholder="data scientist jobs in dubai since yesterday" maxlength="300" />
+            <p class="note warn">Google has no boolean search. Paste the plain phrase and include how fresh, e.g. "since yesterday".</p>
           </div>
-
           <details class="adv">
             <summary>Advanced</summary>
-            <div class="body">
-              <label>Keep only titles containing <span class="opt">— comma-separated, optional</span></label>
-              <input type="text" v-model="s.require_kw_input" placeholder="data scientist, machine learning" />
+            <div class="adv-body">
+              <div class="field">
+                <label>Title must contain <span class="opt">— optional</span></label>
+                <ui-tags :model-value="s.require_kw" @update:model-value="v => s.require_kw = v" placeholder="type a word and press Enter…"></ui-tags>
+              </div>
               <div class="row">
-                <div>
-                  <label>LinkedIn query override <span class="opt">— optional</span></label>
-                  <input type="text" v-model.trim="s.linkedin_query" />
-                </div>
-                <div>
-                  <label>Indeed query override <span class="opt">— optional</span></label>
-                  <input type="text" v-model.trim="s.indeed_query" />
-                </div>
+                <div class="field"><label :for="'lq' + i">LinkedIn query override <span class="opt">— optional</span></label><input :id="'lq' + i" type="text" v-model.trim="s.linkedin_query" /></div>
+                <div class="field"><label :for="'iq' + i">Indeed query override <span class="opt">— optional</span></label><input :id="'iq' + i" type="text" v-model.trim="s.indeed_query" /></div>
               </div>
             </div>
           </details>
-          <div class="err" v-if="s._err">{{ s._err }}</div>
+          <p class="err" v-if="s._err" role="alert" style="margin-top:10px">{{ s._err }}</p>
         </div>
 
-        <button class="btn secondary tiny" :disabled="searches.length >= 5" @click="addSearch">+ Add search</button>
+        <button type="button" class="add" :disabled="store.searches.length >= 5" @click="actions.addSearch()">
+          + Add a search <span v-if="store.searches.length < 5">· {{ 5 - store.searches.length }} left</span><span v-else>· limit of 5 reached</span>
+        </button>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Where alerts go</h2></div>
+        <div class="list">
+          <div class="li">
+            <span class="ic" aria-hidden="true">TG</span>
+            <div class="t"><b>Telegram</b><span>Instant message the moment a new job matches</span></div>
+            <span v-if="store.telegramLinked" class="pill ok">Connected ✓</span>
+            <div v-else class="li-actions">
+              <button type="button" class="btn secondary tiny" :disabled="!store.profile.id" @click="actions.connectTelegram()">Connect</button>
+              <span v-if="store.polling" class="hint waiting"><span class="spinner sm"></span> waiting for you to press Start…</span>
+              <span v-else-if="store.pollTimedOut" class="hint">Didn't see you press Start. Try Connect again.</span>
+            </div>
+          </div>
+          <div class="li">
+            <span class="ic" aria-hidden="true">@</span>
+            <div class="t"><b>Email digest</b><span>{{ store.userEmail }}</span></div>
+            <ui-switch label="Email digest" :model-value="store.profile.email_enabled" @update:model-value="v => store.profile.email_enabled = v"></ui-switch>
+          </div>
+          <div class="li sub">
+            <div class="t"><span>Also send a Telegram note when a check finds nothing new</span></div>
+            <ui-switch label="Nothing-new note" :model-value="store.profile.notify_when_empty" @update:model-value="v => store.profile.notify_when_empty = v"></ui-switch>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Filters for every search</h2></div>
+        <div class="row">
+          <div class="field">
+            <label for="country">Country for Indeed</label>
+            <select id="country" v-model="store.profile.country_indeed"><option v-for="c in countries" :key="c.v" :value="c.v">{{ c.l }}</option></select>
+          </div>
+          <div class="field">
+            <label for="salary">Minimum salary <span class="opt">— AED / month</span></label>
+            <input id="salary" type="number" min="0" step="500" inputmode="numeric" v-model="store.salaryInput" placeholder="e.g. 25000" :aria-invalid="store.fieldErrors.salary ? 'true' : null" />
+            <p class="err" v-if="store.fieldErrors.salary">{{ store.fieldErrors.salary }}</p>
+          </div>
+        </div>
+        <div class="field">
+          <label>Skip jobs whose title contains</label>
+          <ui-tags :model-value="store.excludeList" @update:model-value="v => store.excludeList = v" placeholder="intern, junior… type a word and press Enter"></ui-tags>
+        </div>
+      </section>
+
+      <section class="card account-strip">
+        <div><b>{{ store.profile.full_name || 'Your account' }}</b><span v-if="maskedPhone"> · {{ maskedPhone }}</span></div>
+        <a href="#/settings" @click.prevent="nav.go('settings')">Profile &amp; settings →</a>
+      </section>
+    </div>
+  </template>
+
+  <template id="tpl-history">
+    <div class="view">
+      <div class="page-head">
+        <div>
+          <h1>What we've sent you</h1>
+          <p class="hint" v-if="lastRun">Last check {{ lastRun.time }}<span v-if="lastRun.note" :style="lastRun.status === 'failed' ? 'color:var(--warn)' : ''"> · {{ lastRun.note }}</span></p>
+        </div>
+        <div class="page-tools" v-if="h.status === 'ready' && grouped.searches.length">
+          <select v-model="filter" aria-label="Filter by search"><option value="">All searches</option><option v-for="s in grouped.searches" :key="s" :value="s">{{ s }}</option></select>
+          <button type="button" class="btn ghost tiny" @click="actions.loadHistory(true)">Refresh</button>
+        </div>
       </div>
 
-      <div class="actions">
-        <button class="btn" :disabled="saving" @click="save">{{ saving ? 'Saving…' : 'Save changes' }}</button>
-        <span class="who" v-if="!telegramLinked && profile.email_enabled">Alerts will go to your email; connect Telegram for instant pings.</span>
-      </div>
-      <p class="foot">Alerts start within the hour after you save. Powered by Easyy AI.</p>
-    </template>
-  </div>
+      <section class="card" v-if="h.status === 'loading' || h.status === 'idle'" aria-busy="true">
+        <div class="skeleton row-sk"></div><div class="skeleton row-sk"></div><div class="skeleton row-sk"></div>
+      </section>
+      <section class="card empty" v-else-if="h.status === 'missing'">
+        <p>History is being connected — your alerts keep running.</p>
+      </section>
+      <section class="card empty" v-else-if="h.status === 'error'">
+        <p>Couldn't load your history. {{ h.error }}</p>
+        <button type="button" class="btn secondary" @click="actions.loadHistory(true)">Try again</button>
+      </section>
+      <section class="card empty" v-else-if="grouped.total === 0">
+        <p v-if="!store.dbSearchIds.length">Add a search on <a href="#/" @click.prevent="nav.go('home')">Home</a> to start — everything we send you will show up here.</p>
+        <p v-else-if="filter">Nothing sent for this search yet.</p>
+        <p v-else>Nothing sent yet — your first check runs within the hour after you save.</p>
+      </section>
+      <section class="card history" v-else>
+        <div v-if="grouped.pending" class="event pending">
+          <div class="ev-row">
+            <span class="tm">{{ grouped.pending.time }}</span>
+            <span class="ic warn" aria-hidden="true">…</span>
+            <div class="t"><b>Waiting to send</b><span>{{ grouped.pending.jobs.length }} {{ grouped.pending.jobs.length === 1 ? 'job' : 'jobs' }} matched — we retry on the next check</span></div>
+            <button type="button" class="btn ghost tiny" :aria-expanded="String(isOpen('pending'))" @click="toggle('pending')">{{ isOpen('pending') ? 'Hide ▴' : 'Show ▾' }}</button>
+          </div>
+          <div v-if="isOpen('pending')" class="jobs">
+            <div class="job" v-for="j in grouped.pending.jobs" :key="j.id">
+              <div class="jt"><a :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
+              <span class="src">{{ siteLabel(j.site) }}</span>
+              <span class="tag">{{ j.search }}</span>
+              <button type="button" class="btn secondary tiny" disabled title="Coming soon — being connected">Tailor resume</button>
+            </div>
+          </div>
+        </div>
 
-  <style>[v-cloak]{display:none}</style>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <template v-for="day in grouped.days" :key="day.key">
+          <div class="day">{{ day.label }}</div>
+          <div class="event" v-for="ev in day.events" :key="ev.key">
+            <div class="ev-row">
+              <span class="tm">{{ ev.time }}</span>
+              <span class="ic" aria-hidden="true">{{ ev.jobs.length }}</span>
+              <div class="t">
+                <b>{{ ev.jobs.length }} new {{ ev.jobs.length === 1 ? 'job' : 'jobs' }}</b>
+                <span>sent to {{ channels }}<span class="tag" v-for="s in ev.searches" :key="s">{{ s }}</span></span>
+              </div>
+              <button type="button" class="btn ghost tiny" :aria-expanded="String(isOpen(ev.key))" @click="toggle(ev.key)">{{ isOpen(ev.key) ? 'Hide ▴' : 'Show ▾' }}</button>
+            </div>
+            <div v-if="isOpen(ev.key)" class="jobs">
+              <div class="job" v-for="j in ev.jobs" :key="j.id">
+                <div class="jt"><a :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
+                <span class="src">{{ siteLabel(j.site) }}</span>
+                <span class="tag">{{ j.search }}</span>
+                <button type="button" class="btn secondary tiny" disabled title="Coming soon — being connected">Tailor resume</button>
+              </div>
+            </div>
+          </div>
+        </template>
+        <p class="foot">Showing the last 14 days.</p>
+      </section>
+    </div>
+  </template>
+
+  <template id="tpl-resume">
+    <div class="view">
+      <div class="page-head"><h1>Resume builder</h1></div>
+      <div class="msg info" role="status">Resume tailoring is being connected — your alerts keep running.</div>
+      <div class="row">
+        <section class="card">
+          <div class="card-head"><h2>From a recent alert</h2></div>
+          <p class="hint">Recent alerts will appear here. Picking one fetches the full description for you.</p>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2>Or paste a job description</h2></div>
+          <div class="field"><label for="rb-title">Job title <span class="opt">— optional</span></label><input id="rb-title" type="text" placeholder="e.g. Senior Data Scientist" disabled /></div>
+          <div class="field"><label for="rb-company">Company <span class="opt">— optional, unlocks referral drafts</span></label><input id="rb-company" type="text" placeholder="e.g. Careem" disabled /></div>
+          <div class="field"><label for="rb-jd">Description</label><textarea id="rb-jd" placeholder="Paste the whole posting here — requirements, responsibilities, tools. The more of the employer's own words, the better the match." disabled></textarea></div>
+          <div class="actions"><button type="button" class="btn" disabled>Tailor my resume</button></div>
+        </section>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-resumes">
+    <div class="view">
+      <div class="page-head"><h1>Resumes</h1></div>
+      <div class="msg info" role="status">Resume tailoring is being connected — your alerts keep running.</div>
+      <section class="card">
+        <div class="card-head"><h2>Master resume</h2><button type="button" class="btn secondary tiny" disabled>Review &amp; edit</button></div>
+        <p class="hint">Source of truth for every tailored resume.</p>
+      </section>
+      <section class="card empty">
+        <h2>Tailored resumes</h2>
+        <p>Tailored resumes will appear here, newest first, with their files and the job they were for.</p>
+      </section>
+    </div>
+  </template>
+
+  <template id="tpl-settings">
+    <div class="view">
+      <div class="page-head"><h1>Profile &amp; settings</h1></div>
+
+      <section class="card">
+        <div class="card-head"><h2>Profile</h2></div>
+        <div class="row">
+          <div class="field">
+            <label for="st-name">Full name</label>
+            <input id="st-name" type="text" v-model.trim="store.profile.full_name" maxlength="120" autocomplete="name" :aria-invalid="store.fieldErrors.full_name ? 'true' : null" />
+            <p class="err" v-if="store.fieldErrors.full_name">{{ store.fieldErrors.full_name }}</p>
+          </div>
+          <div class="field">
+            <label for="st-email">Email <span class="opt">— sign-in and digests</span></label>
+            <input id="st-email" type="email" :value="store.userEmail" readonly />
+          </div>
+        </div>
+        <div class="field">
+          <label>Mobile</label>
+          <intl-phone :model-value="store.profile.phone" @update:model-value="v => store.profile.phone = v" :countries="dialCountries"></intl-phone>
+          <p class="err" v-if="store.fieldErrors.phone">{{ store.fieldErrors.phone }}</p>
+        </div>
+        <p class="hint" style="margin-top:12px">Changes here are saved with the bar below.</p>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Password</h2><button v-if="!pwOpen" type="button" class="btn secondary tiny" @click="pwOpen = true">Change password</button></div>
+        <div v-if="pwMsg" class="msg" :class="pwMsgType" role="status">{{ pwMsg }}</div>
+        <div v-if="pwOpen">
+          <div class="field">
+            <div class="labrow"><label for="st-pw">New password <span class="opt">— 8+ characters</span></label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
+            <input id="st-pw" :type="showPw ? 'text' : 'password'" v-model="pw" autocomplete="new-password" @keyup.enter="submitPw" />
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" :disabled="pwBusy || pw.length < 8" @click="submitPw">{{ pwBusy ? 'Updating…' : 'Update password' }}</button>
+            <button type="button" class="btn ghost" @click="cancelPw">Cancel</button>
+          </div>
+        </div>
+        <p class="hint" v-else>Use a password you don't use anywhere else.</p>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Sign out</h2></div>
+        <p class="hint">Signs you out on this device. Your alerts keep running.</p>
+        <div class="actions"><button type="button" class="btn secondary" @click="actions.signOut()">Sign out</button></div>
+      </section>
+
+      <section class="card danger-zone">
+        <h2>Delete account</h2>
+        <p class="hint" style="margin-top:6px">Removes your searches, alert history and account. Telegram stops immediately. This can't be undone.</p>
+        <button type="button" class="btn danger" disabled>Delete my account…</button>
+        <p class="hint" style="margin-top:8px">Account deletion is being connected.</p>
+      </section>
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.5.42/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
   <script src="countries.js"></script>
+  <script src="lib.js"></script>
+  <script src="views.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

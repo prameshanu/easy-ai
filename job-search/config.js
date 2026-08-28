@@ -8,4 +8,11 @@ window.EASYY_CONFIG = {
 
   // The shared bot's username WITHOUT the @ (e.g. "EasyyJobAlerts_bot")
   TELEGRAM_BOT_USERNAME: "EasyyJobAlerts_bot",
+
+  // Feature flags. Flip only when the backend behind them exists.
+  FEATURES: {
+    // Per-search "Paused" switch; writes searches.is_active.
+    // true only after (a) the Phase 2a runbook added the column AND (b) Phase 2b made the runner skip inactive searches.
+    searchPause: false,
+  },
 };

@@ -7,3 +7,6 @@ job-search/home
 
 # Session handover docs — never commit (kept local only)
 docs/handovers/
+
+# Design specs — kept local, not published (the Pages workflow deploys the whole repo)
+docs/specs/
