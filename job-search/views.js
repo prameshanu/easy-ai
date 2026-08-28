@@ -145,9 +145,7 @@
         pwBusy.value = false;
         if (error) {
           pwMsgType.value = "warn";
-          pwMsg.value = /reauth|recent login/i.test(error.message || "")
-            ? "For security, sign out and sign in again, then retry."
-            : (error.message || "Couldn't update the password. Please try again.");
+          pwMsg.value = L.friendlyAuthError(error);
           return;
         }
         pwMsgType.value = "ok"; pwMsg.value = "Password updated ✓";

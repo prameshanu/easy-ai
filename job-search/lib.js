@@ -275,11 +275,35 @@
     return { pending, days, total: list.length, searches: uniq(all.map((j) => j.search)).sort() };
   }
 
+  // ------------------------------------------------------------ auth errors
+  // Supabase auth errors → plain English. Prefer error.code (supabase-js v2 AuthApiError),
+  // fall back to the message text. Bug fixed 28 Aug: "New password should be different from
+  // the old password" (code same_password) used to be reported as a length problem.
+  function friendlyAuthError(error) {
+    if (!error) return "Something went wrong. Please try again.";
+    const code = error.code || "";
+    const m = (error.message || "").toLowerCase();
+    if (code === "same_password" || m.indexOf("should be different from the old password") !== -1) {
+      return "That's your current password — choose a new one.";
+    }
+    if (code === "weak_password" || m.indexOf("password should") !== -1) {
+      if (m.indexOf("at least") !== -1 && /\d+ characters/.test(m)) return "Password must be at least 8 characters.";
+      return "Choose a stronger password — mix letters and numbers.";
+    }
+    if (code === "invalid_credentials" || m.indexOf("invalid login") !== -1) return "That email or password doesn't match. Try again, or reset your password.";
+    if (code === "email_not_confirmed" || m.indexOf("email not confirmed") !== -1) return "Please confirm your email first — check your inbox for the confirmation link.";
+    if (code === "user_already_exists" || m.indexOf("already registered") !== -1 || m.indexOf("already been registered") !== -1) return "You already have an account with that email — try signing in instead.";
+    if (code === "over_request_rate_limit" || code === "over_email_send_rate_limit" || m.indexOf("rate limit") !== -1) return "Too many attempts just now. Please wait a minute and try again.";
+    if (code === "reauthentication_needed" || m.indexOf("reauth") !== -1 || m.indexOf("recent login") !== -1) return "For security, sign out and sign in again, then retry.";
+    return error.message || "Something went wrong. Please try again.";
+  }
+
   return {
     ROUTES, parseRoute, routeHash, parseHashError,
     parseIsoZ, formatTime, dayLabel, dayKey, formatSalary, initials, maskPhone, cleanList, parseList, uniq,
     channelsText, statusFor, shortStatus,
     validate, buildPayload,
     isRpcMissing, lastRunInfo, groupHistory,
+    friendlyAuthError,
   };
 });

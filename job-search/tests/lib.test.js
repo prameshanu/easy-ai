@@ -233,3 +233,27 @@ test("groupHistory: search filter and empty input", () => {
   assert.deepEqual(e, { pending: null, days: [], total: 0, searches: [] });
   assert.deepEqual(L.groupHistory(null, {}).days, []);
 });
+
+// ---- auth error mapping (bug 28 Aug: "same password" was reported as "at least 8 characters") ----
+test("friendlyAuthError: same password is not a length error", () => {
+  const msg = L.friendlyAuthError({ code: "same_password", message: "New password should be different from the old password." });
+  assert.match(msg, /current password/i);
+  assert.doesNotMatch(msg, /8 characters/);
+  // message-only fallback (older supabase-js without .code)
+  assert.match(L.friendlyAuthError({ message: "New password should be different from the old password." }), /current password/i);
+});
+test("friendlyAuthError: weak password maps to the length rule only when it is about length", () => {
+  assert.equal(L.friendlyAuthError({ code: "weak_password", message: "Password should be at least 6 characters." }), "Password must be at least 8 characters.");
+  const strength = L.friendlyAuthError({ code: "weak_password", message: "Password should contain at least one character of each: abcdefghijklmnopqrstuvwxyz, ABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789." });
+  assert.match(strength, /letters and numbers|mix/i);
+  assert.doesNotMatch(strength, /8 characters/);
+});
+test("friendlyAuthError: existing mappings still hold", () => {
+  assert.match(L.friendlyAuthError({ message: "Invalid login credentials" }), /doesn't match/);
+  assert.match(L.friendlyAuthError({ message: "Email not confirmed" }), /confirm your email/);
+  assert.match(L.friendlyAuthError({ message: "User already registered" }), /already have an account/);
+  assert.match(L.friendlyAuthError({ message: "Request rate limit reached" }), /wait a minute/);
+  assert.match(L.friendlyAuthError({ message: "Reauthentication needed" }), /sign in again/i);
+  assert.equal(L.friendlyAuthError({ message: "Something odd" }), "Something odd");
+  assert.equal(L.friendlyAuthError(null), "Something went wrong. Please try again.");
+});

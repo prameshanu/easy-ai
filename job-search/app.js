@@ -501,15 +501,7 @@ const app = Vue.createApp({
 
     authRedirect() { return location.origin + location.pathname; },
 
-    friendlyAuthError(error) {
-      const m = ((error && error.message) || "").toLowerCase();
-      if (m.includes("invalid login")) return "That email or password doesn't match. Try again, or reset your password.";
-      if (m.includes("email not confirmed")) return "Please confirm your email first — check your inbox for the confirmation link.";
-      if (m.includes("already registered") || m.includes("already been registered")) return "You already have an account with that email — try signing in instead.";
-      if (m.includes("rate limit")) return "Too many attempts just now. Please wait a minute and try again.";
-      if (m.includes("password should be") || m.includes("at least")) return "Password must be at least 8 characters.";
-      return (error && error.message) || "Something went wrong. Please try again.";
-    },
+    friendlyAuthError(error) { return L.friendlyAuthError(error); },
 
     authErr(msg) { this.authMsg = msg; this.authMsgType = "warn"; },
 
