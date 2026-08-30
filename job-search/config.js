@@ -18,5 +18,10 @@ window.EASYY_CONFIG = {
     // true only after that function is deployed to the Supabase project (see the
     // delete-account runbook in easyy-job-alerts / docs).
     deleteAccount: true,
+    // History job rows open a JD detail page (#/job/<id>) that reads job_details.
+    // true only after the job_details table exists and the runner captures JDs
+    // (see the jd-capture runbooks in easyy-job-alerts / docs). Resume tailoring
+    // stays a "coming soon" placeholder until that pipeline ships.
+    jdView: true,
   },
 };

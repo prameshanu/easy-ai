@@ -28,6 +28,20 @@ test("routeHash", () => {
   assert.equal(L.routeHash("home"), "#/");
   assert.equal(L.routeHash("history"), "#/history");
 });
+test("parseRoute: job route carries the id", () => {
+  assert.deepEqual(L.parseRoute("#/job/li-123"), { name: "job", id: "li-123", rewrite: false });
+  assert.deepEqual(L.parseRoute("#/job/4256186272"), { name: "job", id: "4256186272", rewrite: false });
+  assert.deepEqual(L.parseRoute("#/job/li-1/"), { name: "job", id: "li-1", rewrite: false });
+  assert.deepEqual(L.parseRoute("#/job/li-1?x=1"), { name: "job", id: "li-1", rewrite: false });
+});
+test("parseRoute: job route without an id → home with rewrite", () => {
+  assert.deepEqual(L.parseRoute("#/job"), { name: "home", rewrite: true });
+  assert.deepEqual(L.parseRoute("#/job/"), { name: "home", rewrite: true });
+});
+test("routeHash: job route builds #/job/<id>", () => {
+  assert.equal(L.routeHash("job", "li-123"), "#/job/li-123");
+  assert.equal(L.routeHash("job", "4256186272"), "#/job/4256186272");
+});
 test("parseHashError", () => {
   assert.equal(L.parseHashError("#error=access_denied&error_description=Email+link+is+invalid+or+has+expired"), "Email link is invalid or has expired");
   assert.equal(L.parseHashError("#/history"), null);

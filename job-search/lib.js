@@ -19,12 +19,19 @@
     if (h.slice(0, 2) !== "#/") return null;
     const path = h.slice(2).split(/[?&]/)[0].replace(/\/+$/, "");
     if (path === "") return { name: "home", rewrite: false };
+    if (path.slice(0, 4) === "job/") {
+      const id = decodeURIComponent(path.slice(4));
+      return id ? { name: "job", id, rewrite: false } : { name: "home", rewrite: true };
+    }
     if (ROUTES.indexOf(path) !== -1) return { name: path, rewrite: false };
     return { name: "home", rewrite: true };
   }
 
-  function routeHash(name) {
-    return name === "home" ? "#/" : "#/" + name;
+  // routeHash("job", id) → "#/job/<id>"; id is ignored for the flat routes.
+  function routeHash(name, id) {
+    if (name === "home") return "#/";
+    if (name === "job") return "#/job/" + encodeURIComponent(id || "");
+    return "#/" + name;
   }
 
   // Surfaces expired/invalid auth-link errors Supabase returns in the hash.

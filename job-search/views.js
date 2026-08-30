@@ -120,6 +120,8 @@
       const SITES = { linkedin: "LinkedIn", indeed: "Indeed", google: "Google" };
       return {
         store, actions, nav, filter, h, grouped, lastRun, channels,
+        features: store.features,
+        jobHash: (id) => L.routeHash("job", id),
         isOpen: (k) => !!opened.value[k],
         toggle(k) { touched.value = true; opened.value = Object.assign({}, opened.value, { [k]: !opened.value[k] }); },
         salary: (j) => L.formatSalary(j.salary_min, j.salary_max, j.currency),
@@ -129,6 +131,24 @@
         eventTitle: (ev) => ev.kind === "daily"
           ? "Daily digest · " + ev.jobCount + " " + (ev.jobCount === 1 ? "job" : "jobs")
           : ev.jobCount + " new " + (ev.jobCount === 1 ? "job" : "jobs"),
+      };
+    },
+  };
+
+  const ViewJob = {
+    template: "#tpl-job",
+    setup() {
+      const store = inject("store");
+      const actions = inject("actions");
+      const nav = inject("nav");
+      const job = computed(() => store.job);
+      const SITES = { linkedin: "LinkedIn", indeed: "Indeed", google: "Google" };
+      // Reload whenever the routed job id changes (the view instance is reused).
+      watch(() => store.jobId, (id) => { if (id) actions.loadJob(id); }, { immediate: true });
+      return {
+        store, actions, nav, job, features: store.features,
+        siteLabel: (s) => SITES[s] || (s || ""),
+        metaLine: (m) => (m ? [m.company, m.location, SITES[m.site] || m.site].filter(Boolean).join(" · ") : ""),
       };
     },
   };
@@ -162,6 +182,6 @@
 
   window.EasyyViews = {
     "ui-switch": UiSwitch, "ui-chip": UiChip, "ui-tags": UiTags, "ui-dialog": UiDialog,
-    "view-home": ViewHome, "view-history": ViewHistory, "view-resume": ViewResume, "view-resumes": ViewResumes, "view-settings": ViewSettings,
+    "view-home": ViewHome, "view-history": ViewHistory, "view-job": ViewJob, "view-resume": ViewResume, "view-resumes": ViewResumes, "view-settings": ViewSettings,
   };
 })();

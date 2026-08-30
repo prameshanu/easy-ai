@@ -144,16 +144,25 @@ function payloadState(s) {
 }
 function noFieldErrors() { return { full_name: "", phone: "", salary: "" }; }
 function emptyHistory() { return { status: "idle", data: null, error: "", loadedAt: 0 }; }
+function emptyJob() { return { status: "idle", id: null, meta: null, jd: null, error: "" }; }
+
+// Job meta for the JD page, taken from already-loaded history when possible.
+function jobMetaFromHistory(id) {
+  const jobs = (store.history.data && store.history.data.jobs) || [];
+  const j = jobs.find((x) => x.id === id);
+  return j ? { id: j.id, title: j.title, company: j.company, location: j.location, url: j.url, site: j.site, search: j.search } : null;
+}
 
 const store = Vue.reactive({
   booting: true, session: null, recoveryMode: false,
-  route: "home",
+  route: "home", jobId: null,
   countries: COUNTRIES, features: FEATURES,
   profile: defaultProfile(), salaryInput: "", excludeList: [], searches: [], dbSearchIds: [], lastRow: null,
   loadError: "",
   snapshot: "", saving: false, saveState: "idle", saveError: "", fieldErrors: noFieldErrors(),
   polling: false, pollTimedOut: false,
   history: emptyHistory(),
+  job: emptyJob(),
   checklistDismissed: false,
   dialog: null,
   deleting: false, deleteError: "",
@@ -190,7 +199,7 @@ const actions = {
     store.profile = defaultProfile();
     store.salaryInput = ""; store.excludeList = []; store.searches = []; store.dbSearchIds = []; store.lastRow = null;
     store.snapshot = ""; store.saveState = "idle"; store.saveError = ""; store.fieldErrors = noFieldErrors(); store.loadError = "";
-    store.history = emptyHistory(); store.checklistDismissed = false; store.dialog = null;
+    store.history = emptyHistory(); store.job = emptyJob(); store.jobId = null; store.checklistDismissed = false; store.dialog = null;
     store.deleting = false; store.deleteError = "";
     loadPromise = null;
   },
@@ -342,6 +351,30 @@ const actions = {
     h.status = "ready"; h.loadedAt = Date.now();
   },
 
+  // ---- one job's JD (job_details, gated by FEATURES.jdView) ----
+  // Meta comes from loaded history when available; a deep link falls back to the
+  // jobs table (both under the "you matched this job" RLS policies).
+  async loadJob(id) {
+    const j = store.job;
+    j.status = "loading"; j.error = ""; j.id = id; j.jd = null;
+    j.meta = jobMetaFromHistory(id);
+    const jdReq = sb.from("job_details").select("jd_text,jd_source,char_count").eq("job_id", id).maybeSingle();
+    const metaReq = j.meta ? null : sb.from("jobs").select("id,title,company,location,url,site").eq("id", id).maybeSingle();
+    const [jdRes, metaRes] = await Promise.all([jdReq, metaReq]);
+    if (store.job !== j || j.id !== id) return;   // navigated away while awaiting
+    if (jdRes.error) { j.status = "error"; j.error = jdRes.error.message || "Couldn't load this job."; return; }
+    if (!j.meta) {
+      if ((metaRes && metaRes.error) || !metaRes || !metaRes.data) {
+        j.status = "error"; j.error = "We couldn't find this job — it may have been removed."; return;
+      }
+      const m = metaRes.data;
+      j.meta = { id: m.id, title: m.title, company: m.company, location: m.location, url: m.url, site: m.site, search: null };
+    }
+    const jd = jdRes.data;
+    j.jd = jd ? { text: jd.jd_text, source: jd.jd_source, chars: jd.char_count } : null;
+    j.status = "ready";
+  },
+
   // ---- account ----
   async updatePassword(password) {
     const { error } = await sb.auth.updateUser({ password });
@@ -411,14 +444,15 @@ Vue.watch(() => store.payloadJson, () => {
 
 // ------------------------------------------------------------------ router
 const nav = {
-  go(name) {
-    if (name === store.route) return;
-    if (store.isDirty) { actions.confirmLeave(() => { actions.discard(); nav.apply(name); }); return; }
-    nav.apply(name);
+  go(name, id) {
+    if (name === store.route && (name !== "job" || id === store.jobId)) return;
+    if (store.isDirty) { actions.confirmLeave(() => { actions.discard(); nav.apply(name, id); }); return; }
+    nav.apply(name, id);
   },
-  apply(name) {
+  apply(name, id) {
     store.route = name;
-    const h = L.routeHash(name);
+    if (name === "job" && id !== undefined) store.jobId = id;
+    const h = L.routeHash(name, store.jobId);
     if (location.hash !== h) location.hash = h;   // pushes a history entry; the hashchange handler sees name === route and does nothing
     window.scrollTo(0, 0);
   },
@@ -428,14 +462,14 @@ window.addEventListener("hashchange", () => {
   const r = L.parseRoute(location.hash);
   if (!r) return;                                  // Supabase auth hash or foreign — leave it alone
   if (r.rewrite) history.replaceState(null, "", location.pathname + location.search + "#/");
-  if (r.name === store.route) return;
-  if (!store.session || store.recoveryMode) { store.route = r.name; return; }   // auth panel shows; route applies after sign-in
+  if (r.name === store.route && (r.name !== "job" || r.id === store.jobId)) return;
+  if (!store.session || store.recoveryMode) { store.route = r.name; if (r.name === "job") store.jobId = r.id; return; }   // auth panel shows; route applies after sign-in
   if (store.isDirty) {
-    history.replaceState(null, "", location.pathname + location.search + L.routeHash(store.route));   // put the URL back, then ask
-    actions.confirmLeave(() => { actions.discard(); nav.apply(r.name); });
+    history.replaceState(null, "", location.pathname + location.search + L.routeHash(store.route, store.jobId));   // put the URL back, then ask
+    actions.confirmLeave(() => { actions.discard(); nav.apply(r.name, r.id); });
     return;
   }
-  nav.apply(r.name);
+  nav.apply(r.name, r.id);
 });
 
 window.addEventListener("beforeunload", (e) => {
@@ -482,6 +516,7 @@ const app = Vue.createApp({
     const r = L.parseRoute(URL_HASH);
     if (r) {
       store.route = r.name;
+      if (r.name === "job") store.jobId = r.id;
       if (r.rewrite) history.replaceState(null, "", location.pathname + location.search + "#/");
     }
 
@@ -516,7 +551,7 @@ const app = Vue.createApp({
       store.session = data.session;
       if (store.session) {
         await actions.loadProfile();
-        if (location.hash !== L.routeHash(store.route)) history.replaceState(null, "", location.pathname + location.search + L.routeHash(store.route));
+        if (location.hash !== L.routeHash(store.route, store.jobId)) history.replaceState(null, "", location.pathname + location.search + L.routeHash(store.route, store.jobId));
         actions.loadHistory(false);
       }
     }

@@ -374,7 +374,7 @@
           </div>
           <div v-if="isOpen('pending')" class="jobs">
             <div class="job" v-for="j in grouped.pending.jobs" :key="j.id">
-              <div class="jt"><a :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
+              <div class="jt"><a v-if="features.jdView" :href="jobHash(j.id)" @click.prevent="nav.go('job', j.id)">{{ j.title }}</a><a v-else :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
               <span class="src">{{ siteLabel(j.site) }}</span>
               <span class="tag">{{ j.search }}</span>
               <button type="button" class="btn secondary tiny" disabled title="Coming soon — being connected">Tailor resume</button>
@@ -400,7 +400,7 @@
             </div>
             <div v-if="isOpen(ev.key) && ev.jobs.length" class="jobs">
               <div class="job" v-for="j in ev.jobs" :key="j.id">
-                <div class="jt"><a :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
+                <div class="jt"><a v-if="features.jdView" :href="jobHash(j.id)" @click.prevent="nav.go('job', j.id)">{{ j.title }}</a><a v-else :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
                 <span class="src">{{ siteLabel(j.site) }}</span>
                 <span class="tag">{{ j.search }}</span>
                 <button type="button" class="btn secondary tiny" disabled title="Coming soon — being connected">Tailor resume</button>
@@ -410,6 +410,43 @@
         </template>
         <p class="foot">Showing the last 90 days.</p>
       </section>
+    </div>
+  </template>
+
+  <template id="tpl-job">
+    <div class="view">
+      <button type="button" class="backlink" @click="nav.go('history')">← Back to history</button>
+
+      <section class="card" v-if="job.status === 'loading' || job.status === 'idle'" aria-busy="true">
+        <div class="skeleton row-sk"></div><div class="skeleton row-sk"></div><div class="skeleton row-sk"></div>
+      </section>
+
+      <section class="card empty" v-else-if="job.status === 'error'">
+        <p>{{ job.error || "Couldn't load this job." }}</p>
+        <button type="button" class="btn secondary" @click="actions.loadJob(store.jobId)">Try again</button>
+      </section>
+
+      <template v-else>
+        <div class="page-head">
+          <div>
+            <h1>{{ job.meta.title }}</h1>
+            <p class="hint">{{ metaLine(job.meta) }}</p>
+          </div>
+        </div>
+        <div class="job-actions">
+          <a v-if="job.meta.url" class="btn secondary" :href="job.meta.url" target="_blank" rel="noopener">Open on {{ siteLabel(job.meta.site) }} ↗</a>
+          <button type="button" class="btn" disabled title="Coming soon — being connected">Tailor resume</button>
+        </div>
+
+        <section class="card">
+          <div class="card-head"><h2>Job description</h2><span class="sub" v-if="job.jd">{{ job.jd.chars.toLocaleString() }} chars</span></div>
+          <div v-if="job.jd" class="jd-body">{{ job.jd.text }}</div>
+          <div v-else class="empty-jd">
+            <p><b>Description not captured yet.</b></p>
+            <p class="hint">We fetch the full description when this job is matched on a run — check back shortly, or open it on {{ siteLabel(job.meta.site) }}.</p>
+          </div>
+        </section>
+      </template>
     </div>
   </template>
 

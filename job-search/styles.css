@@ -243,6 +243,15 @@ input[type=text].search-title::placeholder { font-weight: 500; }
 .job .jt span { display: block; color: var(--mut); font-size: 12.5px; }
 .job .tag { font-size: 12px; padding: 2px 7px; }
 .src { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; padding: 3px 7px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); color: var(--mut); white-space: nowrap; }
+
+/* ---------- JD detail page (#/job/<id>) ---------- */
+.backlink { background: transparent; border: 0; color: var(--acc); font-weight: 600; font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.backlink:hover { text-decoration: underline; }
+.job-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 16px; }
+.job-actions .btn { text-decoration: none; }
+.jd-body { white-space: pre-wrap; font-size: 14px; line-height: 1.62; color: var(--ink); overflow-wrap: anywhere; }
+.empty-jd { padding: 4px 0; }
+.empty-jd p + p { margin-top: 6px; }
 .foot { color: var(--mut); font-size: 12.5px; text-align: center; margin-top: 14px; }
 .empty { text-align: center; color: var(--mut); padding: 36px 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .skeleton { background: linear-gradient(90deg, var(--bg), var(--line), var(--bg)); background-size: 200% 100%; border-radius: 8px; animation: shimmer 1.2s linear infinite; height: 14px; }
