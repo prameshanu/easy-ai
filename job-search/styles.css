@@ -252,6 +252,15 @@ input[type=text].search-title::placeholder { font-weight: 500; }
 .jd-body { white-space: pre-wrap; font-size: 14px; line-height: 1.62; color: var(--ink); overflow-wrap: anywhere; }
 .empty-jd { padding: 4px 0; }
 .empty-jd p + p { margin-top: 6px; }
+.jd-fetching { display: flex; align-items: center; gap: 10px; color: var(--mut); font-size: 14px; padding: 6px 0; }
+
+/* clickable History tile (opens the JD page) */
+.job.rowlink { grid-template-columns: 1fr auto auto auto auto; cursor: pointer; }
+.job.rowlink:hover { background: var(--bg); }
+.job.rowlink:focus-visible { outline: 2px solid var(--acc); outline-offset: -2px; }
+.job .jtitle { font-weight: 600; font-size: 13.5px; color: var(--ink); }
+.job.rowlink:hover .jtitle { color: var(--acc); }
+.chev { color: var(--mut); font-size: 18px; line-height: 1; justify-self: end; }
 .foot { color: var(--mut); font-size: 12.5px; text-align: center; margin-top: 14px; }
 .empty { text-align: center; color: var(--mut); padding: 36px 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .skeleton { background: linear-gradient(90deg, var(--bg), var(--line), var(--bg)); background-size: 200% 100%; border-radius: 8px; animation: shimmer 1.2s linear infinite; height: 14px; }
@@ -335,6 +344,7 @@ input[type=text].search-title::placeholder { font-weight: 500; }
   .ev-row > .btn { grid-column: 3; justify-self: start; }
   .jobs { margin-left: 0; }
   .job { grid-template-columns: 1fr auto; }
+  .job.rowlink { grid-template-columns: 1fr auto auto; }
   .job .src, .job .tag { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {

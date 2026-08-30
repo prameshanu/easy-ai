@@ -370,9 +370,22 @@ const actions = {
       const m = metaRes.data;
       j.meta = { id: m.id, title: m.title, company: m.company, location: m.location, url: m.url, site: m.site, search: null };
     }
-    const jd = jdRes.data;
-    j.jd = jd ? { text: jd.jd_text, source: jd.jd_source, chars: jd.char_count } : null;
-    j.status = "ready";
+    if (jdRes.data && jdRes.data.jd_text) {
+      j.jd = { text: jdRes.data.jd_text, source: jdRes.data.jd_source, chars: jdRes.data.char_count };
+      j.status = "ready";
+      return;
+    }
+    // Not captured yet → fetch it on demand (the fetch-jd Edge Function does the
+    // LinkedIn guest fetch server-side and saves it). Show a working state meanwhile.
+    j.status = "fetching";
+    const { data: fetched, error: fnErr } = await sb.functions.invoke("fetch-jd", { body: { job_id: id } });
+    if (store.job !== j || j.id !== id) return;   // navigated away while awaiting
+    if (!fnErr && fetched && fetched.jd_text) {
+      j.jd = { text: fetched.jd_text, source: fetched.jd_source, chars: fetched.char_count };
+      j.status = "ready";
+    } else {
+      j.status = "unavailable";   // couldn't fetch (rare / non-LinkedIn) → "open on LinkedIn" fallback
+    }
   },
 
   // ---- account ----

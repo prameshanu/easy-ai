@@ -121,7 +121,6 @@
       return {
         store, actions, nav, filter, h, grouped, lastRun, channels,
         features: store.features,
-        jobHash: (id) => L.routeHash("job", id),
         isOpen: (k) => !!opened.value[k],
         toggle(k) { touched.value = true; opened.value = Object.assign({}, opened.value, { [k]: !opened.value[k] }); },
         salary: (j) => L.formatSalary(j.salary_min, j.salary_max, j.currency),
