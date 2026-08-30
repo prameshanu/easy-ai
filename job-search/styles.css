@@ -231,7 +231,7 @@ input[type=text].search-title::placeholder { font-weight: 500; }
 .ev-row .ic.warn { background: var(--warn-bg); color: var(--warn); }
 .ev-row .t { min-width: 0; }
 .ev-row .t b { font-weight: 600; }
-.ev-row .t span { display: block; color: var(--mut); font-size: 13px; }
+.ev-row .t > span { display: block; color: var(--mut); font-size: 13px; }
 .ev-row .t .tag { display: inline-flex; margin-left: 4px; font-size: 12px; padding: 1px 7px; }
 .event.pending .t b { color: var(--warn); }
 .jobs { margin: 0 0 10px 92px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
