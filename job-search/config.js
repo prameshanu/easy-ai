@@ -26,6 +26,6 @@ window.EASYY_CONFIG = {
     // Resumes page becomes the master-resume builder (#/resumes + #/master).
     // true only after migration 0006 is applied AND the master worker is running
     // (see the master-resume runbooks in easy-ai/docs/specs). Ships false.
-    masterResume: false,
+    masterResume: true,
   },
 };
