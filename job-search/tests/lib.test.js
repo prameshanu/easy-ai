@@ -372,3 +372,118 @@ test("groupHistory v2: alert event survives filter with jobs narrowed to the sea
   assert.deepEqual(ev.jobs.map((j) => j.id), ["j1"]);   // narrowed to the DS job, event kept
   assert.deepEqual(ev.searches, ["DS"]);
 });
+
+// ---- master resume (Plan 3) ----
+test("routes: master", () => {
+  assert.deepEqual(L.parseRoute("#/master"), { name: "master", rewrite: false });
+  assert.equal(L.routeHash("master"), "#/master");
+  assert.ok(L.ROUTES.includes("master"));
+});
+
+test("kindForFile by extension", () => {
+  assert.equal(L.kindForFile("My Resume.DOCX"), "docx");
+  assert.equal(L.kindForFile("cv.pdf"), "pdf");
+  assert.equal(L.kindForFile("old.doc"), null);
+  assert.equal(L.kindForFile("notes.txt"), null);
+  assert.equal(L.kindForFile(""), null);
+});
+
+test("fileCapCheck", () => {
+  const files = [{ sha256: "a".repeat(64) }, { sha256: "b".repeat(64) }];
+  assert.equal(L.fileCapCheck({ files, cap: 2, size: 100, sha256: "c".repeat(64) }), "cap_files");
+  assert.equal(L.fileCapCheck({ files, cap: 20, size: 5242881, sha256: "c".repeat(64) }), "cap_size");
+  assert.equal(L.fileCapCheck({ files, cap: 20, size: 0, sha256: "c".repeat(64) }), "cap_size");
+  assert.equal(L.fileCapCheck({ files, cap: 20, size: 100, sha256: "a".repeat(64) }), "duplicate");
+  assert.equal(L.fileCapCheck({ files, cap: 20, size: 100, sha256: "c".repeat(64) }), null);
+});
+
+test("masterError maps codes and never leaks raw text", () => {
+  assert.equal(L.masterError({ message: "cap_files" }), "You've reached your file limit — remove one to add another.");
+  assert.equal(L.masterError("cap_size"), "Files must be under 5 MB.");
+  assert.equal(L.masterError({ message: "cap_builds" }), "That's 5 builds today — try again tomorrow.");
+  assert.equal(L.masterError({ message: "duplicate" }), "You've already added this file.");
+  assert.equal(L.masterError({ message: "build_active" }), "A build is already running.");
+  assert.equal(L.masterError({ message: "bad_kind" }), "We can read DOCX, PDF or pasted text.");
+  assert.equal(L.masterError({ message: "no_files" }), "Add at least one resume first.");
+  assert.equal(L.masterError({ message: "not_cancellable" }), "This build has already started and can't be cancelled.");
+  assert.equal(L.masterError({ message: "relation does not exist blah" }), "Something went wrong — please try again.");
+  assert.equal(L.masterError(null, "Upload didn't finish — try again."), "Upload didn't finish — try again.");
+  assert.equal(L.masterError({ name: "StorageApiError", message: "x" }, "Upload didn't finish — try again."), "Upload didn't finish — try again.");
+});
+
+test("buildFailureCopy by error_kind", () => {
+  assert.equal(L.buildFailureCopy({ status: "failed", error_kind: "worker_lost" }), "Our builder went offline mid-way — it will retry automatically.");
+  assert.equal(L.buildFailureCopy({ status: "failed", error_kind: "infra" }), "Something went wrong on our side — we've been notified.");
+  assert.equal(L.buildFailureCopy({ status: "failed", error_kind: null }), "Something went wrong on our side — we've been notified.");
+});
+
+test("buildStageLabel states and steps", () => {
+  assert.equal(L.buildStageLabel(null).state, "none");
+  const q = L.buildStageLabel({ status: "queued", progress: {}, created_at: "2026-08-30T10:00:00Z" }, Date.parse("2026-08-30T10:01:00Z"));
+  assert.equal(q.state, "queued"); assert.equal(q.waiting, false);
+  assert.deepEqual(q.steps.map((s) => s.state), ["todo", "todo", "todo"]);
+  const w = L.buildStageLabel({ status: "queued", progress: {}, created_at: "2026-08-30T10:00:00Z" }, Date.parse("2026-08-30T10:03:00Z"));
+  assert.equal(w.waiting, true);
+  const e = L.buildStageLabel({ status: "extracting", progress: { files_done: 4, files_total: 12 } });
+  assert.equal(e.state, "running");
+  assert.deepEqual(e.steps[0], { key: "extract", label: "Reading your resumes", detail: "4 of 12 files", state: "now" });
+  assert.equal(e.steps[1].state, "todo");
+  const m = L.buildStageLabel({ status: "merging", progress: { files_done: 12, files_total: 12, positions_done: 2, positions_total: 6 } });
+  assert.deepEqual(m.steps.map((s) => s.state), ["done", "now", "todo"]);
+  assert.equal(m.steps[1].detail, "2 of 6 sections");
+  const d = L.buildStageLabel({ status: "detecting", progress: {} });
+  assert.deepEqual(d.steps.map((s) => s.state), ["done", "done", "now"]);
+  assert.equal(L.buildStageLabel({ status: "ready" }).state, "ready");
+  assert.equal(L.buildStageLabel({ status: "failed" }).state, "failed");
+  assert.equal(L.buildStageLabel({ status: "cancelled" }).state, "cancelled");
+});
+
+test("conflictProgress", () => {
+  assert.deepEqual(L.conflictProgress([]), { open: 0, resolved: 0, total: 0, text: "No open conflicts" });
+  const c = [{ status: "open" }, { status: "resolved" }, { status: "resolved" }];
+  assert.deepEqual(L.conflictProgress(c), { open: 1, resolved: 2, total: 3, text: "2 of 3 resolved" });
+});
+
+test("groupItemsBySection nests bullets, variants, sources", () => {
+  const items = [
+    { id: "p1", kind: "position", parent_id: null, position_key: "maverix", text: "Maverix Lead AI Engineer", status: "extracted", sort_order: 0, data: { title: "Lead AI Engineer" }, master_item_sources: [] },
+    { id: "b2", kind: "bullet", parent_id: "p1", position_key: "maverix", text: "Cut cost $16K", status: "extracted", sort_order: 1, data: {},
+      master_item_sources: [{ source_kind: "file", file_id: "f2", lines: [8], text: "Cut cost $16K", is_canonical: true }] },
+    { id: "b1", kind: "bullet", parent_id: "p1", position_key: "maverix", text: "Built 34 tables", status: "confirmed", sort_order: 0, data: {},
+      master_item_sources: [{ source_kind: "file", file_id: "f1", lines: [5], text: "Built 34 tables", is_canonical: true },
+                            { source_kind: "file", file_id: "f2", lines: [6, 7], text: "Built thirty-four tables", is_canonical: false },
+                            { source_kind: "file", file_id: "f3", lines: [9], text: "Built 34 tables", is_canonical: false }] },
+    { id: "s1", kind: "skill", parent_id: null, position_key: null, text: "Python", status: "extracted", sort_order: 0, data: {},
+      master_item_sources: [{ source_kind: "file", file_id: "f1", lines: [9], text: "Python", is_canonical: true }] },
+    { id: "u1", kind: "skill", parent_id: null, position_key: null, text: "Rust", status: "confirmed", sort_order: 1, data: {},
+      master_item_sources: [{ source_kind: "user", file_id: null, lines: null, text: "Rust", is_canonical: true }] },
+  ];
+  const sections = L.groupItemsBySection(items);
+  assert.deepEqual(sections.map((s) => s.kind), ["position", "skill"]);
+  assert.equal(sections[0].label, "Positions"); assert.equal(sections[1].label, "Skills");
+  const pos = sections[0].items[0];
+  assert.equal(pos.id, "p1");
+  assert.deepEqual(pos.children.map((c) => c.id), ["b1", "b2"]);
+  const b1 = pos.children[0];
+  assert.equal(b1.canonical, "Built 34 tables");
+  assert.deepEqual(b1.variants, ["Built thirty-four tables"]);
+  assert.equal(b1.sources.length, 3); assert.equal(b1.singleSource, false); assert.equal(b1.userAdded, false);
+  assert.equal(pos.children[1].singleSource, true);
+  const rust = sections[1].items[1];
+  assert.equal(rust.userAdded, true); assert.equal(rust.singleSource, false);
+});
+
+test("rulingFromForm", () => {
+  assert.deepEqual(L.rulingFromForm("option", 1, ""), { choice: "option", option_index: 1 });
+  assert.deepEqual(L.rulingFromForm("both", null, ""), { choice: "both" });
+  assert.deepEqual(L.rulingFromForm("custom", null, "  Built 40 tables "), { choice: "custom", custom_text: "Built 40 tables" });
+  assert.equal(L.rulingFromForm("custom", null, "   "), null);
+  assert.equal(L.rulingFromForm("option", null, ""), null);
+  assert.equal(L.rulingFromForm("", null, ""), null);
+});
+
+test("fileSizeText", () => {
+  assert.equal(L.fileSizeText(512), "1 KB");
+  assert.equal(L.fileSizeText(153600), "150 KB");
+  assert.equal(L.fileSizeText(2 * 1024 * 1024 + 300000), "2.3 MB");
+});

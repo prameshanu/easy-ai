@@ -23,5 +23,9 @@ window.EASYY_CONFIG = {
     // (see the jd-capture runbooks in easyy-job-alerts / docs). Resume tailoring
     // stays a "coming soon" placeholder until that pipeline ships.
     jdView: true,
+    // Resumes page becomes the master-resume builder (#/resumes + #/master).
+    // true only after migration 0006 is applied AND the master worker is running
+    // (see the master-resume runbooks in easy-ai/docs/specs). Ships false.
+    masterResume: false,
   },
 };

@@ -463,6 +463,16 @@
   <template id="tpl-resume">
     <div class="view">
       <div class="page-head"><h1>Resume builder</h1></div>
+      <template v-if="features.masterResume">
+        <div v-if="store.master.status === 'ready' && !store.hasReadyMaster" class="msg info banner" role="status">
+          Build your master resume first — it's what every tailored resume is made from.
+          <a href="#/resumes" @click.prevent="nav.go('resumes')">Go to Resumes →</a>
+        </div>
+        <div v-else-if="store.openConflicts > 0" class="msg warn banner" role="status">
+          Resolve {{ store.openConflicts }} {{ store.openConflicts === 1 ? 'conflict' : 'conflicts' }} in your master resume first.
+          <a href="#/master" @click.prevent="actions.openMaster('conflicts')">Review →</a>
+        </div>
+      </template>
       <div class="msg info" role="status">Resume tailoring is being connected — your alerts keep running.</div>
       <div class="row">
         <section class="card">
@@ -483,15 +493,209 @@
   <template id="tpl-resumes">
     <div class="view">
       <div class="page-head"><h1>Resumes</h1></div>
-      <div class="msg info" role="status">Resume tailoring is being connected — your alerts keep running.</div>
-      <section class="card">
-        <div class="card-head"><h2>Master resume</h2><button type="button" class="btn secondary tiny" disabled>Review &amp; edit</button></div>
-        <p class="hint">Source of truth for every tailored resume.</p>
-      </section>
+
+      <template v-if="!features.masterResume">
+        <div class="msg info" role="status">Resume tailoring is being connected — your alerts keep running.</div>
+        <section class="card">
+          <div class="card-head"><h2>Master resume</h2><button type="button" class="btn secondary tiny" disabled>Review &amp; edit</button></div>
+          <p class="hint">Source of truth for every tailored resume.</p>
+        </section>
+      </template>
+
+      <template v-else>
+        <section class="card empty" v-if="m.status === 'error'">
+          <p>{{ m.error }}</p>
+          <button type="button" class="btn secondary" @click="actions.loadMaster(true)">Try again</button>
+        </section>
+        <section class="card" v-else-if="m.status !== 'ready'" aria-busy="true">
+          <div class="skeleton row-sk"></div><div class="skeleton row-sk"></div>
+        </section>
+
+        <template v-else>
+          <!-- master card -->
+          <section class="card">
+            <div class="card-head"><h2>Master resume</h2><span class="sub" v-if="ov.master && ov.master.current_build_id">v{{ ov.master.version }} · built {{ when(ov.build && ov.build.finished_at) }}</span></div>
+
+            <template v-if="stage.state === 'none' || stage.state === 'cancelled'">
+              <p class="hint" v-if="stage.state === 'cancelled'">Build cancelled.</p>
+              <p class="hint" v-else>Upload the resumes you've sent over the years. We'll combine them into one set of facts and ask you only about what disagrees.</p>
+              <div class="actions">
+                <button type="button" class="btn" :disabled="store.buildBusy || !files.length" :title="files.length ? '' : 'Add at least one resume first'" @click="actions.requestBuild()">{{ store.buildBusy ? 'Starting…' : 'Build master' }}</button>
+              </div>
+            </template>
+
+            <template v-else-if="stage.state === 'queued' || stage.state === 'running'">
+              <div class="stepper" role="status" aria-live="polite">
+                <div class="step-row" v-for="s in stage.steps" :key="s.key" :class="s.state">
+                  <span class="step-dot" aria-hidden="true">{{ s.state === 'done' ? '✓' : '' }}</span>
+                  <span class="step-label">{{ s.label }}</span><span class="step-detail" v-if="s.detail">{{ s.detail }}</span>
+                </div>
+              </div>
+              <p class="hint" v-if="stage.state === 'queued'"><span class="spinner sm"></span> {{ stage.waiting ? 'Waiting for our builder — this can take a few minutes.' : 'Starting…' }}</p>
+              <div class="actions" v-if="stage.state === 'queued'">
+                <button type="button" class="btn ghost tiny" :disabled="store.buildBusy" @click="actions.cancelBuild()">Cancel</button>
+              </div>
+            </template>
+
+            <template v-else-if="stage.state === 'failed'">
+              <p class="err">{{ failCopy }}</p>
+              <div class="actions"><button type="button" class="btn secondary" :disabled="store.buildBusy" @click="actions.requestBuild()">Try again</button></div>
+            </template>
+
+            <template v-else>
+              <p><b>{{ ov.item_count }}</b> facts · <b>{{ ov.open_conflicts }}</b> {{ ov.open_conflicts === 1 ? 'question' : 'questions' }} to answer</p>
+              <div class="actions">
+                <button type="button" class="btn" v-if="ov.open_conflicts" @click="actions.openMaster('conflicts')">Review conflicts ({{ ov.open_conflicts }})</button>
+                <button type="button" class="btn secondary" @click="actions.openMaster('master')">Browse master</button>
+                <button type="button" class="btn ghost" :disabled="store.buildBusy || !files.length" @click="actions.requestBuild()">{{ store.buildBusy ? 'Starting…' : 'Rebuild' }}</button>
+              </div>
+            </template>
+            <p class="err" v-if="store.buildError" role="alert">{{ store.buildError }}</p>
+          </section>
+
+          <!-- files card -->
+          <section class="card">
+            <div class="card-head"><h2>Source files</h2><span class="sub">{{ files.length }} of {{ ov.files_cap }} files</span></div>
+            <div class="list" v-if="files.length">
+              <div class="li file-row" v-for="f in files" :key="f.id">
+                <span class="ic" aria-hidden="true">{{ f.kind === 'pdf' ? 'PDF' : f.kind === 'docx' ? 'DOC' : 'TXT' }}</span>
+                <div class="t"><b>{{ f.filename }}</b><span class="file-meta">{{ size(f.size_bytes) }} · added {{ when(f.created_at) }}</span></div>
+                <span class="pill ok" v-if="f.in_master">In master ✓</span>
+                <span class="pill warn" v-else-if="f.excluded" title="We couldn't read this file. Try saving it again as .docx or paste its text.">Couldn't be read</span>
+                <button type="button" class="btn ghost tiny" :disabled="building" @click="actions.removeResumeFile(f)">Remove</button>
+              </div>
+            </div>
+            <p class="hint" v-else>No resumes yet. Add DOCX or PDF files, or paste the text of one.</p>
+
+            <div class="actions">
+              <input ref="picker" type="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple hidden @change="onPick" />
+              <button type="button" class="btn secondary" :disabled="store.upload.busy || building || files.length >= ov.files_cap" @click="$refs.picker.click()">{{ store.upload.busy ? 'Adding…' : 'Upload DOCX / PDF' }}</button>
+              <button type="button" class="btn ghost" :disabled="store.upload.busy || building || files.length >= ov.files_cap" @click="pasteOpen = !pasteOpen">Paste text</button>
+            </div>
+            <div v-if="pasteOpen" class="paste-box">
+              <div class="field"><label for="pst-name">Name <span class="opt">— optional</span></label><input id="pst-name" type="text" v-model.trim="pasteName" placeholder="e.g. 2024 data science resume" maxlength="120" /></div>
+              <div class="field"><label for="pst-text">Resume text</label><textarea id="pst-text" v-model="pasteText" rows="10" placeholder="Paste the whole resume here."></textarea></div>
+              <div class="actions">
+                <button type="button" class="btn" :disabled="store.upload.busy || !pasteText.trim()" @click="doPaste">Add</button>
+                <button type="button" class="btn ghost" @click="pasteOpen = false">Cancel</button>
+              </div>
+            </div>
+            <p class="err" v-if="store.upload.error" role="alert">{{ store.upload.error }}</p>
+            <p class="ok" v-else-if="store.upload.notice" role="status">{{ store.upload.notice }} ✓</p>
+            <p class="hint" v-if="building">Files are locked while a build is running.</p>
+          </section>
+        </template>
+      </template>
+
       <section class="card empty">
         <h2>Tailored resumes</h2>
         <p>Tailored resumes will appear here, newest first, with their files and the job they were for.</p>
       </section>
+    </div>
+  </template>
+
+  <template id="tpl-master">
+    <div class="view">
+      <button type="button" class="backlink" @click="nav.go('resumes')">← Back to resumes</button>
+      <div class="page-head">
+        <div><h1>Your master resume</h1><p class="hint" v-if="r.status === 'ready'">{{ progress.text }} · {{ factCount }} facts</p></div>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" class="tab-btn" :class="{ on: store.masterTab === 'conflicts' }" :aria-selected="String(store.masterTab === 'conflicts')" @click="store.masterTab = 'conflicts'">Conflicts <span class="count" v-if="progress.open">{{ progress.open }}</span></button>
+          <button type="button" role="tab" class="tab-btn" :class="{ on: store.masterTab === 'master' }" :aria-selected="String(store.masterTab === 'master')" @click="store.masterTab = 'master'">Master</button>
+        </div>
+      </div>
+
+      <section class="card empty" v-if="r.status === 'error'">
+        <p>{{ r.error }}</p><button type="button" class="btn secondary" @click="actions.loadReview(true)">Try again</button>
+      </section>
+      <section class="card" v-else-if="r.status !== 'ready'" aria-busy="true"><div class="skeleton row-sk"></div><div class="skeleton row-sk"></div><div class="skeleton row-sk"></div></section>
+
+      <template v-else>
+        <p class="err" v-if="store.reviewError" role="alert">{{ store.reviewError }}</p>
+
+        <!-- conflicts tab -->
+        <template v-if="store.masterTab === 'conflicts'">
+          <section class="card empty" v-if="!openConflicts.length">
+            <p><b>No open conflicts</b> — tailoring is unblocked.</p>
+            <p class="hint" v-if="progress.resolved">You've answered {{ progress.resolved }} {{ progress.resolved === 1 ? 'question' : 'questions' }}.</p>
+          </section>
+          <section class="card conflict" v-for="c in openConflicts" :key="c.id" :class="{ focus: c.id === focusId }">
+            <div class="card-head"><h2>{{ c.question }}</h2><span class="sub">{{ kindLabel(c.kind) }}</span></div>
+            <div class="opt" v-for="(o, i) in c.options" :key="i">
+              <label><input type="radio" :name="'c-' + c.id" :value="'o' + i" v-model="choice[c.id]" /> <span class="opt-text">{{ o.text }}</span></label>
+              <span class="opt-files hint">in {{ o.count }} {{ o.count === 1 ? 'file' : 'files' }}<template v-if="fileNames(o.file_ids)"> — {{ fileNames(o.file_ids) }}</template></span>
+            </div>
+            <div class="opt"><label><input type="radio" :name="'c-' + c.id" value="both" v-model="choice[c.id]" /> <span class="opt-text">Both are fine</span></label></div>
+            <div class="opt"><label><input type="radio" :name="'c-' + c.id" value="custom" v-model="choice[c.id]" /> <span class="opt-text">Write my own</span></label>
+              <textarea v-if="choice[c.id] === 'custom'" v-model="custom[c.id]" rows="2" placeholder="The wording you want to keep" maxlength="2000"></textarea>
+            </div>
+            <div class="actions">
+              <button type="button" class="btn" :disabled="!!store.reviewBusy[c.id] || !rulingFor(c)" @click="save(c)">{{ store.reviewBusy[c.id] ? 'Saving…' : 'Save answer' }}</button>
+            </div>
+          </section>
+        </template>
+
+        <!-- master tab -->
+        <template v-else>
+          <section class="card empty" v-if="!sections.length"><p>Nothing here yet — build your master resume first.</p></section>
+          <section class="card" v-for="sec in sections" :key="sec.kind">
+            <div class="card-head"><h2>{{ sec.label }}</h2>
+              <button type="button" class="btn ghost tiny" v-if="sec.kind !== 'position'" @click="addOpen = addOpen === sec.kind ? '' : sec.kind">+ Add a fact</button>
+            </div>
+            <div v-if="addOpen === sec.kind" class="paste-box">
+              <div class="field"><textarea v-model="addText[sec.kind]" rows="2" :placeholder="'Add to ' + sec.label.toLowerCase()" maxlength="2000"></textarea></div>
+              <div class="actions"><button type="button" class="btn tiny" :disabled="!(addText[sec.kind] || '').trim()" @click="addFact(sec.kind, null)">Add</button><button type="button" class="btn ghost tiny" @click="addOpen = ''">Cancel</button></div>
+            </div>
+
+            <template v-for="it in sec.items" :key="it.id">
+              <div class="item-row" :class="{ rejected: it.status === 'rejected', head: it.kind === 'position' }">
+                <div class="item-text">
+                  <span>{{ it.kind === 'position' ? posLabel(it) : it.canonical }}</span>
+                  <span class="status-chip" v-if="it.userAdded">added by you</span>
+                  <span class="status-chip ok" v-else-if="it.status === 'confirmed'">confirmed ✓</span>
+                  <span class="status-chip muted" v-else-if="it.status === 'rejected'">rejected</span>
+                  <span class="status-chip warn" v-if="it.singleSource && it.status !== 'rejected'" title="Only one of your resumes says this">seen in 1 file</span>
+                </div>
+                <div class="item-tools" v-if="it.kind !== 'position'">
+                  <button type="button" class="linkbtn" v-if="it.variants.length || it.sources.length" :aria-expanded="String(!!open[it.id])" @click="toggle(it.id)">{{ open[it.id] ? 'Hide' : 'Sources' }}<template v-if="it.variants.length"> · {{ it.variants.length }} {{ it.variants.length === 1 ? 'variant' : 'variants' }}</template></button>
+                  <button type="button" class="btn ghost tiny" :disabled="!!store.reviewBusy[it.id]" @click="actions.setItemStatus(it, it.status === 'rejected' ? 'restore' : 'rejected')">{{ it.status === 'rejected' ? 'Restore' : 'Reject' }}</button>
+                </div>
+              </div>
+              <div class="variants" v-if="open[it.id]">
+                <div class="src" v-for="v in it.variants" :key="v"><span class="tag">variant</span> {{ v }}</div>
+                <div class="src hint" v-for="(s, i) in it.sources" :key="'s' + i">{{ fileName(s.file_id) }}<template v-if="s.lines && s.lines.length"> · line{{ s.lines.length > 1 ? 's' : '' }} {{ s.lines[0] }}<template v-if="s.lines.length > 1">–{{ s.lines[s.lines.length - 1] }}</template></template></div>
+              </div>
+
+              <template v-if="it.kind === 'position'">
+                <template v-for="b in it.children" :key="b.id">
+                  <div class="item-row child" :class="{ rejected: b.status === 'rejected' }">
+                    <div class="item-text">
+                      <span>{{ b.canonical }}</span>
+                      <span class="status-chip" v-if="b.userAdded">added by you</span>
+                      <span class="status-chip ok" v-else-if="b.status === 'confirmed'">confirmed ✓</span>
+                      <span class="status-chip muted" v-else-if="b.status === 'rejected'">rejected</span>
+                      <span class="status-chip warn" v-if="b.singleSource && b.status !== 'rejected'" title="Only one of your resumes says this">seen in 1 file</span>
+                    </div>
+                    <div class="item-tools">
+                      <button type="button" class="linkbtn" v-if="b.variants.length || b.sources.length" :aria-expanded="String(!!open[b.id])" @click="toggle(b.id)">{{ open[b.id] ? 'Hide' : 'Sources' }}<template v-if="b.variants.length"> · {{ b.variants.length }} {{ b.variants.length === 1 ? 'variant' : 'variants' }}</template></button>
+                      <button type="button" class="btn ghost tiny" :disabled="!!store.reviewBusy[b.id]" @click="actions.setItemStatus(b, b.status === 'rejected' ? 'restore' : 'rejected')">{{ b.status === 'rejected' ? 'Restore' : 'Reject' }}</button>
+                    </div>
+                  </div>
+                  <div class="variants child" v-if="open[b.id]">
+                    <div class="src" v-for="v in b.variants" :key="v"><span class="tag">variant</span> {{ v }}</div>
+                    <div class="src hint" v-for="(s, i) in b.sources" :key="'s' + i">{{ fileName(s.file_id) }}<template v-if="s.lines && s.lines.length"> · line{{ s.lines.length > 1 ? 's' : '' }} {{ s.lines[0] }}<template v-if="s.lines.length > 1">–{{ s.lines[s.lines.length - 1] }}</template></template></div>
+                  </div>
+                </template>
+                <div class="item-row child add" v-if="addOpen === 'bullet:' + it.id">
+                  <div class="field" style="flex:1"><textarea v-model="addText['bullet:' + it.id]" rows="2" placeholder="Add an achievement for this role" maxlength="2000"></textarea></div>
+                  <div class="actions"><button type="button" class="btn tiny" :disabled="!(addText['bullet:' + it.id] || '').trim()" @click="addFact('bullet', it)">Add</button><button type="button" class="btn ghost tiny" @click="addOpen = ''">Cancel</button></div>
+                </div>
+                <button type="button" class="linkbtn child" v-else @click="addOpen = 'bullet:' + it.id">+ Add an achievement</button>
+              </template>
+            </template>
+          </section>
+        </template>
+      </template>
     </div>
   </template>
 

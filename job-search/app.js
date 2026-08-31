@@ -2,7 +2,7 @@
    Pure functions live in lib.js (window.EasyyLib); views in views.js (window.EasyyViews).
    No build step: Vue 3 + supabase-js from CDN (pinned in index.html). */
 const CFG = window.EASYY_CONFIG;
-const FEATURES = Object.assign({ searchPause: false, deleteAccount: false }, CFG.FEATURES || {});
+const FEATURES = Object.assign({ searchPause: false, deleteAccount: false, jdView: false, masterResume: false }, CFG.FEATURES || {});
 const L = window.EasyyLib;
 const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
 
@@ -145,6 +145,8 @@ function payloadState(s) {
 function noFieldErrors() { return { full_name: "", phone: "", salary: "" }; }
 function emptyHistory() { return { status: "idle", data: null, error: "", loadedAt: 0 }; }
 function emptyJob() { return { status: "idle", id: null, meta: null, jd: null, error: "" }; }
+function emptyMaster() { return { status: "idle", data: null, error: "" }; }
+function emptyReview() { return { status: "idle", items: [], conflicts: [], error: "" }; }
 
 // Job meta for the JD page, taken from already-loaded history when possible.
 function jobMetaFromHistory(id) {
@@ -163,6 +165,9 @@ const store = Vue.reactive({
   polling: false, pollTimedOut: false,
   history: emptyHistory(),
   job: emptyJob(),
+  master: emptyMaster(), review: emptyReview(), masterTab: "conflicts",
+  upload: { busy: false, error: "", notice: "" }, buildBusy: false, buildError: "",
+  reviewBusy: {}, reviewError: "",
   checklistDismissed: false,
   dialog: null,
   deleting: false, deleteError: "",
@@ -172,6 +177,8 @@ const store = Vue.reactive({
   get payloadJson() { return JSON.stringify(L.buildPayload(payloadState(this), FEATURES)); },
   get isDirty() { return !!this.profile.id && this.payloadJson !== this.snapshot; },
   get lastRun() { return L.lastRunInfo(this.history.data && this.history.data.last_run); },
+  get openConflicts() { return (this.master.data && this.master.data.open_conflicts) || 0; },
+  get hasReadyMaster() { return !!(this.master.data && this.master.data.master && this.master.data.master.current_build_id); },
   get status() {
     return L.statusFor({
       loading: !this.profile.id, savedSearchCount: this.dbSearchIds.length, isActive: this.profile.is_active,
@@ -187,6 +194,7 @@ const store = Vue.reactive({
 
 let savedTimer = null;
 let pollTimer = null;
+let buildPollTimer = null;
 let pollGiveUp = null;
 let loadPromise = null;
 
@@ -201,6 +209,9 @@ const actions = {
     store.snapshot = ""; store.saveState = "idle"; store.saveError = ""; store.fieldErrors = noFieldErrors(); store.loadError = "";
     store.history = emptyHistory(); store.job = emptyJob(); store.jobId = null; store.checklistDismissed = false; store.dialog = null;
     store.deleting = false; store.deleteError = "";
+    actions.stopBuildPolling();
+    store.master = emptyMaster(); store.review = emptyReview(); store.masterTab = "conflicts";
+    store.upload = { busy: false, error: "", notice: "" }; store.buildBusy = false; store.buildError = ""; store.reviewBusy = {}; store.reviewError = "";
     loadPromise = null;
   },
 
@@ -388,6 +399,175 @@ const actions = {
     }
   },
 
+  // ---- master resume (gated by FEATURES.masterResume) ----
+  async loadMaster(force) {
+    if (!FEATURES.masterResume) return;
+    const m = store.master;
+    if (!force && m.status === "loading") return;
+    if (m.status !== "ready") m.status = "loading";
+    m.error = "";
+    const { data, error } = await sb.rpc("master_overview");
+    if (error) { m.status = "error"; m.error = L.masterError(error); return; }
+    m.data = data; m.status = "ready";
+    const b = data && data.build;
+    if (b && ["queued", "extracting", "merging", "detecting"].indexOf(b.status) !== -1) actions.startBuildPolling();
+    else actions.stopBuildPolling();
+  },
+  startBuildPolling() {
+    if (buildPollTimer) return;
+    buildPollTimer = setInterval(() => { if (store.route === "resumes") actions.loadMaster(true); else actions.stopBuildPolling(); }, 5000);
+  },
+  stopBuildPolling() {
+    if (buildPollTimer) clearInterval(buildPollTimer);
+    buildPollTimer = null;
+  },
+
+  async sha256Hex(blob) {
+    const buf = await blob.arrayBuffer();
+    const hash = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  },
+
+  // register (caps) → upload → on failure discard the row
+  async addResumeBlob(blob, filename, kind) {
+    const u = store.upload;
+    u.error = ""; u.notice = ""; u.busy = true;
+    try {
+      const files = (store.master.data && store.master.data.files) || [];
+      const cap = (store.master.data && store.master.data.files_cap) || 20;
+      const sha = await actions.sha256Hex(blob);
+      const local = L.fileCapCheck({ files, cap, size: blob.size, sha256: sha });
+      if (local) { u.error = L.masterError(local); return false; }
+      const reg = await sb.rpc("register_resume_file", { p_filename: filename, p_kind: kind, p_size_bytes: blob.size, p_sha256: sha });
+      if (reg.error) { u.error = L.masterError(reg.error); return false; }
+      const { file_id, storage_path } = reg.data;
+      const mime = kind === "docx" ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : kind === "pdf" ? "application/pdf" : "text/plain";
+      const up = await sb.storage.from("resumes").upload(storage_path, blob, { contentType: mime, upsert: false });
+      if (up.error) {
+        const dis = await sb.rpc("discard_resume_file", { p_file_id: file_id });
+        if (dis.error) await actions.loadMaster(true);   // cleanup failed → surface the orphan, don't leave it silent
+        u.error = L.masterError(up.error, "Upload didn't finish — try again.");
+        return false;
+      }
+      u.notice = "Added " + filename;
+      await actions.loadMaster(true);
+      return true;
+    } catch (e) {
+      u.error = L.masterError(e, "Upload didn't finish — try again.");
+      return false;
+    } finally {
+      u.busy = false;
+    }
+  },
+  async uploadResumeFile(file) {
+    const kind = L.kindForFile(file && file.name);
+    if (!kind) { store.upload.error = L.masterError("bad_kind"); return false; }
+    return actions.addResumeBlob(file, file.name, kind);
+  },
+  async pasteResumeText(text, name) {
+    const t = (text || "").trim();
+    if (!t) { store.upload.error = "Paste the resume text first."; return false; }
+    const blob = new Blob([t], { type: "text/plain" });
+    return actions.addResumeBlob(blob, (name || "Pasted resume").trim().slice(0, 120) + ".txt", "text");
+  },
+  removeResumeFile(file) {
+    store.dialog = {
+      title: "Remove " + file.filename + "?",
+      body: "It stays in your master resume until you rebuild.",
+      confirmLabel: "Remove file", cancelLabel: "Keep it", danger: true,
+      onConfirm: async () => {
+        store.upload.error = "";
+        const { data: path, error } = await sb.rpc("remove_resume_file", { p_file_id: file.id });
+        if (error) { store.upload.error = L.masterError(error); return; }
+        if (path) await sb.storage.from("resumes").remove([path]);   // object removal failure is harmless: row is already soft-deleted
+        await actions.loadMaster(true);
+      },
+    };
+  },
+
+  async requestBuild() {
+    if (store.buildBusy) return;
+    store.buildBusy = true; store.buildError = "";
+    try {
+      const { error } = await sb.rpc("request_master_build");
+      if (error) { store.buildError = L.masterError(error); return; }
+      await actions.loadMaster(true);
+    } finally {
+      store.buildBusy = false;
+    }
+  },
+  async cancelBuild() {
+    const b = store.master.data && store.master.data.build;
+    if (!b || store.buildBusy) return;
+    store.buildBusy = true; store.buildError = "";
+    try {
+      const { error } = await sb.rpc("cancel_master_build", { p_build_id: b.id });
+      if (error) { store.buildError = L.masterError(error); }
+      await actions.loadMaster(true);
+    } finally {
+      store.buildBusy = false;
+    }
+  },
+  openMaster(tab) {
+    store.masterTab = tab === "master" ? "master" : "conflicts";
+    nav.go("master");
+  },
+
+  async loadReview(force) {
+    if (!FEATURES.masterResume) return;
+    const r = store.review;
+    if (!force && r.status === "loading") return;
+    if (r.status !== "ready") r.status = "loading";
+    r.error = ""; store.reviewError = "";
+    if (!store.master.data) await actions.loadMaster(true);
+    const master = store.master.data && store.master.data.master;
+    if (!master) { r.items = []; r.conflicts = []; r.status = "ready"; return; }
+    const [items, conflicts] = await Promise.all([
+      sb.from("master_items").select("*, master_item_sources(*)").eq("master_id", master.id).order("sort_order"),
+      sb.from("master_conflicts").select("*").eq("master_id", master.id).order("created_at"),
+    ]);
+    if (items.error || conflicts.error) { r.status = "error"; r.error = L.masterError(items.error || conflicts.error); return; }
+    r.items = items.data || []; r.conflicts = conflicts.data || []; r.status = "ready";
+  },
+  async resolveConflict(conflict, ruling) {
+    if (store.reviewBusy[conflict.id]) return false;
+    store.reviewBusy = Object.assign({}, store.reviewBusy, { [conflict.id]: true }); store.reviewError = "";
+    try {
+      const { error } = await sb.rpc("resolve_conflict", { p_conflict_id: conflict.id, p_ruling: ruling });
+      if (error) { store.reviewError = L.masterError(error); return false; }
+      await actions.loadReview(true);
+      actions.loadMaster(true);
+      return true;
+    } finally {
+      const b = Object.assign({}, store.reviewBusy); delete b[conflict.id]; store.reviewBusy = b;
+    }
+  },
+  async setItemStatus(item, status) {
+    if (store.reviewBusy[item.id]) return;
+    const row = store.review.items.find((x) => x.id === item.id) || item;   // reactive store row
+    const prev = row.status;
+    row.status = status === "rejected" ? "rejected" : (item.userAdded ? "confirmed" : "extracted");   // optimistic (reactive row)
+    store.reviewBusy = Object.assign({}, store.reviewBusy, { [item.id]: true }); store.reviewError = "";
+    try {
+      const { data, error } = await sb.rpc("set_item_status", { p_item_id: item.id, p_status: status });
+      if (error) { row.status = prev; store.reviewError = L.masterError(error); return; }
+      row.status = data;
+      actions.loadMaster(true);
+    } finally {
+      const b = Object.assign({}, store.reviewBusy); delete b[item.id]; store.reviewBusy = b;
+    }
+  },
+  async addUserItem(kind, positionKey, text) {
+    const t = (text || "").trim();
+    if (!t) return false;
+    store.reviewError = "";
+    const { error } = await sb.rpc("add_user_item", { p_kind: kind, p_position_key: positionKey || null, p_text: t, p_data: {} });
+    if (error) { store.reviewError = L.masterError(error); return false; }
+    await actions.loadReview(true);
+    actions.loadMaster(true);
+    return true;
+  },
+
   // ---- account ----
   async updatePassword(password) {
     const { error } = await sb.auth.updateUser({ password });
@@ -395,6 +575,7 @@ const actions = {
   },
   async signOut() {
     actions.stopPolling();
+    actions.stopBuildPolling();
     await sb.auth.signOut();
     actions.resetProfile();
     store.route = "home";
@@ -463,6 +644,7 @@ const nav = {
     nav.apply(name, id);
   },
   apply(name, id) {
+    if (name !== "resumes") actions.stopBuildPolling();
     store.route = name;
     if (name === "job" && id !== undefined) store.jobId = id;
     const h = L.routeHash(name, store.jobId);

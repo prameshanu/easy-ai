@@ -152,8 +152,91 @@
     },
   };
 
-  const ViewResume = { template: "#tpl-resume", setup() { return { nav: inject("nav") }; } };
-  const ViewResumes = { template: "#tpl-resumes", setup() { return { nav: inject("nav") }; } };
+  const ViewResume = {
+    template: "#tpl-resume",
+    setup() {
+      const store = inject("store"), actions = inject("actions"), nav = inject("nav");
+      onMounted(() => { if (store.features.masterResume) actions.loadMaster(false); });
+      return { store, actions, nav, features: store.features };
+    },
+  };
+
+  const ViewResumes = {
+    template: "#tpl-resumes",
+    setup() {
+      const store = inject("store"), actions = inject("actions"), nav = inject("nav");
+      const pasteOpen = ref(false), pasteText = ref(""), pasteName = ref("");
+      const picker = ref(null);
+      const m = computed(() => store.master);
+      const ov = computed(() => store.master.data || {});
+      const files = computed(() => (store.master.data && store.master.data.files) || []);
+      const stage = computed(() => L.buildStageLabel(store.master.data && store.master.data.build));
+      const building = computed(() => stage.value.state === "queued" || stage.value.state === "running");
+      const failCopy = computed(() => L.buildFailureCopy(store.master.data && store.master.data.build));
+      onMounted(() => { if (store.features.masterResume) actions.loadMaster(true); });
+      async function onPick(e) {
+        const list = Array.from(e.target.files || []);
+        e.target.value = "";
+        for (const f of list) { const ok = await actions.uploadResumeFile(f); if (!ok) break; }
+      }
+      async function doPaste() {
+        const ok = await actions.pasteResumeText(pasteText.value, pasteName.value);
+        if (ok) { pasteOpen.value = false; pasteText.value = ""; pasteName.value = ""; }
+      }
+      return {
+        store, actions, nav, features: store.features, m, ov, files, stage, building, failCopy,
+        pasteOpen, pasteText, pasteName, picker, onPick, doPaste,
+        size: (b) => L.fileSizeText(b || 0),
+        when: (iso) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""),
+      };
+    },
+  };
+
+  const KIND_LABELS = { numeric: "Different figures", title: "Job title", dates: "Dates", cert_date: "Certification date", education: "Education", entity: "Employer name" };
+
+  const ViewMaster = {
+    template: "#tpl-master",
+    setup() {
+      const store = inject("store"), actions = inject("actions"), nav = inject("nav");
+      const r = computed(() => store.review);
+      const choice = ref({}), custom = ref({}), open = ref({}), addOpen = ref(""), addText = ref({});
+      const focusId = ref(null);
+      const openConflicts = computed(() => r.value.conflicts.filter((c) => c.status === "open"));
+      const progress = computed(() => L.conflictProgress(r.value.conflicts));
+      const sections = computed(() => L.groupItemsBySection(r.value.items));
+      const factCount = computed(() => r.value.items.filter((i) => i.status !== "rejected").length);
+      const filesById = computed(() => { const o = {}; ((store.master.data && store.master.data.files) || []).forEach((f) => { o[f.id] = f.filename; }); return o; });
+      onMounted(() => { actions.loadReview(true); });
+      watch(openConflicts, (list) => { focusId.value = list[0] ? list[0].id : null; }, { immediate: true });
+      function rulingFor(c) {
+        const v = choice.value[c.id];
+        if (!v) return null;
+        if (v === "both") return L.rulingFromForm("both");
+        if (v === "custom") return L.rulingFromForm("custom", null, custom.value[c.id]);
+        return L.rulingFromForm("option", parseInt(v.slice(1), 10));
+      }
+      async function save(c) {
+        const ruling = rulingFor(c);
+        if (!ruling) return;
+        const ok = await actions.resolveConflict(c, ruling);
+        if (ok) { delete choice.value[c.id]; delete custom.value[c.id]; }
+      }
+      async function addFact(kind, parent) {
+        const key = kind === "bullet" ? "bullet:" + parent.id : kind;
+        const ok = await actions.addUserItem(kind, parent ? parent.position_key : null, addText.value[key]);
+        if (ok) { addText.value[key] = ""; addOpen.value = ""; }
+      }
+      return {
+        store, actions, nav, r, choice, custom, open, addOpen, addText, focusId, openConflicts, progress, sections, factCount,
+        rulingFor, save, addFact,
+        toggle(id) { open.value = Object.assign({}, open.value, { [id]: !open.value[id] }); },
+        kindLabel: (k) => KIND_LABELS[k] || k,
+        fileName: (id) => filesById.value[id] || "a removed file",
+        fileNames(ids) { return (ids || []).map((id) => filesById.value[id]).filter(Boolean).slice(0, 3).join(", "); },
+        posLabel(it) { const d = it.data || {}; return [d.employer, d.title, [d.start, d.end].filter(Boolean).join(" – ")].filter(Boolean).join(" · ") || it.canonical; },
+      };
+    },
+  };
 
   const ViewSettings = {
     template: "#tpl-settings",
@@ -181,6 +264,6 @@
 
   window.EasyyViews = {
     "ui-switch": UiSwitch, "ui-chip": UiChip, "ui-tags": UiTags, "ui-dialog": UiDialog,
-    "view-home": ViewHome, "view-history": ViewHistory, "view-job": ViewJob, "view-resume": ViewResume, "view-resumes": ViewResumes, "view-settings": ViewSettings,
+    "view-home": ViewHome, "view-history": ViewHistory, "view-job": ViewJob, "view-resume": ViewResume, "view-resumes": ViewResumes, "view-master": ViewMaster, "view-settings": ViewSettings,
   };
 })();

@@ -8,7 +8,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  const ROUTES = ["home", "history", "resume", "resumes", "settings"];
+  const ROUTES = ["home", "history", "resume", "resumes", "master", "settings"];
 
   // ---------------------------------------------------------------- routing
   // A hash is a route only when it starts with "#/". Anything else (Supabase
@@ -357,6 +357,124 @@
     return "Couldn't delete your account" + (reason ? " — " + reason : "") + "." + support;
   }
 
+  // ------------------------------------------------------- master resume ----
+  const MASTER_ERRORS = {
+    cap_files: "You've reached your file limit — remove one to add another.",
+    cap_size: "Files must be under 5 MB.",
+    cap_builds: "That's 5 builds today — try again tomorrow.",
+    duplicate: "You've already added this file.",
+    build_active: "A build is already running.",
+    bad_kind: "We can read DOCX, PDF or pasted text.",
+    no_files: "Add at least one resume first.",
+    not_cancellable: "This build has already started and can't be cancelled.",
+    bad_ruling: "That answer didn't save — pick an option or write your own.",
+    bad_status: "That change didn't save — please try again.",
+    not_found: "We couldn't find that — refresh and try again.",
+  };
+  const GENERIC_ERROR = "Something went wrong — please try again.";
+  const SECTION_LABELS = [
+    ["contact", "Contact"], ["headline", "Headline"], ["summary", "Summaries"], ["position", "Positions"],
+    ["skill", "Skills"], ["education", "Education"], ["cert", "Certifications"], ["award", "Awards"],
+  ];
+  const MAX_FILE_BYTES = 5242880;
+
+  function kindForFile(name) {
+    const m = /\.([a-z0-9]+)$/i.exec(name || "");
+    const ext = m ? m[1].toLowerCase() : "";
+    return ext === "docx" ? "docx" : ext === "pdf" ? "pdf" : null;
+  }
+
+  function fileCapCheck(o) {
+    const files = o.files || [];
+    if (files.length >= (o.cap || 20)) return "cap_files";
+    if (!o.size || o.size > MAX_FILE_BYTES) return "cap_size";
+    if (o.sha256 && files.some((f) => f.sha256 === o.sha256)) return "duplicate";
+    return null;
+  }
+
+  function masterError(err, fallback) {
+    const code = typeof err === "string" ? err : (err && err.message) || "";
+    if (MASTER_ERRORS[code]) return MASTER_ERRORS[code];
+    return fallback || GENERIC_ERROR;
+  }
+
+  function buildFailureCopy(build) {
+    if (build && build.error_kind === "worker_lost") return "Our builder went offline mid-way — it will retry automatically.";
+    return "Something went wrong on our side — we've been notified.";
+  }
+
+  function buildStageLabel(build, now) {
+    const steps = [
+      { key: "extract", label: "Reading your resumes", detail: "", state: "todo" },
+      { key: "merge", label: "Combining what they say", detail: "", state: "todo" },
+      { key: "check", label: "Checking for conflicts", detail: "", state: "todo" },
+    ];
+    if (!build) return { state: "none", steps, waiting: false };
+    const s = build.status;
+    const p = build.progress || {};
+    if (s === "ready" || s === "failed" || s === "cancelled") return { state: s, steps: steps.map((x) => Object.assign({}, x, { state: "done" })), waiting: false };
+    if (s === "queued") {
+      const age = (now || Date.now()) - Date.parse(build.created_at || 0);
+      return { state: "queued", steps, waiting: age > 120000 };
+    }
+    const idx = s === "extracting" ? 0 : s === "merging" ? 1 : 2;
+    steps.forEach((x, i) => { x.state = i < idx ? "done" : i === idx ? "now" : "todo"; });
+    if (p.files_total) steps[0].detail = (p.files_done || 0) + " of " + p.files_total + " files";
+    if (p.positions_total) steps[1].detail = (p.positions_done || 0) + " of " + p.positions_total + " sections";
+    return { state: "running", steps, waiting: false };
+  }
+
+  function conflictProgress(conflicts) {
+    const list = conflicts || [];
+    const resolved = list.filter((c) => c.status === "resolved").length;
+    const total = list.length;
+    const open = total - resolved;
+    return { open, resolved, total, text: open === 0 ? "No open conflicts" : resolved + " of " + total + " resolved" };
+  }
+
+  function decorateItem(row) {
+    const srcs = row.master_item_sources || [];
+    const fileSrcs = srcs.filter((s) => s.source_kind === "file");
+    const canonical = (srcs.find((s) => s.is_canonical) || {}).text || row.text;
+    const variants = [];
+    srcs.forEach((s) => { if (!s.is_canonical && s.text !== canonical && variants.indexOf(s.text) === -1) variants.push(s.text); });
+    const userAdded = srcs.some((s) => s.source_kind === "user");
+    const files = {};
+    fileSrcs.forEach((s) => { files[s.file_id] = true; });
+    return Object.assign({}, row, {
+      canonical, variants, sources: fileSrcs, userAdded,
+      singleSource: !userAdded && Object.keys(files).length === 1,
+      children: [],
+    });
+  }
+
+  function groupItemsBySection(items) {
+    const byId = {};
+    const decorated = (items || []).map(decorateItem);
+    decorated.forEach((it) => { byId[it.id] = it; });
+    const bySort = (a, b) => (a.sort_order || 0) - (b.sort_order || 0);
+    decorated.forEach((it) => {
+      if (it.kind === "bullet" && it.parent_id && byId[it.parent_id]) byId[it.parent_id].children.push(it);
+    });
+    decorated.forEach((it) => { it.children.sort(bySort); });
+    return SECTION_LABELS.map(([kind, label]) => ({
+      kind, label,
+      items: decorated.filter((it) => it.kind === kind).sort(bySort),
+    })).filter((s) => s.items.length);
+  }
+
+  function rulingFromForm(choice, optionIndex, customText) {
+    if (choice === "option") return Number.isInteger(optionIndex) && optionIndex >= 0 ? { choice: "option", option_index: optionIndex } : null;
+    if (choice === "both") return { choice: "both" };
+    if (choice === "custom") { const t = (customText || "").trim(); return t ? { choice: "custom", custom_text: t } : null; }
+    return null;
+  }
+
+  function fileSizeText(bytes) {
+    if (bytes >= 1024 * 1024) return (Math.round(bytes / 1024 / 1024 * 10) / 10) + " MB";
+    return Math.max(1, Math.round(bytes / 1024)) + " KB";
+  }
+
   return {
     ROUTES, parseRoute, routeHash, parseHashError,
     parseIsoZ, formatTime, dayLabel, dayKey, formatSalary, initials, maskPhone, cleanList, parseList, uniq,
@@ -364,5 +482,7 @@
     validate, buildPayload,
     isRpcMissing, lastRunInfo, groupHistory, channelParts,
     friendlyAuthError, deleteAccountError,
+    kindForFile, fileCapCheck, masterError, buildFailureCopy, buildStageLabel, conflictProgress,
+    groupItemsBySection, rulingFromForm, fileSizeText, MAX_FILE_BYTES,
   };
 });
