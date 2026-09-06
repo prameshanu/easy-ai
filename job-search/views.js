@@ -173,7 +173,10 @@
       const stage = computed(() => L.buildStageLabel(store.master.data && store.master.data.build));
       const building = computed(() => stage.value.state === "queued" || stage.value.state === "running");
       const failCopy = computed(() => L.buildFailureCopy(store.master.data && store.master.data.build));
-      onMounted(() => { if (store.features.masterResume) actions.loadMaster(true); });
+      onMounted(() => {
+        if (store.features.masterResume) actions.loadMaster(true);
+        if (store.features.tailorResume) actions.loadTailored(false);
+      });
       async function onPick(e) {
         const list = Array.from(e.target.files || []);
         e.target.value = "";
@@ -188,6 +191,7 @@
         pasteOpen, pasteText, pasteName, picker, onPick, doPaste,
         size: (b) => L.fileSizeText(b || 0),
         when: (iso) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""),
+        tWhen: (iso) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""),
       };
     },
   };
@@ -238,6 +242,50 @@
     },
   };
 
+  const ViewTailored = {
+    template: "#tpl-tailored",
+    setup() {
+      const store = inject("store"), actions = inject("actions"), nav = inject("nav");
+      const run = computed(() => store.tailorRun);
+      const stage = computed(() => L.tailorStageLabel(store.tailorRun.row));
+      const running = computed(() => stage.value.state === "queued" || stage.value.state === "running");
+      const failCopy = computed(() => L.tailorFailureCopy(store.tailorRun.row));
+      const fitText = computed(() => L.fitLine((store.tailorRun.row || {}).fit));
+      const ats = computed(() => (store.tailorRun.row || {}).ats || {});
+      const gaps = computed(() => L.gapLists(store.tailorRun.row, store.tailorRun.answers));
+      const facts = computed(() => L.usedFacts(store.tailorRun.row));
+      const jdMeta = computed(() => (store.tailorRun.row || {}).jd_meta || {});
+      // per-gap local form state: which gap is answering, its note + position pick
+      const answering = ref(""), note = ref(""), posKey = ref("");
+      const editing = ref(null), editText = ref("");     // draft being edited (answer id)
+      const guide = ref("");                              // regenerate guidance
+      watch(() => store.tailoredId, (id) => {
+        answering.value = ""; editing.value = null; guide.value = "";
+        if (id) actions.loadTailorRun(id);
+      }, { immediate: true });
+      function startYes(g) { answering.value = g.keyword; note.value = ""; posKey.value = ""; }
+      async function sendYes(g, skip) {
+        await actions.answerGap(g, "yes", skip ? "" : note.value, skip ? null : posKey.value);
+        answering.value = "";
+      }
+      function startEdit(a) { editing.value = a.id; editText.value = a.draft_text || ""; }
+      async function approve(a, edited) {
+        await actions.approveDraft(a, edited ? editText.value : a.draft_text);
+        editing.value = null;
+      }
+      const answeredSinceReady = computed(() =>
+        (store.tailorRun.answers || []).some((a) => a.tailor_id === (store.tailorRun.row || {}).id
+          && (a.status === "approved" || (a.status === "recorded" && a.answer === "yes"))));
+      return {
+        store, actions, nav, features: store.features, run, stage, running, failCopy, fitText, ats,
+        gaps, facts, jdMeta, answering, note, posKey, editing, editText, guide,
+        startYes, sendYes, startEdit, approve, answeredSinceReady,
+        posLabel: (p) => { const d = p.data || {}; return [d.employer, d.title].filter(Boolean).join(" — ") || p.text; },
+        when: (iso) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""),
+      };
+    },
+  };
+
   const ViewSettings = {
     template: "#tpl-settings",
     setup() {
@@ -264,6 +312,6 @@
 
   window.EasyyViews = {
     "ui-switch": UiSwitch, "ui-chip": UiChip, "ui-tags": UiTags, "ui-dialog": UiDialog,
-    "view-home": ViewHome, "view-history": ViewHistory, "view-job": ViewJob, "view-resume": ViewResume, "view-resumes": ViewResumes, "view-master": ViewMaster, "view-settings": ViewSettings,
+    "view-home": ViewHome, "view-history": ViewHistory, "view-job": ViewJob, "view-resume": ViewResume, "view-resumes": ViewResumes, "view-master": ViewMaster, "view-tailored": ViewTailored, "view-settings": ViewSettings,
   };
 })();

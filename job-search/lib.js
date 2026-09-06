@@ -23,6 +23,10 @@
       const id = decodeURIComponent(path.slice(4));
       return id ? { name: "job", id, rewrite: false } : { name: "home", rewrite: true };
     }
+    if (path.slice(0, 9) === "tailored/") {
+      const id = decodeURIComponent(path.slice(9));
+      return id ? { name: "tailored", id, rewrite: false } : { name: "home", rewrite: true };
+    }
     if (ROUTES.indexOf(path) !== -1) return { name: path, rewrite: false };
     return { name: "home", rewrite: true };
   }
@@ -31,6 +35,7 @@
   function routeHash(name, id) {
     if (name === "home") return "#/";
     if (name === "job") return "#/job/" + encodeURIComponent(id || "");
+    if (name === "tailored") return "#/tailored/" + encodeURIComponent(id || "");
     return "#/" + name;
   }
 
@@ -475,6 +480,97 @@
     return Math.max(1, Math.round(bytes / 1024)) + " KB";
   }
 
+  // ------------------------------------------------------ tailored resumes ----
+  const TAILOR_ERRORS = {
+    no_master: "Build your master resume first — it's what every tailored resume is made from.",
+    conflicts_open: "Resolve your master-resume conflicts first, then tailor.",
+    tailor_active: "A tailored resume is already being made — wait for it to finish.",
+    cap_tailors: "That's your limit for today — try again tomorrow.",
+    bad_jd: "That job description looks too short — paste the full posting (at least a few paragraphs).",
+    not_cancellable: "This one has already started and can't be cancelled.",
+    not_deletable: "This one is still running — wait for it to finish first.",
+    answered: "You've already answered that one.",
+    bad_answer: "That answer didn't save — please try again.",
+  };
+  function tailorError(err, fallback) {
+    const code = typeof err === "string" ? err : (err && err.message) || "";
+    return TAILOR_ERRORS[code] || fallback || GENERIC_ERROR;
+  }
+
+  function canTailor(overview) {
+    const master = overview && overview.master;
+    if (!master || !master.current_build_id) return { ok: false, reason: "no_master", open: 0 };
+    const open = (overview && overview.open_conflicts) || 0;
+    if (open > 0) return { ok: false, reason: "conflicts", open };
+    return { ok: true, reason: null, open: 0 };
+  }
+
+  const TAILOR_STEPS = [
+    { key: "analyze", label: "Analyzing the job description" },
+    { key: "plan", label: "Choosing and wording your facts" },
+    { key: "render", label: "Laying out the PDF" },
+  ];
+  function tailorStageLabel(run, now) {
+    const steps = TAILOR_STEPS.map((s) => ({ key: s.key, label: s.label, state: "todo" }));
+    if (!run) return { state: "none", steps, waiting: false };
+    const s = run.status;
+    if (s === "ready" || s === "failed" || s === "cancelled") {
+      return { state: s, steps: steps.map((x) => Object.assign({}, x, { state: "done" })), waiting: false };
+    }
+    if (s === "queued") {
+      const age = (now || Date.now()) - Date.parse(run.created_at || 0);
+      return { state: "queued", steps, waiting: age > 120000 };
+    }
+    const idx = s === "analyzing" ? 0 : s === "planning" ? 1 : 2;
+    steps.forEach((x, i) => { x.state = i < idx ? "done" : i === idx ? "now" : "todo"; });
+    return { state: "running", steps, waiting: false };
+  }
+
+  function tailorFailureCopy(run) {
+    const kind = run && run.error_kind;
+    if (kind === "fit") return "This one couldn't fit two pages. Regenerate with guidance about what to trim.";
+    if (kind === "worker_lost") return "Our builder went offline mid-way — it will retry automatically.";
+    return "Something went wrong on our side — we've been notified.";
+  }
+
+  function fitLine(fit) {
+    if (!fit || !fit.pages) return "";
+    let s = fit.pages + (fit.pages === 1 ? " page" : " pages") + " · " + fit.spacing + " · " + fit.font_pt + "pt";
+    const n = (fit.dropped_item_ids || []).length;
+    if (n) s += " · " + n + (n === 1 ? " bullet" : " bullets") + " trimmed to fit";
+    return s;
+  }
+
+  function normalizeKeyword(k) {
+    return String(k == null ? "" : k).trim().replace(/\s+/g, " ").toLowerCase();
+  }
+
+  // plan.gaps + master_answers → questionnaire model. done-states:
+  // declined (no) · skill_added (yes, no note) · draft_pending · draft_ready · approved · discarded
+  function gapLists(run, answers) {
+    const gaps = ((run && run.plan && run.plan.gaps) || []);
+    const byNorm = {};
+    (answers || []).forEach((a) => { byNorm[a.keyword_norm] = a; });
+    const open = [], done = [], structural = [];
+    for (const g of gaps) {
+      if (!g.askable) { structural.push({ keyword: g.keyword, question: g.question, state: "structural", answer: null }); continue; }
+      const a = byNorm[normalizeKeyword(g.keyword)];
+      if (!a) { open.push({ keyword: g.keyword, question: g.question, state: "unanswered", answer: null }); continue; }
+      const state = a.status === "recorded" ? (a.answer === "no" ? "declined" : "skill_added") : a.status;
+      done.push({ keyword: g.keyword, question: g.question, state, answer: a });
+    }
+    return { open, done, structural };
+  }
+
+  function usedFacts(run) {
+    const dropped = {};
+    (((run && run.fit) || {}).dropped_item_ids || []).forEach((id) => { dropped[id] = true; });
+    return (((run && run.plan) || {}).positions || []).map((p) => ({
+      position_key: p.position_key,
+      bullets: (p.bullets || []).map((b) => ({ id: b.id, text: b.text, dropped: !!dropped[b.id] })),
+    }));
+  }
+
   return {
     ROUTES, parseRoute, routeHash, parseHashError,
     parseIsoZ, formatTime, dayLabel, dayKey, formatSalary, initials, maskPhone, cleanList, parseList, uniq,
@@ -484,5 +580,6 @@
     friendlyAuthError, deleteAccountError,
     kindForFile, fileCapCheck, masterError, buildFailureCopy, buildStageLabel, conflictProgress,
     groupItemsBySection, rulingFromForm, fileSizeText, MAX_FILE_BYTES,
+    TAILOR_ERRORS, tailorError, canTailor, tailorStageLabel, tailorFailureCopy, fitLine, normalizeKeyword, gapLists, usedFacts,
   };
 });

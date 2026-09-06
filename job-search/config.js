@@ -27,5 +27,9 @@ window.EASYY_CONFIG = {
     // true only after migration 0006 is applied AND the master worker is running
     // (see the master-resume runbooks in easy-ai/docs/specs). Ships false.
     masterResume: true,
+    // Tailor buttons + #/tailored/<id> + the Tailored-resumes card become live.
+    // true only after 0007 is applied AND the tailor worker update is deployed
+    // (see the 2026-09-01 tailor-resume runbooks). Ships false.
+    tailorResume: false,
   },
 };

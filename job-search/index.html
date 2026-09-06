@@ -190,6 +190,25 @@
       <ui-dialog :open="!!store.dialog" :title="store.dialog ? store.dialog.title : ''" :body="store.dialog ? store.dialog.body : ''"
                  :confirm-label="store.dialog ? store.dialog.confirmLabel : 'Confirm'" :cancel-label="store.dialog ? store.dialog.cancelLabel : 'Cancel'"
                  :danger="!!(store.dialog && store.dialog.danger)" @confirm="actions.dialogConfirm()" @cancel="actions.dialogCancel()"></ui-dialog>
+
+      <div v-if="store.tailorModal" class="dialog-backdrop" @click.self="actions.cancelTailorModal()">
+        <div class="dialog" role="dialog" aria-modal="true" aria-label="Tailor resume">
+          <h2 v-if="store.tailorModal.jobId">Tailor for {{ store.tailorModal.title || "this job" }}
+            <span v-if="store.tailorModal.company">at {{ store.tailorModal.company }}</span></h2>
+          <h2 v-else>Tailor from a pasted job description</h2>
+          <textarea v-if="!store.tailorModal.jobId" v-model="store.tailorModal.jdText" rows="8"
+                    placeholder="Paste the full job description (at least a few paragraphs)…"></textarea>
+          <label class="hint">Anything to emphasise? (optional)</label>
+          <textarea v-model="store.tailorModal.guidance" rows="2"
+                    placeholder="e.g. lead with credit-risk work, keep the GenAI platform bullet"></textarea>
+          <div v-if="store.tailorModal.error" class="msg warn">{{ store.tailorModal.error }}</div>
+          <div class="dialog-actions">
+            <button type="button" class="btn secondary" @click="actions.cancelTailorModal()">Cancel</button>
+            <button type="button" class="btn" :disabled="store.tailorBusy"
+                    @click="actions.submitTailorModal()">{{ store.tailorBusy ? "Starting…" : "Tailor it" }}</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -379,7 +398,10 @@
               <div class="jt"><span v-if="features.jdView" class="jtitle">{{ j.title }}</span><a v-else :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
               <span class="src">{{ siteLabel(j.site) }}</span>
               <span class="tag">{{ j.search }}</span>
-              <button type="button" class="btn secondary tiny" disabled title="Coming soon — being connected" @click.stop>Tailor resume</button>
+              <button v-if="features.tailorResume" type="button" class="btn secondary tiny"
+                      @click.stop="actions.tailorFromJob(j)">Tailor resume</button>
+              <button v-else type="button" class="btn secondary tiny" disabled
+                      title="Coming soon — being connected" @click.stop>Tailor resume</button>
               <span class="chev" v-if="features.jdView" aria-hidden="true">›</span>
             </div>
           </div>
@@ -408,7 +430,10 @@
                 <div class="jt"><span v-if="features.jdView" class="jtitle">{{ j.title }}</span><a v-else :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
                 <span class="src">{{ siteLabel(j.site) }}</span>
                 <span class="tag">{{ j.search }}</span>
-                <button type="button" class="btn secondary tiny" disabled title="Coming soon — being connected" @click.stop>Tailor resume</button>
+                <button v-if="features.tailorResume" type="button" class="btn secondary tiny"
+                        @click.stop="actions.tailorFromJob(j)">Tailor resume</button>
+                <button v-else type="button" class="btn secondary tiny" disabled
+                        title="Coming soon — being connected" @click.stop>Tailor resume</button>
                 <span class="chev" v-if="features.jdView" aria-hidden="true">›</span>
               </div>
             </div>
@@ -441,7 +466,9 @@
         </div>
         <div class="job-actions">
           <a v-if="job.meta.url" class="btn secondary" :href="job.meta.url" target="_blank" rel="noopener">Open on {{ siteLabel(job.meta.site) }} ↗</a>
-          <button type="button" class="btn" disabled title="Coming soon — being connected">Tailor resume</button>
+          <button v-if="features.tailorResume" type="button" class="btn"
+                  @click="actions.tailorFromJob(job.meta)">Tailor resume</button>
+          <button v-else type="button" class="btn" disabled title="Coming soon — being connected">Tailor resume</button>
         </div>
 
         <section class="card">
@@ -473,19 +500,32 @@
           <a href="#/master" @click.prevent="actions.openMaster('conflicts')">Review →</a>
         </div>
       </template>
-      <div class="msg info" role="status">Resume tailoring is being connected — your alerts keep running.</div>
-      <div class="row">
+      <div v-if="features.tailorResume">
         <section class="card">
-          <div class="card-head"><h2>From a recent alert</h2></div>
-          <p class="hint">Recent alerts will appear here. Picking one fetches the full description for you.</p>
+          <h2>Tailor a resume</h2>
+          <p class="hint">Pick a job from History, or paste any job description — you'll get a PDF built
+            from your master resume, with an ATS report.</p>
+          <div class="actions">
+            <button type="button" class="btn" @click="actions.openPasteTailor()">Paste a job description</button>
+            <button type="button" class="btn secondary" @click="nav.go('history')">Pick from History</button>
+          </div>
         </section>
-        <section class="card">
-          <div class="card-head"><h2>Or paste a job description</h2></div>
-          <div class="field"><label for="rb-title">Job title <span class="opt">— optional</span></label><input id="rb-title" type="text" placeholder="e.g. Senior Data Scientist" disabled /></div>
-          <div class="field"><label for="rb-company">Company <span class="opt">— optional, unlocks referral drafts</span></label><input id="rb-company" type="text" placeholder="e.g. Careem" disabled /></div>
-          <div class="field"><label for="rb-jd">Description</label><textarea id="rb-jd" placeholder="Paste the whole posting here — requirements, responsibilities, tools. The more of the employer's own words, the better the match." disabled></textarea></div>
-          <div class="actions"><button type="button" class="btn" disabled>Tailor my resume</button></div>
-        </section>
+      </div>
+      <div v-else>
+        <div class="msg info" role="status">Resume tailoring is being connected — your alerts keep running.</div>
+        <div class="row">
+          <section class="card">
+            <div class="card-head"><h2>From a recent alert</h2></div>
+            <p class="hint">Recent alerts will appear here. Picking one fetches the full description for you.</p>
+          </section>
+          <section class="card">
+            <div class="card-head"><h2>Or paste a job description</h2></div>
+            <div class="field"><label for="rb-title">Job title <span class="opt">— optional</span></label><input id="rb-title" type="text" placeholder="e.g. Senior Data Scientist" disabled /></div>
+            <div class="field"><label for="rb-company">Company <span class="opt">— optional, unlocks referral drafts</span></label><input id="rb-company" type="text" placeholder="e.g. Careem" disabled /></div>
+            <div class="field"><label for="rb-jd">Description</label><textarea id="rb-jd" placeholder="Paste the whole posting here — requirements, responsibilities, tools. The more of the employer's own words, the better the match." disabled></textarea></div>
+            <div class="actions"><button type="button" class="btn" disabled>Tailor my resume</button></div>
+          </section>
+        </div>
       </div>
     </div>
   </template>
@@ -589,7 +629,23 @@
 
       <section class="card empty">
         <h2>Tailored resumes</h2>
-        <p>Tailored resumes will appear here, newest first, with their files and the job they were for.</p>
+        <div v-if="features.tailorResume">
+          <div v-if="store.tailored.error" class="msg warn">{{ store.tailored.error }}</div>
+          <p v-if="store.tailored.status === 'ready' && !store.tailored.rows.length">
+            Nothing tailored yet — start from a job in History or paste a JD on the Resume builder page.</p>
+          <div v-for="t in store.tailored.rows" :key="t.id" class="row tailored-row">
+            <div class="grow">
+              <b>{{ t.file_name || "Preparing…" }}</b>
+              <div class="hint">{{ [t.jd_meta && t.jd_meta.title, t.jd_meta && t.jd_meta.company].filter(Boolean).join(" @ ")
+                || "Pasted job description" }} · {{ tWhen(t.created_at) }} · {{ t.status }}</div>
+            </div>
+            <button v-if="t.status === 'ready'" type="button" class="btn secondary tiny"
+                    @click="actions.downloadTailored(t)">Download</button>
+            <button type="button" class="btn secondary tiny" @click="nav.go('tailored', t.id)">Report</button>
+            <button type="button" class="btn secondary tiny danger" @click="actions.deleteTailored(t)">Delete</button>
+          </div>
+        </div>
+        <p v-else>Tailored resumes will appear here, newest first, with their files and the job they were for.</p>
       </section>
     </div>
   </template>
@@ -696,6 +752,135 @@
           </section>
         </template>
       </template>
+    </div>
+  </template>
+
+  <template id="tpl-tailored">
+    <div class="page">
+      <p><a href="#/resumes" @click.prevent="nav.go('resumes')">← Resumes</a></p>
+      <div v-if="run.status === 'loading'" class="msg info" role="status">Loading…</div>
+      <div v-else-if="run.status === 'error'" class="msg warn">{{ run.error }}</div>
+
+      <div v-else-if="run.row">
+        <h1>{{ run.row.file_name || "Tailored resume" }}</h1>
+        <p class="hint">{{ [jdMeta.title, jdMeta.company].filter(Boolean).join(" @ ") || "Pasted job description" }}
+          · {{ when(run.row.created_at) }}</p>
+
+        <!-- in flight -->
+        <section v-if="running" class="card">
+          <ol class="steps">
+            <li v-for="s in stage.steps" :key="s.key" :class="s.state">{{ s.label }}</li>
+          </ol>
+          <p v-if="stage.waiting" class="hint">Waiting for our builder — it usually picks up within a couple of minutes.</p>
+          <div class="actions" v-if="run.row.status === 'queued'">
+            <button type="button" class="btn secondary" @click="actions.cancelTailor()">Cancel</button>
+          </div>
+        </section>
+
+        <!-- failed -->
+        <section v-else-if="stage.state === 'failed'" class="card">
+          <div class="msg warn">{{ failCopy }}</div>
+          <div class="actions">
+            <button type="button" class="btn" @click="actions.regenerateTailor(guide)">Try again</button>
+          </div>
+        </section>
+
+        <!-- ready -->
+        <div v-else-if="stage.state === 'ready'">
+          <section class="card">
+            <div class="actions">
+              <button type="button" class="btn" @click="actions.downloadTailored(run.row)">Download PDF</button>
+              <span class="hint" v-if="fitText">{{ fitText }}</span>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2>ATS keywords · {{ ats.score }}%<span class="hint"> of {{ ats.must_total }} must-have terms</span></h2>
+            <div class="chips">
+              <span v-for="k in ats.matched" :key="'m' + k" class="chip on">✓ {{ k }}</span>
+              <span v-for="k in ats.missing" :key="'x' + k" class="chip">{{ k }}</span>
+            </div>
+          </section>
+
+          <section v-if="gaps.open.length || gaps.done.length" class="card">
+            <h2>{{ gaps.open.length ? gaps.open.length + (gaps.open.length === 1 ? " question" : " questions") + " could strengthen this resume" : "Your answers" }}</h2>
+            <div v-for="g in gaps.open" :key="g.keyword" class="gap">
+              <p><b>{{ g.keyword }}</b> — {{ g.question }}</p>
+              <div v-if="answering !== g.keyword" class="actions">
+                <button type="button" class="btn tiny" @click="startYes(g)">Yes, I've used it</button>
+                <button type="button" class="btn secondary tiny" :disabled="store.gapBusy[g.keyword]"
+                        @click="actions.answerGap(g, 'no')">No</button>
+              </div>
+              <div v-else class="gap-form">
+                <label class="hint">Where and how? One line — we'll draft a proper bullet (stronger than a bare skill).</label>
+                <textarea v-model="note" rows="2" placeholder="e.g. migrated 12 data marts to Snowflake at IDFC"></textarea>
+                <select v-model="posKey">
+                  <option value="">Which role was it in?</option>
+                  <option v-for="p in run.positions" :key="p.position_key" :value="p.position_key">{{ posLabel(p) }}</option>
+                </select>
+                <div class="actions">
+                  <button type="button" class="btn tiny" :disabled="!note.trim() || !posKey || store.gapBusy[g.keyword]"
+                          @click="sendYes(g, false)">Draft a bullet</button>
+                  <button type="button" class="btn secondary tiny" @click="sendYes(g, true)">Skip — just add the skill</button>
+                  <button type="button" class="btn secondary tiny" @click="answering = ''">Cancel</button>
+                </div>
+              </div>
+            </div>
+            <div v-for="g in gaps.done" :key="'d' + g.keyword" class="gap">
+              <p><b>{{ g.keyword }}</b>
+                <span v-if="g.state === 'declined'" class="hint"> — noted, we won't ask again.</span>
+                <span v-else-if="g.state === 'skill_added'" class="hint"> — added to your skills ✓</span>
+                <span v-else-if="g.state === 'approved'" class="hint"> — added to your master ✓</span>
+                <span v-else-if="g.state === 'discarded'" class="hint"> — draft discarded.</span>
+                <span v-else-if="g.state === 'draft_pending'" class="hint"> — drafting a bullet…</span>
+              </p>
+              <div v-if="g.state === 'draft_ready'" class="gap-draft">
+                <p v-if="editing !== g.answer.id" class="draft-text">“{{ g.answer.draft_text }}”</p>
+                <textarea v-else v-model="editText" rows="2"></textarea>
+                <div class="actions">
+                  <button v-if="editing !== g.answer.id" type="button" class="btn tiny"
+                          :disabled="store.gapBusy[g.answer.id]" @click="approve(g.answer, false)">Approve</button>
+                  <button v-else type="button" class="btn tiny" :disabled="!editText.trim() || store.gapBusy[g.answer.id]"
+                          @click="approve(g.answer, true)">Approve my edit</button>
+                  <button v-if="editing !== g.answer.id" type="button" class="btn secondary tiny"
+                          @click="startEdit(g.answer)">Edit</button>
+                  <button type="button" class="btn secondary tiny" :disabled="store.gapBusy[g.answer.id]" @click="actions.discardDraft(g.answer)">Discard</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section v-if="gaps.structural.length" class="card">
+            <h2>Honest gaps</h2>
+            <p class="hint">The posting asks for these; your master has no support, so the resume leans on
+              transferable strengths instead of claiming them.</p>
+            <ul><li v-for="g in gaps.structural" :key="g.keyword">{{ g.keyword }}</li></ul>
+          </section>
+
+          <section class="card">
+            <h2>What was used</h2>
+            <div v-for="f in facts" :key="f.position_key" class="facts-pos">
+              <ul>
+                <li v-for="b in f.bullets" :key="b.id" :class="{ dropped: b.dropped }">
+                  {{ b.text.replaceAll("**", "") }}<span v-if="b.dropped" class="hint"> · trimmed to fit</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2>Regenerate</h2>
+            <p class="hint" v-if="answeredSinceReady">Your new answers will be woven in.</p>
+            <textarea v-model="guide" rows="2" placeholder="Optional guidance — e.g. shorter summary, lead with the RM enablement work"></textarea>
+            <div class="actions">
+              <button type="button" class="btn" :disabled="store.tailorBusy"
+                      @click="actions.regenerateTailor(guide)">Regenerate</button>
+            </div>
+          </section>
+
+          <div v-if="run.error" class="msg warn">{{ run.error }}</div>
+        </div>
+      </div>
     </div>
   </template>
 

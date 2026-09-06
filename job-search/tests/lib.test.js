@@ -487,3 +487,85 @@ test("fileSizeText", () => {
   assert.equal(L.fileSizeText(153600), "150 KB");
   assert.equal(L.fileSizeText(2 * 1024 * 1024 + 300000), "2.3 MB");
 });
+
+// ---------------------------------------------------------------- tailored
+test("parseRoute handles tailored ids", () => {
+  assert.deepEqual(L.parseRoute("#/tailored/abc-1"), { name: "tailored", id: "abc-1", rewrite: false });
+  assert.deepEqual(L.parseRoute("#/tailored/"), { name: "home", rewrite: true });
+  assert.equal(L.routeHash("tailored", "x y"), "#/tailored/x%20y");
+});
+
+test("canTailor gates on master and conflicts", () => {
+  assert.deepEqual(L.canTailor(null), { ok: false, reason: "no_master", open: 0 });
+  assert.deepEqual(L.canTailor({ master: null, open_conflicts: 0 }), { ok: false, reason: "no_master", open: 0 });
+  assert.deepEqual(L.canTailor({ master: { current_build_id: "b" }, open_conflicts: 2 }),
+    { ok: false, reason: "conflicts", open: 2 });
+  assert.deepEqual(L.canTailor({ master: { current_build_id: "b" }, open_conflicts: 0 }),
+    { ok: true, reason: null, open: 0 });
+});
+
+test("tailorStageLabel maps statuses", () => {
+  assert.equal(L.tailorStageLabel(null).state, "none");
+  const run = (status) => ({ status, created_at: new Date().toISOString() });
+  assert.equal(L.tailorStageLabel(run("queued")).state, "queued");
+  const r = L.tailorStageLabel(run("planning"));
+  assert.equal(r.state, "running");
+  assert.deepEqual(r.steps.map((s) => s.state), ["done", "now", "todo"]);
+  assert.equal(L.tailorStageLabel(run("ready")).state, "ready");
+  const old = { status: "queued", created_at: new Date(Date.now() - 300000).toISOString() };
+  assert.equal(L.tailorStageLabel(old, Date.now()).waiting, true);
+});
+
+test("tailorFailureCopy per error_kind", () => {
+  assert.match(L.tailorFailureCopy({ error_kind: "fit" }), /couldn't fit/i);
+  assert.match(L.tailorFailureCopy({ error_kind: "worker_lost" }), /offline/i);
+  assert.match(L.tailorFailureCopy({ error_kind: "infra" }), /our side/i);
+});
+
+test("fitLine formats", () => {
+  assert.equal(L.fitLine({}), "");
+  assert.equal(L.fitLine({ pages: 2, spacing: "compact", font_pt: 10, dropped_item_ids: [] }),
+    "2 pages · compact · 10pt");
+  assert.equal(L.fitLine({ pages: 2, spacing: "normal", font_pt: 10.5, dropped_item_ids: ["a", "b"] }),
+    "2 pages · normal · 10.5pt · 2 bullets trimmed to fit");
+});
+
+test("gapLists merges plan gaps with answers", () => {
+  const run = { plan: { gaps: [
+    { keyword: "Snowflake", askable: true, question: "Used Snowflake?" },
+    { keyword: "dbt", askable: true, question: "Used dbt?" },
+    { keyword: "10 years insurance", askable: false, question: "" },
+  ] } };
+  const answers = [
+    { keyword_norm: "snowflake", keyword: "Snowflake", answer: "yes", status: "draft_ready", draft_text: "d" },
+  ];
+  const g = L.gapLists(run, answers);
+  assert.equal(g.structural.length, 1);
+  assert.deepEqual(g.open.map((x) => x.keyword), ["dbt"]);
+  assert.equal(g.done.length, 1);
+  assert.equal(g.done[0].state, "draft_ready");
+});
+
+test("gapLists maps answer states", () => {
+  const run = { plan: { gaps: [{ keyword: "K", askable: true, question: "?" }] } };
+  const mk = (status, answer) => L.gapLists(run, [{ keyword_norm: "k", answer, status }]).done[0].state;
+  assert.equal(mk("recorded", "no"), "declined");
+  assert.equal(mk("recorded", "yes"), "skill_added");
+  assert.equal(mk("draft_pending", "yes"), "draft_pending");
+  assert.equal(mk("approved", "yes"), "approved");
+  assert.equal(mk("discarded", "yes"), "discarded");
+});
+
+test("usedFacts flags dropped bullets", () => {
+  const run = { plan: { positions: [{ position_key: "p", bullets: [
+    { id: "a", text: "kept", rank: 1 }, { id: "b", text: "cut", rank: 2 }] }] },
+    fit: { dropped_item_ids: ["b"] } };
+  const u = L.usedFacts(run);
+  assert.deepEqual(u[0].bullets.map((b) => b.dropped), [false, true]);
+});
+
+test("tailorError maps codes", () => {
+  assert.match(L.tailorError({ message: "cap_tailors" }), /today/);
+  assert.match(L.tailorError({ message: "conflicts_open" }), /conflict/i);
+  assert.equal(L.tailorError({ message: "wat" }, "fallback"), "fallback");
+});

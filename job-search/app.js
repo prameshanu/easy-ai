@@ -2,7 +2,7 @@
    Pure functions live in lib.js (window.EasyyLib); views in views.js (window.EasyyViews).
    No build step: Vue 3 + supabase-js from CDN (pinned in index.html). */
 const CFG = window.EASYY_CONFIG;
-const FEATURES = Object.assign({ searchPause: false, deleteAccount: false, jdView: false, masterResume: false }, CFG.FEATURES || {});
+const FEATURES = Object.assign({ searchPause: false, deleteAccount: false, jdView: false, masterResume: false, tailorResume: false }, CFG.FEATURES || {});
 const L = window.EasyyLib;
 const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
 
@@ -147,6 +147,8 @@ function emptyHistory() { return { status: "idle", data: null, error: "", loaded
 function emptyJob() { return { status: "idle", id: null, meta: null, jd: null, error: "" }; }
 function emptyMaster() { return { status: "idle", data: null, error: "" }; }
 function emptyReview() { return { status: "idle", items: [], conflicts: [], error: "" }; }
+function emptyTailored() { return { status: "idle", rows: [], error: "" }; }
+function emptyTailorRun() { return { status: "idle", id: null, row: null, answers: [], positions: [], error: "" }; }
 
 // Job meta for the JD page, taken from already-loaded history when possible.
 function jobMetaFromHistory(id) {
@@ -166,6 +168,9 @@ const store = Vue.reactive({
   history: emptyHistory(),
   job: emptyJob(),
   master: emptyMaster(), review: emptyReview(), masterTab: "conflicts",
+  tailored: emptyTailored(), tailorRun: emptyTailorRun(), tailoredId: null,
+  tailorModal: null,            // { jobId, title, company, jdText, guidance } — jdText set = pasted-JD mode
+  tailorBusy: false, gapBusy: {},
   upload: { busy: false, error: "", notice: "" }, buildBusy: false, buildError: "",
   reviewBusy: {}, reviewError: "",
   checklistDismissed: false,
@@ -179,6 +184,7 @@ const store = Vue.reactive({
   get lastRun() { return L.lastRunInfo(this.history.data && this.history.data.last_run); },
   get openConflicts() { return (this.master.data && this.master.data.open_conflicts) || 0; },
   get hasReadyMaster() { return !!(this.master.data && this.master.data.master && this.master.data.master.current_build_id); },
+  get tailorGate() { return L.canTailor(this.master.data); },
   get status() {
     return L.statusFor({
       loading: !this.profile.id, savedSearchCount: this.dbSearchIds.length, isActive: this.profile.is_active,
@@ -195,6 +201,7 @@ const store = Vue.reactive({
 let savedTimer = null;
 let pollTimer = null;
 let buildPollTimer = null;
+let tailorPollTimer = null;
 let pollGiveUp = null;
 let loadPromise = null;
 
@@ -212,6 +219,9 @@ const actions = {
     actions.stopBuildPolling();
     store.master = emptyMaster(); store.review = emptyReview(); store.masterTab = "conflicts";
     store.upload = { busy: false, error: "", notice: "" }; store.buildBusy = false; store.buildError = ""; store.reviewBusy = {}; store.reviewError = "";
+    actions.stopTailorPolling();
+    store.tailored = emptyTailored(); store.tailorRun = emptyTailorRun(); store.tailoredId = null;
+    store.tailorModal = null; store.tailorBusy = false; store.gapBusy = {};
     loadPromise = null;
   },
 
@@ -568,6 +578,187 @@ const actions = {
     return true;
   },
 
+  // ---- tailored resumes (gated by FEATURES.tailorResume) ----
+  async loadTailored(force) {
+    if (!FEATURES.tailorResume) return;
+    const t = store.tailored;
+    if (!force && t.status === "ready") return;
+    if (t.status !== "ready") t.status = "loading";
+    t.error = "";
+    const { data, error } = await sb.from("tailored_resumes")
+      .select("id,job_id,jd_meta,status,file_name,pdf_path,created_at")
+      .order("created_at", { ascending: false }).limit(25);
+    if (error) { t.status = "error"; t.error = L.tailorError(error); return; }
+    t.rows = data || []; t.status = "ready";
+  },
+
+  async loadTailorRun(id, silent) {
+    if (!FEATURES.tailorResume || !id) return;
+    const r = store.tailorRun;
+    if (!silent) { r.status = r.id === id && r.row ? r.status : "loading"; r.error = ""; r.id = id; }
+    const { data, error } = await sb.from("tailored_resumes").select("*").eq("id", id).maybeSingle();
+    if (store.tailorRun !== r || r.id !== id) return;              // navigated away
+    if (error || !data) { r.status = "error"; r.error = error ? L.tailorError(error) : "We couldn't find that resume."; return; }
+    r.row = data; r.status = "ready";
+    const wantAnswers = data.status === "ready" && data.plan && (data.plan.gaps || []).length;
+    if (wantAnswers) {
+      const [ans, pos] = await Promise.all([
+        sb.from("master_answers").select("*").eq("master_id", data.master_id),
+        r.positions.length ? null : sb.from("master_items").select("id,position_key,text,data,sort_order")
+          .eq("master_id", data.master_id).eq("kind", "position").order("sort_order"),
+      ]);
+      if (!ans.error) r.answers = ans.data || [];
+      if (pos && !pos.error) r.positions = pos.data || [];
+    }
+    const active = ["queued", "analyzing", "planning", "rendering"].indexOf(data.status) !== -1;
+    const drafting = (r.answers || []).some((a) => a.status === "draft_pending");
+    if (active || drafting) actions.startTailorPolling(); else actions.stopTailorPolling();
+  },
+  startTailorPolling() {
+    if (tailorPollTimer) return;
+    tailorPollTimer = setInterval(() => {
+      if (store.route === "tailored" && store.tailoredId) actions.loadTailorRun(store.tailoredId, true);
+      else actions.stopTailorPolling();
+    }, 5000);
+  },
+  stopTailorPolling() {
+    if (tailorPollTimer) clearInterval(tailorPollTimer);
+    tailorPollTimer = null;
+  },
+
+  // Entry points. meta = { id, title, company } (job) — or null via openPasteTailor (pasted JD).
+  async tailorFromJob(meta) {
+    if (!FEATURES.tailorResume) return;
+    if (!store.master.data) await actions.loadMaster(true);
+    const gate = store.tailorGate;
+    if (!gate.ok) { actions.tailorLockedDialog(gate); return; }
+    store.tailorModal = { jobId: meta.id, title: meta.title || "", company: meta.company || "", jdText: null, guidance: "" };
+  },
+  async openPasteTailor() {
+    if (!FEATURES.tailorResume) return;
+    if (!store.master.data) await actions.loadMaster(true);
+    const gate = store.tailorGate;
+    if (!gate.ok) { actions.tailorLockedDialog(gate); return; }
+    store.tailorModal = { jobId: null, title: "", company: "", jdText: "", guidance: "" };
+  },
+  tailorLockedDialog(gate) {
+    store.dialog = gate.reason === "conflicts"
+      ? { title: "Resolve " + gate.open + (gate.open === 1 ? " conflict" : " conflicts") + " to unlock tailoring",
+          body: "Your master resume has open questions. Answer them once and every tailored resume benefits.",
+          confirmLabel: "Review conflicts", cancelLabel: "Not now",
+          onConfirm: () => actions.openMaster("conflicts") }
+      : { title: "Build your master resume first",
+          body: "It's what every tailored resume is made from — add your old resumes once, build, done.",
+          confirmLabel: "Go to Resumes", cancelLabel: "Not now",
+          onConfirm: () => nav.go("resumes") };
+  },
+  cancelTailorModal() { store.tailorModal = null; },
+  async submitTailorModal() {
+    const m = store.tailorModal;
+    if (!m || store.tailorBusy) return;
+    store.tailorBusy = true;
+    try {
+      const { data, error } = await sb.rpc("request_tailored_resume", {
+        p_job_id: m.jobId, p_jd_text: m.jobId ? null : (m.jdText || "").trim() || null,
+        p_guidance: (m.guidance || "").trim() || null, p_parent_id: null,
+      });
+      if (error) { m.error = L.tailorError(error); return; }
+      store.tailorModal = null;
+      store.tailorRun = emptyTailorRun();
+      nav.go("tailored", data);
+      actions.loadTailored(true);
+    } finally { store.tailorBusy = false; }
+  },
+  async regenerateTailor(guidance) {
+    const r = store.tailorRun.row;
+    if (!r || store.tailorBusy) return;
+    store.tailorBusy = true;
+    try {
+      const { data, error } = await sb.rpc("request_tailored_resume", {
+        p_job_id: null, p_jd_text: null, p_guidance: (guidance || "").trim() || null, p_parent_id: r.id,
+      });
+      if (error) { store.tailorRun.error = L.tailorError(error); return; }
+      store.tailorRun = emptyTailorRun();
+      nav.go("tailored", data);
+      actions.loadTailored(true);
+    } finally { store.tailorBusy = false; }
+  },
+  async cancelTailor() {
+    const r = store.tailorRun.row;
+    if (!r) return;
+    const { error } = await sb.rpc("cancel_tailored_resume", { p_id: r.id });
+    if (error) { store.tailorRun.error = L.tailorError(error); return; }
+    await actions.loadTailorRun(r.id);
+    actions.loadTailored(true);
+  },
+  async downloadTailored(row) {
+    if (!row || !row.pdf_path) return;
+    const { data, error } = await sb.storage.from("resumes").download(row.pdf_path);
+    if (error) { store.tailorRun.error = "Download didn't start — try again."; return; }
+    const url = URL.createObjectURL(data);
+    const a = document.createElement("a");
+    a.href = url; a.download = row.file_name || "resume.pdf";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  },
+  deleteTailored(row) {
+    store.dialog = {
+      title: "Delete " + (row.file_name || "this resume") + "?",
+      body: "The PDF and its report will be removed. Your master resume is untouched.",
+      confirmLabel: "Delete", cancelLabel: "Keep it", danger: true,
+      onConfirm: async () => {
+        const { data: path, error } = await sb.rpc("delete_tailored_resume", { p_id: row.id });
+        if (error) { store.tailored.error = L.tailorError(error); return; }
+        if (path) await sb.storage.from("resumes").remove([path]);   // object removal failure is harmless
+        if (store.tailoredId === row.id) nav.go("resumes");
+        actions.loadTailored(true);
+      },
+    };
+  },
+
+  // ---- gap questionnaire ----
+  async answerGap(gap, answer, note, positionKey) {
+    const r = store.tailorRun;
+    if (!r.row || store.gapBusy[gap.keyword]) return;
+    store.gapBusy = Object.assign({}, store.gapBusy, { [gap.keyword]: true });
+    try {
+      const { error } = await sb.rpc("answer_tailor_gap", {
+        p_tailor_id: r.row.id, p_keyword: gap.keyword, p_answer: answer,
+        p_note: (note || "").trim() || null, p_position_key: positionKey || null,
+      });
+      if (error) { r.error = L.tailorError(error); return; }
+      await actions.loadTailorRun(r.row.id, true);
+      actions.loadMaster(true);            // a skill may have landed in the master
+    } finally {
+      const b = Object.assign({}, store.gapBusy); delete b[gap.keyword]; store.gapBusy = b;
+    }
+  },
+  async approveDraft(a, text) {
+    const r = store.tailorRun;
+    if (store.gapBusy[a.id]) return;
+    store.gapBusy = Object.assign({}, store.gapBusy, { [a.id]: true });
+    try {
+      const { error } = await sb.rpc("approve_gap_draft", { p_answer_id: a.id, p_final_text: text });
+      if (error) { r.error = L.tailorError(error); return; }
+      await actions.loadTailorRun(r.row.id, true);
+      actions.loadMaster(true);
+    } finally {
+      const b = Object.assign({}, store.gapBusy); delete b[a.id]; store.gapBusy = b;
+    }
+  },
+  async discardDraft(a) {
+    const r = store.tailorRun;
+    if (store.gapBusy[a.id]) return;
+    store.gapBusy = Object.assign({}, store.gapBusy, { [a.id]: true });
+    try {
+      const { error } = await sb.rpc("discard_gap_draft", { p_answer_id: a.id });
+      if (error) { r.error = L.tailorError(error); return; }
+      await actions.loadTailorRun(r.row.id, true);
+    } finally {
+      const b = Object.assign({}, store.gapBusy); delete b[a.id]; store.gapBusy = b;
+    }
+  },
+
   // ---- account ----
   async updatePassword(password) {
     const { error } = await sb.auth.updateUser({ password });
@@ -576,6 +767,7 @@ const actions = {
   async signOut() {
     actions.stopPolling();
     actions.stopBuildPolling();
+    actions.stopTailorPolling();
     await sb.auth.signOut();
     actions.resetProfile();
     store.route = "home";
@@ -639,15 +831,17 @@ Vue.watch(() => store.payloadJson, () => {
 // ------------------------------------------------------------------ router
 const nav = {
   go(name, id) {
-    if (name === store.route && (name !== "job" || id === store.jobId)) return;
+    if (name === store.route && (name !== "job" || id === store.jobId) && (name !== "tailored" || id === store.tailoredId)) return;
     if (store.isDirty) { actions.confirmLeave(() => { actions.discard(); nav.apply(name, id); }); return; }
     nav.apply(name, id);
   },
   apply(name, id) {
     if (name !== "resumes") actions.stopBuildPolling();
+    if (name !== "tailored") actions.stopTailorPolling();
     store.route = name;
     if (name === "job" && id !== undefined) store.jobId = id;
-    const h = L.routeHash(name, store.jobId);
+    if (name === "tailored" && id !== undefined) store.tailoredId = id;
+    const h = L.routeHash(name, name === "tailored" ? store.tailoredId : store.jobId);
     if (location.hash !== h) location.hash = h;   // pushes a history entry; the hashchange handler sees name === route and does nothing
     window.scrollTo(0, 0);
   },
@@ -657,10 +851,10 @@ window.addEventListener("hashchange", () => {
   const r = L.parseRoute(location.hash);
   if (!r) return;                                  // Supabase auth hash or foreign — leave it alone
   if (r.rewrite) history.replaceState(null, "", location.pathname + location.search + "#/");
-  if (r.name === store.route && (r.name !== "job" || r.id === store.jobId)) return;
-  if (!store.session || store.recoveryMode) { store.route = r.name; if (r.name === "job") store.jobId = r.id; return; }   // auth panel shows; route applies after sign-in
+  if (r.name === store.route && (r.name !== "job" || r.id === store.jobId) && (r.name !== "tailored" || r.id === store.tailoredId)) return;
+  if (!store.session || store.recoveryMode) { store.route = r.name; if (r.name === "job") store.jobId = r.id; if (r.name === "tailored") store.tailoredId = r.id; return; }   // auth panel shows; route applies after sign-in
   if (store.isDirty) {
-    history.replaceState(null, "", location.pathname + location.search + L.routeHash(store.route, store.jobId));   // put the URL back, then ask
+    history.replaceState(null, "", location.pathname + location.search + L.routeHash(store.route, store.route === "tailored" ? store.tailoredId : store.jobId));   // put the URL back, then ask
     actions.confirmLeave(() => { actions.discard(); nav.apply(r.name, r.id); });
     return;
   }
@@ -712,6 +906,7 @@ const app = Vue.createApp({
     if (r) {
       store.route = r.name;
       if (r.name === "job") store.jobId = r.id;
+      if (r.name === "tailored") store.tailoredId = r.id;
       if (r.rewrite) history.replaceState(null, "", location.pathname + location.search + "#/");
     }
 
@@ -746,7 +941,7 @@ const app = Vue.createApp({
       store.session = data.session;
       if (store.session) {
         await actions.loadProfile();
-        if (location.hash !== L.routeHash(store.route, store.jobId)) history.replaceState(null, "", location.pathname + location.search + L.routeHash(store.route, store.jobId));
+        if (location.hash !== L.routeHash(store.route, store.route === "tailored" ? store.tailoredId : store.jobId)) history.replaceState(null, "", location.pathname + location.search + L.routeHash(store.route, store.route === "tailored" ? store.tailoredId : store.jobId));
         actions.loadHistory(false);
       }
     }
