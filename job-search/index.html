@@ -556,15 +556,8 @@
           <section class="card">
             <div class="card-head"><h2>Master resume</h2><span class="sub" v-if="ov.master && ov.master.current_build_id">v{{ ov.master.version }} · built {{ when(ov.build && ov.build.finished_at) }}</span></div>
 
-            <template v-if="stage.state === 'none' || stage.state === 'cancelled'">
-              <p class="hint" v-if="stage.state === 'cancelled'">Build cancelled.</p>
-              <p class="hint" v-else>Upload the resumes you've sent over the years. We'll combine them into one set of facts and ask you only about what disagrees.</p>
-              <div class="actions">
-                <button type="button" class="btn" :disabled="store.buildBusy || !files.length" :title="files.length ? '' : 'Add at least one resume first'" @click="actions.requestBuild()">{{ store.buildBusy ? 'Starting…' : 'Build master' }}</button>
-              </div>
-            </template>
-
-            <template v-else-if="stage.state === 'queued' || stage.state === 'running'">
+            <!-- an active (re)build: show progress; the committed master is preserved and re-renders when it finishes -->
+            <template v-if="stage.state === 'queued' || stage.state === 'running'">
               <div class="stepper" role="status" aria-live="polite">
                 <div class="step-row" v-for="s in stage.steps" :key="s.key" :class="s.state">
                   <span class="step-dot" aria-hidden="true">{{ s.state === 'done' ? '✓' : '' }}</span>
@@ -577,17 +570,30 @@
               </div>
             </template>
 
-            <template v-else-if="stage.state === 'failed'">
-              <p class="err">{{ failCopy }}</p>
-              <div class="actions"><button type="button" class="btn secondary" :disabled="store.buildBusy" @click="actions.requestBuild()">Try again</button></div>
-            </template>
-
-            <template v-else>
+            <!-- a committed master exists: always show it, even if the latest (re)build was cancelled or failed -->
+            <template v-else-if="ov.master && ov.master.current_build_id">
+              <p class="hint" v-if="stage.state === 'cancelled'">Last rebuild was cancelled — your master resume is unchanged.</p>
+              <p class="hint" v-else-if="stage.state === 'failed'">Last rebuild didn't finish — your master resume is unchanged.</p>
               <p><b>{{ ov.item_count }}</b> facts · <b>{{ ov.open_conflicts }}</b> {{ ov.open_conflicts === 1 ? 'question' : 'questions' }} to answer</p>
               <div class="actions">
                 <button type="button" class="btn" v-if="ov.open_conflicts" @click="actions.openMaster('conflicts')">Review conflicts ({{ ov.open_conflicts }})</button>
                 <button type="button" class="btn secondary" @click="actions.openMaster('master')">Browse master</button>
                 <button type="button" class="btn ghost" :disabled="store.buildBusy || !files.length" @click="actions.requestBuild()">{{ store.buildBusy ? 'Starting…' : 'Rebuild' }}</button>
+              </div>
+            </template>
+
+            <!-- no committed master yet, and the first build failed -->
+            <template v-else-if="stage.state === 'failed'">
+              <p class="err">{{ failCopy }}</p>
+              <div class="actions"><button type="button" class="btn secondary" :disabled="store.buildBusy" @click="actions.requestBuild()">Try again</button></div>
+            </template>
+
+            <!-- no committed master: first-time upload prompt (or 'cancelled' before any master existed) -->
+            <template v-else>
+              <p class="hint" v-if="stage.state === 'cancelled'">Build cancelled.</p>
+              <p class="hint" v-else>Upload the resumes you've sent over the years. We'll combine them into one set of facts and ask you only about what disagrees.</p>
+              <div class="actions">
+                <button type="button" class="btn" :disabled="store.buildBusy || !files.length" :title="files.length ? '' : 'Add at least one resume first'" @click="actions.requestBuild()">{{ store.buildBusy ? 'Starting…' : 'Build master' }}</button>
               </div>
             </template>
             <p class="err" v-if="store.buildError" role="alert">{{ store.buildError }}</p>
