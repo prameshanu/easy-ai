@@ -309,7 +309,8 @@ const actions = {
         const del = await sb.from("searches").delete().in("id", toDelete);
         if (del.error) throw del.error;
       }
-      const up = await sb.from("searches").upsert(searches).select();
+      // defaultToNull:false — a new row has no `id` key; without it a mixed batch sends id=NULL instead of the column default
+      const up = await sb.from("searches").upsert(searches, { defaultToNull: false }).select();
       if (up.error) throw up.error;
 
       await actions.loadProfile();  // resync ids + snapshot
