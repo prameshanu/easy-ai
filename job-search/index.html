@@ -3,15 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Easyy — Job Alerts</title>
-  <meta name="description" content="Job alerts on Telegram and email, and — soon — a tailored resume for every job. Free." />
+  <title>easyy · Job Alerts</title>
+  <meta name="description" content="Job alerts on Telegram and email, and soon a tailored resume for every job. Free." />
   <meta name="color-scheme" content="light dark" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Figtree:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+  <script>
+    // Apply a saved theme before first paint so there is no flash of the wrong theme.
+    try {
+      var t = localStorage.getItem("easyy-theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  </script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- Shown only on staging (config.js sets html[data-env]) so testers never mistake it for the live site. -->
+  <div class="env-badge" aria-hidden="true">Staging</div>
   <div id="app" v-cloak>
 
     <!-- loading -->
@@ -55,11 +64,11 @@
             <input id="su-name" type="text" v-model.trim="signup.full_name" placeholder="Your full name" autocomplete="name" />
           </div>
           <div class="field">
-            <label for="su-email">Email <span class="opt">— digests go here</span></label>
+            <label for="su-email">Email <span class="opt">· digests go here</span></label>
             <input id="su-email" type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" />
           </div>
           <div class="field">
-            <div class="labrow"><label for="su-pw">Password <span class="opt">— 8+ characters</span></label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
+            <div class="labrow"><label for="su-pw">Password <span class="opt">· 8+ characters</span></label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
             <input id="su-pw" :type="showPw ? 'text' : 'password'" v-model="authPassword" placeholder="Choose a password" autocomplete="new-password" />
           </div>
           <div class="field">
@@ -79,7 +88,7 @@
         <!-- magic link -->
         <template v-else-if="authView === 'magic'">
           <h2>Email me a sign-in link</h2>
-          <p class="lede">We'll email a one-tap link — no password needed.</p>
+          <p class="lede">We'll email a one-tap link, no password needed.</p>
           <div class="field">
             <label for="ml-email">Email</label>
             <input id="ml-email" type="email" v-model.trim="authEmail" placeholder="you@example.com" autocomplete="email" @keyup.enter="sendMagicLink" />
@@ -109,7 +118,7 @@
           <h2>Set a new password</h2>
           <p class="lede">Choose a new password for your account.</p>
           <div class="field">
-            <div class="labrow"><label for="rp-pw">New password <span class="opt">— 8+ characters</span></label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
+            <div class="labrow"><label for="rp-pw">New password <span class="opt">· 8+ characters</span></label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
             <input id="rp-pw" :type="showPw ? 'text' : 'password'" v-model="authPassword" placeholder="New password" autocomplete="new-password" @keyup.enter="setNewPassword" />
           </div>
           <div class="actions">
@@ -126,12 +135,13 @@
       <aside class="side">
         <div class="side-top">
           <a class="brand" href="#/" @click.prevent="nav.go('home')"><span class="dot"></span><span class="brand-text">easyy</span></a>
+          <div class="brand-sub">{{ brandSub }}</div>
           <div class="side-status" :class="'is-' + store.status.key" :title="shortStatus"><span class="sdot"></span><span class="side-status-text">{{ shortStatus }}</span></div>
         </div>
         <nav class="nav" aria-label="Main">
-          <a v-for="it in navItems" :key="it.name" :href="it.hash" class="nav-item" :class="{ on: store.route === it.name }"
-             :aria-current="store.route === it.name ? 'page' : null" :title="it.label" @click.prevent="nav.go(it.name)">
-            <span class="nav-ic" v-html="it.icon"></span><span class="nav-label">{{ it.label }}</span>
+          <a v-for="it in navItems" :key="it.name" :href="it.hash" class="nav-item" :class="{ on: navOn(it.name) }"
+             :aria-current="navOn(it.name) ? 'page' : null" :title="it.label" @click.prevent="nav.go(it.name)">
+            <span class="nav-ic" v-html="it.icon"></span><span class="nav-label">{{ it.label }}</span><span v-if="navCount(it.name)" class="nav-count">{{ navCount(it.name) }}</span>
           </a>
         </nav>
         <div class="side-bottom">
@@ -139,9 +149,10 @@
             <span class="avatar" aria-hidden="true">{{ initials }}</span>
             <span class="meta"><span class="uname">{{ store.profile.full_name || 'Your account' }}</span><span class="uemail">{{ store.userEmail }}</span></span>
           </button>
+          <button type="button" class="btn ghost tiny logout" @click="actions.signOut()">Log out</button>
           <div v-if="menuOpen" class="menu-backdrop" @click="menuOpen = false"></div>
           <div v-if="menuOpen" class="menu" role="menu" @keydown.esc="menuOpen = false">
-            <a href="#/settings" role="menuitem" @click.prevent="menuOpen = false; nav.go('settings')">Profile &amp; settings</a>
+            <a href="#/settings" role="menuitem" @click.prevent="menuOpen = false; nav.go('settings')">Your profile</a>
             <a href="terms.html" role="menuitem" target="_blank" rel="noopener">Terms</a>
             <a href="privacy.html" role="menuitem" target="_blank" rel="noopener">Privacy</a>
             <hr />
@@ -152,10 +163,13 @@
 
       <header class="topbar">
         <a class="brand" href="#/" @click.prevent="nav.go('home')"><span class="dot"></span><span class="brand-text">easyy</span></a>
-        <a href="#/settings" class="avatar" aria-label="Profile and settings" @click.prevent="nav.go('settings')">{{ initials }}</a>
+        <a href="#/settings" class="avatar" aria-label="Your profile" @click.prevent="nav.go('settings')">{{ initials }}</a>
       </header>
 
       <main class="content">
+        <div class="topstrip">
+          <button type="button" class="theme-pill" @click="toggleTheme()" :aria-pressed="String(theme === 'dark')" :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">{{ theme === 'dark' ? 'Light' : 'Dark' }}</button>
+        </div>
         <div class="content-inner">
           <div v-if="store.loadError" class="card">
             <h2>Couldn't load your settings</h2>
@@ -168,7 +182,7 @@
         <div class="savebar" v-if="store.isDirty || store.saveState !== 'idle'" role="status">
           <div class="savebar-inner">
             <span v-if="store.saveState === 'saved'" class="ok">Saved ✓ Alerts will start within the hour.</span>
-            <span v-else-if="store.saveState === 'error'" class="err">Couldn't save — {{ store.saveError }}</span>
+            <span v-else-if="store.saveState === 'error'" class="err">Couldn't save: {{ store.saveError }}</span>
             <span v-else-if="store.saveState === 'invalid'" class="err">{{ store.saveError }}</span>
             <span v-else class="dirty">Unsaved changes</span>
             <span class="grow"></span>
@@ -181,8 +195,8 @@
       </main>
 
       <nav class="tabbar" aria-label="Main">
-        <a v-for="it in navItems" :key="it.name" :href="it.hash" class="tab" :class="{ on: store.route === it.name }"
-           :aria-current="store.route === it.name ? 'page' : null" @click.prevent="nav.go(it.name)">
+        <a v-for="it in navItems.filter(n => !n.soon && !n.railOnly)" :key="it.name" :href="it.hash" class="tab" :class="{ on: navOn(it.name) }"
+           :aria-current="navOn(it.name) ? 'page' : null" @click.prevent="nav.go(it.name)">
           <span class="nav-ic" v-html="it.icon"></span><span>{{ it.short }}</span>
         </a>
       </nav>
@@ -217,42 +231,189 @@
   <!-- ============ view templates (in-DOM; compiled by Vue at runtime) ============ -->
 
   <template id="tpl-home">
+    <div class="view ov">
+      <!-- Overview hero (V17): headline, setup cards and the "what easyy does" path all sit on the wash -->
+      <div class="hero">
+        <div class="hero-top">
+          <span class="eyebrow-pill"><span class="dot"></span>{{ weekOf }} · {{ ov.today }} today, {{ ov.week }} this week</span>
+          <div class="hero-switch">
+            <ui-switch size="lg" label="Alerts on" :model-value="store.profile.is_active" @update:model-value="v => store.profile.is_active = v"></ui-switch>
+            <span class="hero-switch-note">{{ store.profile.is_active ? 'Alerts on: pauses or resumes all your job alerts and digests' : 'Alerts paused: turn on to resume your job alerts and digests' }}</span>
+          </div>
+        </div>
+        <h1 class="page">{{ headline.main }} <span class="lift">{{ headline.lift }}</span></h1>
+        <p class="lede">{{ heroLede }}</p>
+        <p class="soon-line"><span aria-hidden="true">✉</span> Outreach emails written for these jobs, waiting in your mailbox <span class="soon-tag">Coming soon</span></p>
+
+        <!-- 7-day activity bar (V17 .act) — needs sent-application tracking (Gmail Phase B) -->
+        <div class="act soon" role="status">
+          <span class="act-n">—</span>
+          <div class="act-b">
+            <b>applications in the last 7 days <span class="soon-tag">Coming soon</span></b>
+            <span>Once your Gmail inbox is connected, easyy counts what you've sent and nudges you when a week goes quiet. The first days after a job is posted matter most.</span>
+          </div>
+          <button type="button" class="btn act-btn" disabled>Send your drafts →</button>
+        </div>
+
+        <!-- Get set up in about three minutes -->
+        <div class="setup-head">
+          <h2>Get set up in about three minutes</h2>
+          <span class="sub">Three things, once. Click any step to do it now.</span>
+          <span class="done">{{ setupDone }} of 3 done</span>
+        </div>
+        <div class="setup-tabs">
+          <button type="button" class="setup-tab" data-tone="resumes" @click="nav.go('resumes')">
+            <div class="tab-h"><span class="tab-n">1</span><span class="tab-t">Upload the resumes you already have</span></div>
+            <div class="tab-d">Any versions, any format. easyy reads them into one master set of facts that every tailored resume draws from.</div>
+            <div class="tab-f"><span class="tab-state">{{ ovFiles }} of {{ ovFilesCap }} uploaded</span><span class="tab-open">Go to your resumes →</span></div>
+          </button>
+          <button type="button" class="setup-tab" data-tone="alerts" @click="nav.go('history')">
+            <div class="tab-h"><span class="tab-n">2</span><span class="tab-t">Set up job alerts for what you want</span></div>
+            <div class="tab-d">Enter the job roles and the locations you're targeting. Alerts and tailoring follow that list.</div>
+            <div class="tab-f"><span class="tab-state">Alerts for {{ ovRoles }} of {{ ovRolesCap }} roles</span><span class="tab-open">Go to Job alerts →</span></div>
+          </button>
+          <!-- V17 step 3 is "Connect your mailbox"; until a mailbox integration exists it configures alert delivery. -->
+          <button type="button" class="setup-tab" data-tone="mailbox" @click="openConnections()">
+            <div class="tab-h"><span class="tab-n">3</span><span class="tab-t">Configure connections</span></div>
+            <div class="tab-d">Choose where alerts reach you: Telegram the moment a job matches, and a daily email digest. easyy never sends on your behalf.</div>
+            <div class="tab-f"><span class="tab-state">{{ connState }}</span><span class="tab-open">Configure →</span></div>
+          </button>
+        </div>
+
+        <!-- What easyy does for you (compact path) -->
+        <div class="path-head">
+          <h2>What easyy does for you</h2>
+          <span class="sub">Steps 1–3 run by themselves every weekday morning. 4 and 5 are there when you need them.</span>
+        </div>
+        <div class="path">
+          <button type="button" class="pnode" data-tone="alerts" @click="nav.go('history')">
+            <span class="pn">1</span>
+            <span class="pb"><span class="pl">Job alerts in one place</span><span class="ps">{{ ov.today }} new today</span></span>
+          </button>
+          <span class="parr" aria-hidden="true">→</span>
+          <button type="button" class="pnode" data-tone="resumes" @click="nav.go('resumes')">
+            <span class="pn">2</span>
+            <span class="pb"><span class="pl">A tailored resume per job</span><span class="ps">{{ ov.tailoredToday }} ready</span></span>
+          </button>
+          <span class="parr" aria-hidden="true">→</span>
+          <button type="button" class="pnode is-soon" data-tone="mailbox" @click="nav.go('outreach')">
+            <span class="pn">3</span>
+            <span class="pb"><span class="pl">Outreach email in your mailbox</span><span class="ps"><span class="soon-tag">Coming soon</span></span></span>
+          </button>
+          <span class="pdiv" aria-hidden="true"></span>
+          <button type="button" class="pnode is-soon" data-tone="community" @click="nav.go('community')">
+            <span class="pn">4</span>
+            <span class="pb"><span class="pl">Community</span><span class="ps"><span class="soon-tag">Coming soon</span></span></span>
+          </button>
+          <button type="button" class="pnode is-soon" data-tone="support" @click="nav.go('prep')">
+            <span class="pn">5</span>
+            <span class="pb"><span class="pl">Interview prep &amp; support</span><span class="ps"><span class="soon-tag">Coming soon</span></span></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Last 14 days funnel -->
+      <div class="setup-head">
+        <h2>Last 14 days</h2>
+        <span class="sub">Every alert that arrived, and how far it got. Percentages are of alerts received.</span>
+      </div>
+      <div class="fun">
+        <div class="fun-c"><div class="fun-n">{{ ov.fortnight }}</div><div class="fun-k">Job alerts received</div><div class="fun-bar"><i style="width:100%"></i></div></div>
+        <div class="fun-c is-soon"><div class="fun-n">— <span class="soon-tag">Coming soon</span></div><div class="fun-k">Applied: you pressed send</div><div class="fun-bar"><i style="width:0%"></i></div></div>
+        <div class="fun-c is-soon"><div class="fun-n">— <span class="soon-tag">Coming soon</span></div><div class="fun-k">Contacted: a human wrote back</div><div class="fun-bar"><i style="width:0%"></i></div></div>
+        <div class="fun-c is-soon"><div class="fun-n">— <span class="soon-tag">Coming soon</span></div><div class="fun-k">Interview calls received</div><div class="fun-bar"><i style="width:0%"></i></div></div>
+        <div class="fun-c win is-soon"><div class="fun-n">— <span class="soon-tag">Coming soon</span></div><div class="fun-k">Job offer</div><div class="fun-bar"><i style="width:0%"></i></div></div>
+      </div>
+      <p class="ev-note"><template v-if="handTime">Tailoring today's {{ plural(ov.tailoredToday, 'resume', 'resumes') }} by hand would take <b>{{ handTime.byHand }}</b> at roughly 50 minutes an application. Reading them takes <b>{{ handTime.reading }}</b>. </template>Applied onwards is counted off your Job search funnel once it ships.</p>
+
+      <!-- Quality vs volume -->
+      <div class="vs">
+        <div class="vs-side them">
+          <span class="vs-k">The spray model</span>
+          <span class="vs-n">50 / day</span>
+          <span class="vs-d">Auto-submitted through portal forms, one resume for everything, no human on the other end.</span>
+          <div class="vs-l">
+            <span><i>·</i>Same CV against every job description</span>
+            <span><i>·</i>Lands in an ATS queue, addressed to nobody</span>
+            <span><i>·</i>The same employer sees you apply twice in a week</span>
+          </div>
+        </div>
+        <div class="vs-mid"></div>
+        <div class="vs-side us">
+          <span class="vs-k">easyy</span>
+          <span class="vs-n">{{ ov.today ? ov.today + ' a morning' : 'A few a morning' }}</span>
+          <span class="vs-d">Each one rewritten against that job description, sent by you, to a named person.</span>
+          <div class="vs-l">
+            <span><i>✓</i>Chosen from your {{ ovFacts }} master facts, per employer</span>
+            <span><i>✓</i>Addressed to the recruiter, not a careers inbox</span>
+            <span><i>✓</i>Tailored to the posting, not one CV for everything</span>
+            <span class="is-soon"><i>✓</i>Flags who at the company could refer you <span class="soon-tag">Coming soon</span></span>
+          </div>
+        </div>
+      </div>
+      <p class="ev-note">Your reply rate shows here once replies are tracked, counted from your Job search funnel, not estimated. <span class="soon-tag">Coming soon</span></p>
+
+      <!-- This morning's run + Community -->
+      <div class="cols">
+        <section class="card">
+          <div class="card-head"><h3>{{ runTitle }}</h3><span class="meta mono" v-if="lastRun && lastRun.time">{{ lastRun.time }}</span></div>
+          <div class="run">
+            <div class="run-row"><div class="run-t">{{ lastRun && lastRun.time ? lastRun.time : "✓" }}</div><div class="run-b"><strong>{{ ovRoles }} role search{{ ovRoles === 1 ? '' : 'es' }} ran</strong><span v-if="searchNames">{{ searchNames }}</span></div></div>
+            <div class="run-row"><div class="run-t">✓</div><div class="run-b"><strong>{{ plural(runJobs, 'job', 'jobs') }} passed your filters</strong><span>Across LinkedIn, Indeed and Google Jobs · postings seen and dropped as duplicates <span class="soon-tag">Coming soon</span></span></div></div>
+            <div class="run-row"><div class="run-t">✓</div><div class="run-b"><strong>{{ plural(ov.tailoredToday, 'resume', 'resumes') }} tailored today</strong><span>{{ masterLine }}</span></div></div>
+            <div class="run-row is-soon"><div class="run-t">—</div><div class="run-b"><strong>Drafts saved to Gmail <span class="soon-tag">Coming soon</span></strong><span>An outreach email per tailored job, waiting in your drafts folder</span></div></div>
+            <div class="run-row"><div class="run-t">✓</div><div class="run-b"><strong>Digest sent to your inbox</strong><span>One mail, {{ plural(runJobs, 'job', 'jobs') }}, links straight into the console</span></div></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h3>Community, right now</h3><span class="meta"><span class="soon-tag">Coming soon</span> <span class="chip sm wait">Sample</span></span></div>
+          <div class="msgs">
+            <div class="cm-msg"><div class="msg-av">PM</div><div class="msg-body"><div class="msg-h"><b>Priya M.</b><span class="role">Growth · Careem</span><time>08:02</time></div><p>We've got two lifecycle roles open. The JD undersells it, it's mostly retention not acquisition. Happy to refer.</p></div></div>
+            <div class="cm-msg"><div class="msg-av">RS</div><div class="msg-body"><div class="msg-h"><b>Rahul S.</b><span class="role">CRM · noon</span><time>08:20</time></div><p>Anyone done the Talabat growth case-study round? Trying to work out how deep they go on SQL.</p></div></div>
+            <div class="cm-msg mine"><div class="msg-av">{{ myInitials }}</div><div class="msg-body"><div class="msg-h"><b>You</b><time>08:31</time></div><p>Did it in July, two hours, cohort retention question, they give you the raw table.</p></div></div>
+          </div>
+          <div class="msgs-foot"><button type="button" class="btn ghost" @click="nav.go('community')">Open the community →</button></div>
+        </section>
+      </div>
+
+    </div>
+  </template>
+
+  <template id="tpl-history">
     <div class="view">
-      <section class="status" :class="'is-' + status.key">
-        <template v-if="status.key === 'loading'">
-          <div style="flex:1"><div class="skeleton" style="width:40%;height:22px"></div><div class="skeleton" style="width:70%;margin-top:8px"></div></div>
-        </template>
-        <template v-else>
-          <div class="status-text">
-            <h1>{{ status.title }}</h1>
-            <p class="hint">{{ status.line }}<a v-if="status.key === 'on'" href="#/history" @click.prevent="nav.go('history')">See what we've sent →</a></p>
-          </div>
-          <ui-switch size="lg" label="Alerts on" :model-value="store.profile.is_active" @update:model-value="v => store.profile.is_active = v"></ui-switch>
-        </template>
-      </section>
-
-      <section v-if="showChecklist" class="card checklist" aria-label="Getting started">
-        <div class="step done"><span class="n">✓</span><div class="t"><b>Create your account</b></div></div>
-        <div class="step" :class="{ done: hasSavedSearch, now: !hasSavedSearch }">
-          <span class="n">{{ hasSavedSearch ? '✓' : '2' }}</span>
-          <div class="t"><b>Add your first search</b><span>What job, where, and which sites</span></div>
+      <div class="page-head">
+        <div>
+          <div class="eyebrow toned" data-tone="alerts">Job alerts</div>
+          <h1>Today's matches</h1>
+          <p class="lede"><template v-if="lastRun">Pulled from your saved searches at {{ lastRun.time }}. </template>Pick any job to see what easyy read and what it already built for it.<span v-if="lastRun && lastRun.note" class="lede-note" :class="{ warn: lastRun.status === 'failed' }"> · {{ lastRun.note }}</span></p>
         </div>
-        <div class="step" :class="{ now: hasSavedSearch }">
-          <span class="n">3</span>
-          <div class="t"><b>Connect Telegram</b><span v-if="!hasSavedSearch">Enabled after your first save</span><span v-else>Instant messages the moment a job matches — or keep email only</span></div>
-          <div class="step-actions" v-if="hasSavedSearch">
-            <button type="button" class="btn secondary tiny" @click="actions.connectTelegram()">Connect</button>
-            <button type="button" class="btn ghost tiny" @click="actions.dismissChecklist()">Not now — email is enough</button>
-          </div>
+        <div class="page-tools" v-if="h.status === 'ready' && grouped.searches.length">
+          <select v-model="bucketFilter" aria-label="Filter by date"><option value="">All dates</option><option v-for="g in jobGroups" :key="g.label" :value="g.label">{{ g.label }}</option></select>
+          <select v-model="filter" aria-label="Filter by search"><option value="">All searches</option><option v-for="s in grouped.searches" :key="s" :value="s">{{ s }}</option></select>
+          <button type="button" class="btn ghost tiny" @click="actions.loadHistory(true)">Refresh</button>
         </div>
-      </section>
+      </div>
 
-      <section class="card">
-        <div class="card-head"><h2>{{ showChecklist ? 'Your first search' : 'Searches' }}</h2><span class="sub" v-if="!showChecklist">{{ store.searches.length }} of 5</span></div>
-
+      <section class="card tone-top target-card" data-tone="alerts">
+        <div class="card-head">
+          <h3>What you're targeting</h3>
+          <span class="target-head-right">
+            <span class="meta">{{ store.searches.length }} / {{ planLimit }} roles</span>
+            <button type="button" class="btn ghost tiny" :disabled="store.saving" @click="toggleManage()">{{ targetOpen ? (store.saving ? 'Saving…' : (store.isDirty ? 'Save and close' : 'Done')) : 'Manage roles' }}</button>
+          </span>
+        </div>
+        <div class="target-chips" v-if="store.searches.length">
+          <span v-for="(s, i) in store.searches" :key="s._key" class="target-chip">
+            <span class="tc-name">{{ s.name || 'Untitled role' }}</span><span v-if="s.location" class="tc-loc">{{ locLabel(s.location) }}</span>
+            <button type="button" class="tc-x" @click="removeTarget(i)" :aria-label="'Remove ' + (s.name || 'role')">✕</button>
+          </span>
+        </div>
+        <template v-if="targetOpen">
+        <div class="target-editor">
         <div v-for="(s, i) in store.searches" :key="s._key" class="search" :class="{ invalid: s._err }">
           <div class="search-head">
-            <input type="text" class="search-title" v-model.trim="s.name" placeholder="Give it a name — e.g. Data Scientist — Dubai" aria-label="Search name" maxlength="120" />
+            <ui-suggest class="search-title-wrap" input-class="search-title" :model-value="s.name" @update:model-value="v => s.name = v" :suggestions="roleSuggest" placeholder="Job role, e.g. one of your past titles" label="Job role" maxlength="120"></ui-suggest>
             <div class="search-tools">
               <label v-if="features.searchPause" class="inline-switch"><span>{{ s.is_active === false ? 'Paused' : 'On' }}</span><ui-switch :model-value="s.is_active !== false" @update:model-value="v => s.is_active = v" label="Search on"></ui-switch></label>
               <button type="button" class="btn ghost tiny" @click="actions.removeSearch(i)">Remove</button>
@@ -261,12 +422,28 @@
           <div class="row">
             <div class="field">
               <label :for="'q' + i">Search terms</label>
-              <input :id="'q' + i" type="text" v-model.trim="s.query" placeholder='"data scientist" NOT intern' maxlength="500" />
+              <ui-suggest :id="'q' + i" :model-value="s.query" @update:model-value="v => s.query = v" :suggestions="roleSuggest" placeholder='e.g. "your job title" NOT intern' maxlength="500"></ui-suggest>
               <p class="hint">Quotes for exact phrases · NOT to exclude · OR for either</p>
             </div>
-            <div class="field">
-              <label :for="'loc' + i">Location</label>
-              <input :id="'loc' + i" type="text" v-model.trim="s.location" placeholder="City or country" maxlength="200" />
+            <div class="field loc-pick">
+              <div class="loc-row">
+                <div>
+                  <label :for="'ctry' + i">Country</label>
+                  <select :id="'ctry' + i" :value="locOf(s).country" @change="setCountry(s, $event.target.value)">
+                    <option v-if="!locOf(s).known && s.location" value="">{{ s.location }} (current)</option>
+                    <option v-else-if="!locOf(s).known" value="">Choose a country</option>
+                    <option value="GCC">All GCC countries</option>
+                    <option v-for="c in gcc" :key="c.name" :value="c.name">{{ c.name }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label :for="'city' + i">{{ cityLabel(s) }}</label>
+                  <select :id="'city' + i" :value="locOf(s).city" :disabled="!locOf(s).known || locOf(s).country === 'GCC'" @change="setCity(s, $event.target.value)">
+                    <option value="">{{ locOf(s).country === 'GCC' ? 'All six countries' : 'Anywhere in ' + countryShort(s) }}</option>
+                    <option v-for="c in citiesOf(s)" :key="c" :value="c">{{ c }}</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
           <div class="field">
@@ -279,7 +456,7 @@
             </div>
           </div>
           <div v-if="s.sites.includes('google')" class="field">
-            <label :for="'g' + i">Google Jobs phrase <span class="opt">— exactly what you'd type into Google</span></label>
+            <label :for="'g' + i">Google Jobs phrase <span class="opt">· exactly what you'd type into Google</span></label>
             <input :id="'g' + i" type="text" v-model.trim="s.google_search_term" placeholder="data scientist jobs in dubai since yesterday" maxlength="300" />
             <p class="note warn">Google has no boolean search. Paste the plain phrase and include how fresh, e.g. "since yesterday".</p>
           </div>
@@ -287,160 +464,169 @@
             <summary>Advanced</summary>
             <div class="adv-body">
               <div class="field">
-                <label>Title must contain <span class="opt">— optional</span></label>
+                <label>Title must contain <span class="opt">· optional</span></label>
                 <ui-tags :model-value="s.require_kw" @update:model-value="v => s.require_kw = v" placeholder="type a word and press Enter…"></ui-tags>
               </div>
               <div class="row">
-                <div class="field"><label :for="'lq' + i">LinkedIn query override <span class="opt">— optional</span></label><input :id="'lq' + i" type="text" v-model.trim="s.linkedin_query" /></div>
-                <div class="field"><label :for="'iq' + i">Indeed query override <span class="opt">— optional</span></label><input :id="'iq' + i" type="text" v-model.trim="s.indeed_query" /></div>
+                <div class="field"><label :for="'lq' + i">LinkedIn query override <span class="opt">· optional</span></label><input :id="'lq' + i" type="text" v-model.trim="s.linkedin_query" /></div>
+                <div class="field"><label :for="'iq' + i">Indeed query override <span class="opt">· optional</span></label><input :id="'iq' + i" type="text" v-model.trim="s.indeed_query" /></div>
               </div>
             </div>
           </details>
           <p class="err" v-if="s._err" role="alert" style="margin-top:10px">{{ s._err }}</p>
         </div>
 
-        <button type="button" class="add" :disabled="store.searches.length >= 5" @click="actions.addSearch()">
-          + Add a search <span v-if="store.searches.length < 5">· {{ 5 - store.searches.length }} left</span><span v-else>· limit of 5 reached</span>
+        <button type="button" class="add" :disabled="store.searches.length >= planLimit" @click="actions.addSearch()">
+          + Add a search <span v-if="store.searches.length < planLimit">· {{ planLimit - store.searches.length }} left</span><span v-else>· limit of {{ planLimit }} reached</span>
         </button>
-      </section>
-
-      <section class="card">
-        <div class="card-head"><h2>Where alerts go</h2></div>
-        <div class="list">
-          <div class="li">
-            <span class="ic" aria-hidden="true">TG</span>
-            <div class="t"><b>Telegram</b><span>Instant message the moment a new job matches</span></div>
-            <span v-if="store.telegramLinked" class="pill ok">Connected ✓</span>
-            <div v-else class="li-actions">
-              <button type="button" class="btn secondary tiny" :disabled="!store.profile.id" @click="actions.connectTelegram()">Connect</button>
-              <span v-if="store.polling" class="hint waiting"><span class="spinner sm"></span> waiting for you to press Start…</span>
-              <span v-else-if="store.pollTimedOut" class="hint">Didn't see you press Start. Try Connect again.</span>
+        <details class="adv target-filters">
+          <summary>Filters for every search</summary>
+          <div class="adv-body">
+            <div class="row">
+              <div class="field">
+                <label for="country">Indeed country <span class="opt">for searches outside the GCC</span></label>
+                <select id="country" v-model="store.profile.country_indeed"><option v-for="c in countries" :key="c.v" :value="c.v">{{ c.l }}</option></select>
+              </div>
+              <div class="field">
+                <label for="salary">Minimum salary <span class="opt">· AED / month</span></label>
+                <input id="salary" type="number" min="0" step="500" inputmode="numeric" v-model="store.salaryInput" placeholder="e.g. 25000" :aria-invalid="store.fieldErrors.salary ? 'true' : null" />
+                <p class="err" v-if="store.fieldErrors.salary">{{ store.fieldErrors.salary }}</p>
+              </div>
+            </div>
+            <div class="field">
+              <label>Skip jobs whose title contains</label>
+              <ui-tags :model-value="store.excludeList" @update:model-value="v => store.excludeList = v" placeholder="intern, junior… type a word and press Enter"></ui-tags>
             </div>
           </div>
-          <div class="li">
-            <span class="ic" aria-hidden="true">@</span>
-            <div class="t"><b>Email digest</b><span>{{ store.userEmail }}</span></div>
-            <ui-switch label="Email digest" :model-value="store.profile.email_enabled" @update:model-value="v => store.profile.email_enabled = v"></ui-switch>
-          </div>
-          <div class="li sub">
-            <div class="t"><span>Also send a Telegram note when a check finds nothing new</span></div>
-            <ui-switch label="Nothing-new note" :model-value="store.profile.notify_when_empty" @update:model-value="v => store.profile.notify_when_empty = v"></ui-switch>
-          </div>
+        </details>
         </div>
+        </template>
+        <div class="cap-row">
+          <div class="cap-track"><div class="cap-fill" :class="{ full: store.searches.length >= planLimit }" :style="{ width: Math.min(100, planLimit ? store.searches.length / planLimit * 100 : 0) + '%' }"></div></div>
+          <span class="cap-text" v-if="isPremium">You're getting job alerts for <b>{{ store.searches.length }} of {{ planLimit }} roles</b> on Premium</span>
+          <span class="cap-text" v-else-if="store.searches.length >= planLimit">You're getting job alerts for <b>all {{ planLimit }} roles</b> the free plan allows. Remove one to add another, or upgrade to Premium for up to {{ premiumLimit }}.</span>
+          <span class="cap-text" v-else>You're getting job alerts for <b>{{ store.searches.length }} of {{ planLimit }} roles</b> on the free plan · Premium covers up to {{ premiumLimit }} roles</span>
+        </div>
+        <div class="tier">
+          <div class="tier-b" :class="{ on: !isPremium }"><span class="tier-k">{{ isPremium ? 'Free' : 'Free · your plan' }}</span><span class="tier-v">Job alerts for up to {{ freeLimit }} roles</span><span class="tier-s">Job alerts kept for {{ freeDays }} days</span></div>
+          <div class="tier-b prem" :class="{ on: isPremium }"><span class="tier-k">◆ Premium{{ isPremium ? ' · your plan' : '' }} · {{ premiumPrice }}</span><span class="tier-v">Job alerts for up to {{ premiumLimit }} roles</span><span class="tier-s">Job alerts kept for {{ premiumDays }} days</span></div>
+        </div>
+        <p class="notice"><span class="i" aria-hidden="true">ⓘ</span><span>You'll only get alerts for the roles and locations listed here, and easyy only tailors a resume when a job matches one of them. <b>Add or remove a role and the next morning's run follows it.</b></span></p>
       </section>
-
-      <section class="card">
-        <div class="card-head"><h2>Filters for every search</h2></div>
-        <div class="row">
-          <div class="field">
-            <label for="country">Country for Indeed</label>
-            <select id="country" v-model="store.profile.country_indeed"><option v-for="c in countries" :key="c.v" :value="c.v">{{ c.l }}</option></select>
-          </div>
-          <div class="field">
-            <label for="salary">Minimum salary <span class="opt">— AED / month</span></label>
-            <input id="salary" type="number" min="0" step="500" inputmode="numeric" v-model="store.salaryInput" placeholder="e.g. 25000" :aria-invalid="store.fieldErrors.salary ? 'true' : null" />
-            <p class="err" v-if="store.fieldErrors.salary">{{ store.fieldErrors.salary }}</p>
-          </div>
-        </div>
-        <div class="field">
-          <label>Skip jobs whose title contains</label>
-          <ui-tags :model-value="store.excludeList" @update:model-value="v => store.excludeList = v" placeholder="intern, junior… type a word and press Enter"></ui-tags>
-        </div>
-      </section>
-
-      <section class="card account-strip">
-        <div><b>{{ store.profile.full_name || 'Your account' }}</b><span v-if="maskedPhone"> · {{ maskedPhone }}</span></div>
-        <a href="#/settings" @click.prevent="nav.go('settings')">Profile &amp; settings →</a>
-      </section>
-    </div>
-  </template>
-
-  <template id="tpl-history">
-    <div class="view">
-      <div class="page-head">
-        <div>
-          <h1>What we've sent you</h1>
-          <p class="hint" v-if="lastRun">Last check {{ lastRun.time }}<span v-if="lastRun.note" :style="lastRun.status === 'failed' ? 'color:var(--warn)' : ''"> · {{ lastRun.note }}</span></p>
-        </div>
-        <div class="page-tools" v-if="h.status === 'ready' && grouped.searches.length">
-          <select v-model="filter" aria-label="Filter by search"><option value="">All searches</option><option v-for="s in grouped.searches" :key="s" :value="s">{{ s }}</option></select>
-          <button type="button" class="btn ghost tiny" @click="actions.loadHistory(true)">Refresh</button>
-        </div>
-      </div>
 
       <section class="card" v-if="h.status === 'loading' || h.status === 'idle'" aria-busy="true">
         <div class="skeleton row-sk"></div><div class="skeleton row-sk"></div><div class="skeleton row-sk"></div>
       </section>
       <section class="card empty" v-else-if="h.status === 'missing'">
-        <p>History is being connected — your alerts keep running.</p>
+        <p>History is being connected. Your alerts keep running.</p>
       </section>
       <section class="card empty" v-else-if="h.status === 'error'">
         <p>Couldn't load your history. {{ h.error }}</p>
         <button type="button" class="btn secondary" @click="actions.loadHistory(true)">Try again</button>
       </section>
       <section class="card empty" v-else-if="grouped.total === 0">
-        <p v-if="!store.dbSearchIds.length">Add a search on <a href="#/" @click.prevent="nav.go('home')">Home</a> to start — everything we send you will show up here.</p>
+        <p v-if="!store.dbSearchIds.length">Add a search on <a href="#/" @click.prevent="nav.go('home')">Overview</a> to start. Everything we send you will show up here.</p>
         <p v-else-if="filter">Nothing sent for this search yet.</p>
-        <p v-else>Nothing sent yet — your first check runs within the hour after you save.</p>
+        <p v-else>Nothing sent yet. Your first check runs within the hour after you save.</p>
       </section>
-      <section class="card history" v-else>
-        <div v-if="grouped.pending" class="event pending">
-          <div class="ev-row">
-            <span class="tm">{{ grouped.pending.time }}</span>
-            <span class="ic warn" aria-hidden="true">…</span>
-            <div class="t"><b>Waiting to send</b><span>{{ grouped.pending.jobs.length }} {{ grouped.pending.jobs.length === 1 ? 'job' : 'jobs' }} matched — we retry on the next check</span></div>
-            <button type="button" class="btn ghost tiny" :aria-expanded="String(isOpen('pending'))" @click="toggle('pending')">{{ isOpen('pending') ? 'Hide ▴' : 'Show ▾' }}</button>
-          </div>
-          <div v-if="isOpen('pending')" class="jobs">
-            <div class="job" :class="{ rowlink: features.jdView }" v-for="j in grouped.pending.jobs" :key="j.id"
-                 :role="features.jdView ? 'link' : null" :tabindex="features.jdView ? 0 : null"
-                 @click="features.jdView && nav.go('job', j.id)" @keydown.enter="features.jdView && nav.go('job', j.id)">
-              <div class="jt"><span v-if="features.jdView" class="jtitle">{{ j.title }}</span><a v-else :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
-              <span class="src">{{ siteLabel(j.site) }}</span>
-              <span class="tag">{{ j.search }}</span>
-              <button v-if="features.tailorResume" type="button" class="btn secondary tiny"
-                      @click.stop="actions.tailorFromJob(j)">Tailor resume</button>
-              <button v-else type="button" class="btn secondary tiny" disabled
-                      title="Coming soon — being connected" @click.stop>Tailor resume</button>
-              <span class="chev" v-if="features.jdView" aria-hidden="true">›</span>
-            </div>
+      <div class="alerts-split" v-else>
+        <div class="joblist">
+          <template v-for="g in visibleGroups" :key="g.label">
+            <button type="button" class="joblist-head" @click="toggleBucket(g.label)" :aria-expanded="String(!isCollapsed(g.label))">
+              <span class="jh-caret" :class="{ open: !isCollapsed(g.label) }" aria-hidden="true">▸</span>{{ g.label }} · {{ g.jobs.length }}
+            </button>
+            <template v-if="!isCollapsed(g.label)">
+            <button type="button" class="jobcard" v-for="j in g.jobs" :key="j.id" :class="{ on: selectedId === j.id }" @click="select(j)">
+              <div class="jc-top">
+                <span class="jc-title">{{ j.title }}</span>
+                <!-- Match % as a ring: the filled arc is the score, the number sits in the middle -->
+                <span v-if="scoreFor(j) != null" class="score ring" :data-band="scoreBand(j)" :title="scoreFor(j) + '% match with your master resume'">
+                  <svg viewBox="0 0 36 36" aria-hidden="true">
+                    <circle class="ring-bg" cx="18" cy="18" r="15.5" pathLength="100"></circle>
+                    <circle v-if="scoreFor(j) > 0" class="ring-fg" cx="18" cy="18" r="15.5" pathLength="100" :stroke-dasharray="scoreFor(j) + ' 100'"></circle>
+                  </svg>
+                  <span class="score-v">{{ scoreFor(j) }}<small>%</small></span>
+                </span>
+              </div>
+              <div class="jc-sub">{{ meta(j) }}</div>
+              <!-- V17 "<name> works here — can refer" line; needs connections data, so a placeholder on the selected job -->
+              <div v-if="selectedId === j.id" class="inside is-soon"><span class="dot"></span>People inside this company who can refer you <span class="soon-tag sm">Soon</span></div>
+              <div class="jc-chips">
+                <span class="chip sm" :class="srcClass(j.site)">{{ siteLabel(j.site) }}</span>
+                <span v-if="postedAgo(j)" class="chip sm">Posted {{ postedAgo(j) }}</span>
+                <span v-if="j.search" class="chip sm">{{ j.search }}</span>
+                <template v-if="resumeFor(j)">
+                  <span class="chip sm ok">Resume ready</span>
+                  <span class="chip sm soonc">Draft email · soon</span>
+                </template>
+              </div>
+            </button>
+            </template>
+          </template>
+          <div v-if="!isPremium && jobs.length" class="window-nudge">
+            <span>Showing the last <b>{{ windowDays }} days</b> of matches on the free plan.</span>
+            <span class="wn-cta">Premium keeps <b>30 days</b> of history.</span>
           </div>
         </div>
 
-        <template v-for="day in grouped.days" :key="day.key">
-          <div class="day">{{ day.label }}</div>
-          <div class="event" v-for="ev in day.events" :key="ev.key">
-            <div class="ev-row">
-              <span class="tm">{{ ev.time }}</span>
-              <span class="ic" aria-hidden="true">{{ ev.jobCount }}</span>
-              <div class="t">
-                <b>{{ eventTitle(ev) }}</b>
-                <span>
-                  <template v-if="chanParts(ev)"><span v-for="c in chanParts(ev)" :key="c.label" class="chan" :class="c.status">{{ c.label }} {{ c.status === 'sent' ? '✓' : 'failed' }}</span></template>
-                  <template v-else>sent to {{ channels }}</template>
-                  <span class="tag" v-for="s in ev.searches" :key="s">{{ s }}</span>
-                </span>
-              </div>
-              <button type="button" class="btn ghost tiny" v-if="ev.jobs.length" :aria-expanded="String(isOpen(ev.key))" @click="toggle(ev.key)">{{ isOpen(ev.key) ? 'Hide ▴' : 'Show ▾' }}</button>
+        <div class="jobdetail">
+          <div v-if="!sel" class="detail-empty">Pick a job on the left to see what we found.</div>
+          <template v-else>
+            <div class="detail-head">
+              <h2>{{ sel.title }}</h2>
+              <p class="hint">{{ meta(sel) }}<span v-if="sel.site"> · via {{ siteLabel(sel.site) }}</span></p>
             </div>
-            <div v-if="isOpen(ev.key) && ev.jobs.length" class="jobs">
-              <div class="job" :class="{ rowlink: features.jdView }" v-for="j in ev.jobs" :key="j.id"
-                   :role="features.jdView ? 'link' : null" :tabindex="features.jdView ? 0 : null"
-                   @click="features.jdView && nav.go('job', j.id)" @keydown.enter="features.jdView && nav.go('job', j.id)">
-                <div class="jt"><span v-if="features.jdView" class="jtitle">{{ j.title }}</span><a v-else :href="j.url" target="_blank" rel="noopener">{{ j.title }}</a><span>{{ meta(j) }}</span></div>
-                <span class="src">{{ siteLabel(j.site) }}</span>
-                <span class="tag">{{ j.search }}</span>
-                <button v-if="features.tailorResume" type="button" class="btn secondary tiny"
-                        @click.stop="actions.tailorFromJob(j)">Tailor resume</button>
-                <button v-else type="button" class="btn secondary tiny" disabled
-                        title="Coming soon — being connected" @click.stop>Tailor resume</button>
-                <span class="chev" v-if="features.jdView" aria-hidden="true">›</span>
-              </div>
+
+            <div class="detail-sub">
+              <span class="chip sm" :class="resumeFor(sel) ? 'ok' : 'wait'">{{ resumeFor(sel) ? 'Resume ready' : 'Not tailored yet' }}</span>
+              <span v-if="resumeFor(sel)" class="chip sm soonc">Draft email · soon</span>
+              <span v-if="postedOn(sel)" class="hint">Posted {{ postedOn(sel) }}</span>
             </div>
-          </div>
-        </template>
-        <p class="foot">Showing the last 90 days.</p>
-      </section>
+
+
+            <div class="detail-body">
+              <div class="jd-col">
+                <div class="eyebrow">What the job description says</div>
+                <div v-if="features.jdView && (job.status === 'loading' || job.status === 'fetching')" class="jd-fetching">
+                  <span class="spinner sm"></span><span>{{ job.status === 'fetching' ? 'Fetching the full description…' : 'Loading…' }}</span>
+                </div>
+                <template v-else-if="features.jdView && job.jd">
+                  <div class="jd-body" :class="{ clamped: jdLong && !jdOpen }" v-html="jdHtml()"></div>
+                  <button v-if="jdLong" type="button" class="jd-more" :aria-expanded="String(jdOpen)" @click="jdOpen = !jdOpen">{{ jdOpen ? 'Hide the full job description ▴' : 'View the full job description ▾' }}</button>
+                  <p class="legend sm" v-if="masterTerms.length"><span class="swatch" aria-hidden="true"></span>Highlighted phrases are the ones easyy matched against your master resume</p>
+                </template>
+                <div v-else class="empty-jd"><p class="hint">Open the posting to read the full description.</p></div>
+              </div>
+
+              <aside class="detail-aside">
+                <div class="side-block">
+                  <h4>Already done for you</h4>
+                  <template v-for="c in checklist(sel)" :key="c.key">
+                    <button v-if="c.act" type="button" class="side-line act" :class="{ off: !c.done, primary: c.primary, warn: c.warn }" @click="c.act()">
+                      <span class="tick" aria-hidden="true"><span v-if="c.busy" class="spinner sm"></span><template v-else>{{ c.done ? '✓' : (c.primary ? '+' : '') }}</template></span>
+                      <span class="sl-label">{{ c.label }}</span><span class="sl-cta" v-if="c.cta">{{ c.cta }}</span>
+                    </button>
+                    <div v-else class="side-line" :class="{ off: !c.done }">
+                      <span class="tick" aria-hidden="true">{{ c.done ? '✓' : '' }}</span>
+                      <span class="sl-label">{{ c.label }}<span v-if="c.soon" class="soon-tag sm">Soon</span></span>
+                    </div>
+                  </template>
+                </div>
+                <!-- V17 Inside track (referrer, members in feed, Ask for a referral) — needs connections data -->
+                <div class="side-block inside-track is-soon">
+                  <h4>Inside track <span class="soon-tag sm">Soon</span></h4>
+                  <div class="it-who"><span class="avatar it-av" aria-hidden="true">?</span><div><div class="it-n">Someone at {{ sel.company || 'this company' }}</div><div class="it-r">who can refer you</div></div></div>
+                  <div class="it-d">See how many members have this job in their feed this week.</div>
+                  <button type="button" class="btn ghost" disabled>Ask for a referral</button>
+                </div>
+                <div class="btn-row">
+                  <a v-if="sel.url" class="btn ghost" :href="sel.url" target="_blank" rel="noopener">Open on {{ siteLabel(sel.site) }} ↗</a>
+                </div>
+              </aside>
+            </div>
+          </template>
+        </div>
+      </div>
     </div>
   </template>
 
@@ -468,7 +654,7 @@
           <a v-if="job.meta.url" class="btn secondary" :href="job.meta.url" target="_blank" rel="noopener">Open on {{ siteLabel(job.meta.site) }} ↗</a>
           <button v-if="features.tailorResume" type="button" class="btn"
                   @click="actions.tailorFromJob(job.meta)">Tailor resume</button>
-          <button v-else type="button" class="btn" disabled title="Coming soon — being connected">Tailor resume</button>
+          <button v-else type="button" class="btn" disabled title="Coming soon, being connected">Tailor resume</button>
         </div>
 
         <section class="card">
@@ -480,7 +666,7 @@
           <div v-else-if="job.jd" class="jd-body">{{ job.jd.text }}</div>
           <div v-else class="empty-jd">
             <p><b>Description unavailable.</b></p>
-            <p class="hint">We couldn't fetch this one right now — open it on {{ siteLabel(job.meta.site) }}.</p>
+            <p class="hint">We couldn't fetch this one right now. Open it on {{ siteLabel(job.meta.site) }}.</p>
           </div>
         </section>
       </template>
@@ -492,8 +678,8 @@
       <div class="page-head"><h1>Resume builder</h1></div>
       <template v-if="features.masterResume">
         <div v-if="store.master.status === 'ready' && !store.hasReadyMaster" class="msg info banner" role="status">
-          Build your master resume first — it's what every tailored resume is made from.
-          <a href="#/resumes" @click.prevent="nav.go('resumes')">Go to Resumes →</a>
+          Build your master resume first. It's what every tailored resume is made from.
+          <a href="#/resumes" @click.prevent="nav.go('resumes')">Go to Tailored resumes →</a>
         </div>
         <div v-else-if="store.openConflicts > 0" class="msg warn banner" role="status">
           Resolve {{ store.openConflicts }} {{ store.openConflicts === 1 ? 'conflict' : 'conflicts' }} in your master resume first.
@@ -503,7 +689,7 @@
       <div v-if="features.tailorResume">
         <section class="card">
           <h2>Tailor a resume</h2>
-          <p class="hint">Pick a job from History, or paste any job description — you'll get a PDF built
+          <p class="hint">Pick a job from History, or paste any job description. You'll get a PDF built
             from your master resume, with an ATS report.</p>
           <div class="actions">
             <button type="button" class="btn" @click="actions.openPasteTailor()">Paste a job description</button>
@@ -512,7 +698,7 @@
         </section>
       </div>
       <div v-else>
-        <div class="msg info" role="status">Resume tailoring is being connected — your alerts keep running.</div>
+        <div class="msg info" role="status">Resume tailoring is being connected. Your alerts keep running.</div>
         <div class="row">
           <section class="card">
             <div class="card-head"><h2>From a recent alert</h2></div>
@@ -520,9 +706,9 @@
           </section>
           <section class="card">
             <div class="card-head"><h2>Or paste a job description</h2></div>
-            <div class="field"><label for="rb-title">Job title <span class="opt">— optional</span></label><input id="rb-title" type="text" placeholder="e.g. Senior Data Scientist" disabled /></div>
-            <div class="field"><label for="rb-company">Company <span class="opt">— optional, unlocks referral drafts</span></label><input id="rb-company" type="text" placeholder="e.g. Careem" disabled /></div>
-            <div class="field"><label for="rb-jd">Description</label><textarea id="rb-jd" placeholder="Paste the whole posting here — requirements, responsibilities, tools. The more of the employer's own words, the better the match." disabled></textarea></div>
+            <div class="field"><label for="rb-title">Job title <span class="opt">· optional</span></label><input id="rb-title" type="text" placeholder="e.g. Senior Data Scientist" disabled /></div>
+            <div class="field"><label for="rb-company">Company <span class="opt">· optional, unlocks referral drafts</span></label><input id="rb-company" type="text" placeholder="e.g. Careem" disabled /></div>
+            <div class="field"><label for="rb-jd">Description</label><textarea id="rb-jd" placeholder="Paste the whole posting here: requirements, responsibilities, tools. The more of the employer's own words, the better the match." disabled></textarea></div>
             <div class="actions"><button type="button" class="btn" disabled>Tailor my resume</button></div>
           </section>
         </div>
@@ -530,140 +716,151 @@
     </div>
   </template>
 
-  <template id="tpl-resumes">
-    <div class="view">
-      <div class="page-head"><h1>Resumes</h1></div>
-
-      <template v-if="!features.masterResume">
-        <div class="msg info" role="status">Resume tailoring is being connected — your alerts keep running.</div>
-        <section class="card">
-          <div class="card-head"><h2>Master resume</h2><button type="button" class="btn secondary tiny" disabled>Review &amp; edit</button></div>
-          <p class="hint">Source of truth for every tailored resume.</p>
-        </section>
-      </template>
-
-      <template v-else>
-        <section class="card empty" v-if="m.status === 'error'">
-          <p>{{ m.error }}</p>
-          <button type="button" class="btn secondary" @click="actions.loadMaster(true)">Try again</button>
-        </section>
-        <section class="card" v-else-if="m.status !== 'ready'" aria-busy="true">
-          <div class="skeleton row-sk"></div><div class="skeleton row-sk"></div>
-        </section>
-
-        <template v-else>
-          <!-- master card -->
-          <section class="card">
-            <div class="card-head"><h2>Master resume</h2><span class="sub" v-if="ov.master && ov.master.current_build_id">v{{ ov.master.version }} · built {{ when(ov.build && ov.build.finished_at) }}</span></div>
-
-            <!-- an active (re)build: show progress; the committed master is preserved and re-renders when it finishes -->
-            <template v-if="stage.state === 'queued' || stage.state === 'running'">
-              <div class="stepper" role="status" aria-live="polite">
-                <div class="step-row" v-for="s in stage.steps" :key="s.key" :class="s.state">
-                  <span class="step-dot" aria-hidden="true">{{ s.state === 'done' ? '✓' : '' }}</span>
-                  <span class="step-label">{{ s.label }}</span><span class="step-detail" v-if="s.detail">{{ s.detail }}</span>
-                </div>
-              </div>
-              <p class="hint" v-if="stage.state === 'queued'"><span class="spinner sm"></span> {{ stage.waiting ? 'Waiting for our builder — this can take a few minutes.' : 'Starting…' }}</p>
-              <div class="actions" v-if="stage.state === 'queued'">
-                <button type="button" class="btn ghost tiny" :disabled="store.buildBusy" @click="actions.cancelBuild()">Cancel</button>
-              </div>
-            </template>
-
-            <!-- a committed master exists: always show it, even if the latest (re)build was cancelled or failed -->
-            <template v-else-if="ov.master && ov.master.current_build_id">
-              <p class="hint" v-if="stage.state === 'cancelled'">Last rebuild was cancelled — your master resume is unchanged.</p>
-              <p class="hint" v-else-if="stage.state === 'failed'">Last rebuild didn't finish — your master resume is unchanged.</p>
-              <p><b>{{ ov.item_count }}</b> facts · <b>{{ ov.open_conflicts }}</b> {{ ov.open_conflicts === 1 ? 'question' : 'questions' }} to answer</p>
-              <div class="actions">
-                <button type="button" class="btn" v-if="ov.open_conflicts" @click="actions.openMaster('conflicts')">Review conflicts ({{ ov.open_conflicts }})</button>
-                <button type="button" class="btn secondary" @click="actions.openMaster('master')">Browse master</button>
-                <button type="button" class="btn ghost" :disabled="store.buildBusy || !files.length" @click="actions.requestBuild()">{{ store.buildBusy ? 'Starting…' : 'Rebuild' }}</button>
-              </div>
-            </template>
-
-            <!-- no committed master yet, and the first build failed -->
-            <template v-else-if="stage.state === 'failed'">
-              <p class="err">{{ failCopy }}</p>
-              <div class="actions"><button type="button" class="btn secondary" :disabled="store.buildBusy" @click="actions.requestBuild()">Try again</button></div>
-            </template>
-
-            <!-- no committed master: first-time upload prompt (or 'cancelled' before any master existed) -->
-            <template v-else>
-              <p class="hint" v-if="stage.state === 'cancelled'">Build cancelled.</p>
-              <p class="hint" v-else>Upload the resumes you've sent over the years. We'll combine them into one set of facts and ask you only about what disagrees.</p>
-              <div class="actions">
-                <button type="button" class="btn" :disabled="store.buildBusy || !files.length" :title="files.length ? '' : 'Add at least one resume first'" @click="actions.requestBuild()">{{ store.buildBusy ? 'Starting…' : 'Build master' }}</button>
-              </div>
-            </template>
-            <p class="err" v-if="store.buildError" role="alert">{{ store.buildError }}</p>
-          </section>
-
-          <!-- files card -->
-          <section class="card">
-            <div class="card-head"><h2>Source files</h2><span class="sub">{{ files.length }} of {{ ov.files_cap }} files</span></div>
-            <div class="list" v-if="files.length">
-              <div class="li file-row" v-for="f in files" :key="f.id">
-                <span class="ic" aria-hidden="true">{{ f.kind === 'pdf' ? 'PDF' : f.kind === 'docx' ? 'DOC' : 'TXT' }}</span>
-                <div class="t"><b>{{ f.filename }}</b><span class="file-meta">{{ size(f.size_bytes) }} · added {{ when(f.created_at) }}</span></div>
-                <span class="pill ok" v-if="f.in_master">In master ✓</span>
-                <span class="pill warn" v-else-if="f.excluded" title="We couldn't read this file. Try saving it again as .docx or paste its text.">Couldn't be read</span>
-                <button type="button" class="btn ghost tiny" :disabled="building" @click="actions.removeResumeFile(f)">Remove</button>
-              </div>
+  <template id="tpl-sources">
+    <section class="card tone-top src-card" data-tone="resumes">
+      <div class="card-head">
+        <h3>Source resumes</h3>
+        <span class="meta">{{ files.length }} of {{ fileCap }} files<template v-if="ov.master && ov.master.current_build_id"> · master v{{ ov.master.version }}</template></span>
+      </div>
+      <input ref="picker" type="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple hidden @change="onPick" />
+      <div class="src-grid2">
+        <div>
+          <div class="drop" :class="{ over: dragging }" @drop.prevent="onDrop" @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false">
+            <div class="drop-t">Drop resumes here, or choose files</div>
+            <div class="drop-d" v-if="ov.item_count">DOCX or PDF. Every file feeds the {{ ov.item_count }}-fact master these tailored versions are built from.</div>
+            <div class="drop-d" v-else>DOCX or PDF. Add the resumes you already have; easyy merges them into one master set of facts.</div>
+            <div class="drop-btns">
+              <button type="button" class="btn" :disabled="store.upload.busy || building || files.length >= fileCap" @click="$refs.picker.click()">{{ store.upload.busy ? 'Adding…' : 'Choose files' }}</button>
+              <button type="button" class="btn ghost tiny" :disabled="store.upload.busy || building || files.length >= fileCap" @click="pasteOpen = !pasteOpen">or paste text</button>
             </div>
-            <p class="hint" v-else>No resumes yet. Add DOCX or PDF files, or paste the text of one.</p>
-
-            <div class="actions">
-              <input ref="picker" type="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple hidden @change="onPick" />
-              <button type="button" class="btn secondary" :disabled="store.upload.busy || building || files.length >= ov.files_cap" @click="$refs.picker.click()">{{ store.upload.busy ? 'Adding…' : 'Upload DOCX / PDF' }}</button>
-              <button type="button" class="btn ghost" :disabled="store.upload.busy || building || files.length >= ov.files_cap" @click="pasteOpen = !pasteOpen">Paste text</button>
-            </div>
-            <div v-if="pasteOpen" class="paste-box">
-              <div class="field"><label for="pst-name">Name <span class="opt">— optional</span></label><input id="pst-name" type="text" v-model.trim="pasteName" placeholder="e.g. 2024 data science resume" maxlength="120" /></div>
-              <div class="field"><label for="pst-text">Resume text</label><textarea id="pst-text" v-model="pasteText" rows="10" placeholder="Paste the whole resume here."></textarea></div>
-              <div class="actions">
-                <button type="button" class="btn" :disabled="store.upload.busy || !pasteText.trim()" @click="doPaste">Add</button>
-                <button type="button" class="btn ghost" @click="pasteOpen = false">Cancel</button>
-              </div>
-            </div>
-            <p class="err" v-if="store.upload.error" role="alert">{{ store.upload.error }}</p>
-            <p class="ok" v-else-if="store.upload.notice" role="status">{{ store.upload.notice }} ✓</p>
-            <p class="hint" v-if="building">Files are locked while a build is running.</p>
-          </section>
-        </template>
-      </template>
-
-      <section class="card empty">
-        <h2>Tailored resumes</h2>
-        <div v-if="features.tailorResume">
-          <div v-if="store.tailored.error" class="msg warn">{{ store.tailored.error }}</div>
-          <p v-if="store.tailored.status === 'ready' && !store.tailored.rows.length">
-            Nothing tailored yet — start from a job in History or paste a JD on the Resume builder page.</p>
-          <div v-for="t in store.tailored.rows" :key="t.id" class="row tailored-row">
-            <div class="grow">
-              <b>{{ t.file_name || "Preparing…" }}</b>
-              <div class="hint">{{ [t.jd_meta && t.jd_meta.title, t.jd_meta && t.jd_meta.company].filter(Boolean).join(" @ ")
-                || "Pasted job description" }} · {{ tWhen(t.created_at) }} · {{ t.status }}</div>
-            </div>
-            <button v-if="t.status === 'ready'" type="button" class="btn secondary tiny"
-                    @click="actions.downloadTailored(t)">Download</button>
-            <button type="button" class="btn secondary tiny" @click="nav.go('tailored', t.id)">Report</button>
-            <button type="button" class="btn secondary tiny danger" @click="actions.deleteTailored(t)">Delete</button>
+          </div>
+          <div class="cap-row">
+            <div class="cap-track"><div class="cap-fill" :class="{ full: files.length >= fileCap }" :style="{ width: Math.min(100, files.length / fileCap * 100) + '%' }"></div></div>
+            <span class="cap-text" v-if="files.length >= fileCap"><b>All {{ fileCap }} uploaded</b>. Remove one to add another{{ planKey !== 'premium' ? ', or upgrade to Premium for up to 20' : '' }}.</span>
+            <span class="cap-text" v-else><b>{{ files.length }} of {{ fileCap }} uploaded</b>, {{ fileCap - files.length }} {{ fileCap - files.length === 1 ? 'slot' : 'slots' }} left on the {{ planKey === 'premium' ? 'Premium' : 'free' }} plan</span>
           </div>
         </div>
-        <p v-else>Tailored resumes will appear here, newest first, with their files and the job they were for.</p>
+        <div>
+          <div class="src-chips">
+            <div class="src-chip" v-for="f in files" :key="f.id">
+              <span class="file-ico" aria-hidden="true">{{ f.kind === 'pdf' ? 'PDF' : f.kind === 'docx' ? 'DOC' : 'TXT' }}</span>
+              <span class="src-name" :title="f.filename + ' · ' + size(f.size_bytes) + ' · added ' + when(f.created_at)">{{ f.filename }}</span>
+              <span class="pill ok" v-if="f.in_master" title="Included in your master">✓</span>
+              <span class="pill warn" v-else-if="f.excluded" title="We couldn't read this file. Try saving it again as .docx or paste its text.">!</span>
+              <button type="button" class="tc-x" :disabled="building" @click="actions.removeResumeFile(f)" :aria-label="'Remove ' + f.filename">✕</button>
+            </div>
+            <p class="hint" v-if="!files.length">No resumes yet. Drop or choose files on the left.</p>
+          </div>
+          <div class="tier">
+            <div class="tier-b" :class="{ on: planKey !== 'premium' }"><span class="tier-k">{{ planKey !== 'premium' ? 'Free · your plan' : 'Free' }}</span><span class="tier-v">5 resume uploads</span></div>
+            <div class="tier-b prem" :class="{ on: planKey === 'premium' }"><span class="tier-k">◆ Premium{{ planKey === 'premium' ? ' · your plan' : '' }} · {{ premiumPrice }}</span><span class="tier-v">Up to 20 resume uploads</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="pasteOpen" class="paste-box">
+        <div class="field"><label for="pst-name">Name <span class="opt">· optional</span></label><input id="pst-name" type="text" v-model.trim="pasteName" placeholder="e.g. 2024 data science resume" maxlength="120" /></div>
+        <div class="field"><label for="pst-text">Resume text</label><textarea id="pst-text" v-model="pasteText" rows="10" placeholder="Paste the whole resume here."></textarea></div>
+        <div class="actions">
+          <button type="button" class="btn" :disabled="store.upload.busy || !pasteText.trim()" @click="doPaste">Add</button>
+          <button type="button" class="btn ghost" @click="pasteOpen = false">Cancel</button>
+        </div>
+      </div>
+      <p class="err" v-if="store.upload.error" role="alert">{{ store.upload.error }}</p>
+      <p class="ok" v-else-if="store.upload.notice" role="status">{{ store.upload.notice }} ✓</p>
+      <p class="hint" v-if="building">Files are locked while a build is running.</p>
+
+      <!-- master resume status: build progress, conflicts, rebuild -->
+      <div class="src-master">
+        <div class="src-master-h"><b>Master resume</b><span class="meta" v-if="ov.master && ov.master.current_build_id">v{{ ov.master.version }} · built {{ when(ov.build && ov.build.finished_at) }}</span></div>
+        <!-- an active (re)build: show progress; the committed master is preserved and re-renders when it finishes -->
+        <template v-if="stage.state === 'queued' || stage.state === 'running'">
+          <div class="stepper" role="status" aria-live="polite">
+            <div class="step-row" v-for="s in stage.steps" :key="s.key" :class="s.state">
+              <span class="step-dot" aria-hidden="true">{{ s.state === 'done' ? '✓' : '' }}</span>
+              <span class="step-label">{{ s.label }}</span><span class="step-detail" v-if="s.detail">{{ s.detail }}</span>
+            </div>
+          </div>
+          <p class="hint" v-if="stage.state === 'queued'"><span class="spinner sm"></span> {{ stage.waiting ? 'Waiting for our builder. This can take a few minutes.' : 'Starting…' }}</p>
+          <div class="actions" v-if="stage.state === 'queued'">
+            <button type="button" class="btn ghost tiny" :disabled="store.buildBusy" @click="actions.cancelBuild()">Cancel</button>
+          </div>
+        </template>
+
+        <!-- a committed master exists: always show it, even if the latest (re)build was cancelled or failed -->
+        <template v-else-if="ov.master && ov.master.current_build_id">
+          <p class="hint" v-if="stage.state === 'cancelled'">Last rebuild was cancelled. Your master resume is unchanged.</p>
+          <p class="hint" v-else-if="stage.state === 'failed'">Last rebuild didn't finish. Your master resume is unchanged.</p>
+          <p><b>{{ ov.item_count }}</b> facts · <b>{{ ov.open_conflicts }}</b> {{ ov.open_conflicts === 1 ? 'question' : 'questions' }} to answer</p>
+          <div class="actions">
+            <button type="button" class="btn" v-if="ov.open_conflicts" @click="actions.openMaster('conflicts')">Review conflicts ({{ ov.open_conflicts }})</button>
+            <button type="button" class="btn secondary" @click="actions.openMaster('master')">Browse master</button>
+            <button type="button" class="btn ghost" :disabled="store.buildBusy || !files.length" @click="actions.requestBuild()">{{ store.buildBusy ? 'Starting…' : 'Rebuild' }}</button>
+          </div>
+        </template>
+
+        <!-- no committed master yet, and the first build failed -->
+        <template v-else-if="stage.state === 'failed'">
+          <p class="err">{{ failCopy }}</p>
+          <div class="actions"><button type="button" class="btn secondary" :disabled="store.buildBusy" @click="actions.requestBuild()">Try again</button></div>
+        </template>
+
+        <!-- no committed master: first-time upload prompt (or 'cancelled' before any master existed) -->
+        <template v-else>
+          <p class="hint" v-if="stage.state === 'cancelled'">Build cancelled.</p>
+          <p class="hint" v-else>Upload the resumes you've sent over the years. We'll combine them into one set of facts and ask you only about what disagrees.</p>
+          <div class="actions">
+            <button type="button" class="btn" :disabled="store.buildBusy || !files.length" :title="files.length ? '' : 'Add at least one resume first'" @click="actions.requestBuild()">{{ store.buildBusy ? 'Starting…' : 'Build master' }}</button>
+          </div>
+        </template>
+        <p class="err" v-if="store.buildError" role="alert">{{ store.buildError }}</p>
+      </div>
+    </section>
+  </template>
+
+  <template id="tpl-resumes">
+    <div class="view tr-screen">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow toned" data-tone="resumes">Tailored resumes</div>
+          <h1>Your tailored resumes</h1>
+          <p class="lede" v-if="ov.item_count">Built from your master resume: {{ ov.item_count }} facts drawn out of {{ plural(masterFiles, 'resume', 'resumes') }} you uploaded.</p>
+          <p class="lede" v-else>One resume per job, rewritten from the resumes you already have. Nothing is invented.</p>
+        </div>
+      </div>
+
+      <div v-if="!features.masterResume" class="msg info" role="status">Resume tailoring is being connected. Your alerts keep running.</div>
+
+      <div class="paste-cta" data-tone="resumes">
+        <span class="paste-ic" aria-hidden="true">＋</span>
+        <div class="paste-tx"><b>Applying for a job that isn't in your alerts?</b><span>Paste its job description (from a company site, a referral, a WhatsApp forward) and easyy tailors your resume to it the same way.</span></div>
+        <button type="button" class="btn" :disabled="!features.tailorResume" @click="actions.openPasteTailor()">Paste a job description</button>
+      </div>
+
+      <ui-sources v-if="features.masterResume"></ui-sources>
+
+      <!-- with tailored resumes, this screen hands over to the latest one (#/tailored/<id>) -->
+      <div v-if="store.tailored.status === 'error'" class="msg warn">{{ store.tailored.error }}</div>
+      <section class="card" v-else-if="features.tailorResume && store.tailored.status !== 'ready'" aria-busy="true">
+        <div class="skeleton row-sk"></div><div class="skeleton row-sk"></div>
       </section>
+      <section class="card empty-tailored" v-else-if="!store.tailored.rows.length">
+        <div class="card-head"><h3>Nothing tailored yet</h3></div>
+        <p class="hint">Open a job in Job alerts and press <b>Tailor resume</b> in "Already done for you", or paste a job description above. Each one lands here as a one-page PDF, ready to attach.</p>
+        <div class="actions"><button type="button" class="btn secondary" @click="nav.go('history')">Go to Job alerts</button></div>
+      </section>
+      <p v-else class="hint">Opening your latest tailored resume…</p>
     </div>
   </template>
 
   <template id="tpl-master">
     <div class="view">
-      <button type="button" class="backlink" @click="nav.go('resumes')">← Back to resumes</button>
+      <button type="button" class="backlink" @click="nav.go('resumes')">← Back to tailored resumes</button>
       <div class="page-head">
         <div><h1>Your master resume</h1><p class="hint" v-if="r.status === 'ready'">{{ progress.text }} · {{ factCount }} facts</p></div>
         <div class="tabs" role="tablist">
-          <button type="button" role="tab" class="tab-btn" :class="{ on: store.masterTab === 'conflicts' }" :aria-selected="String(store.masterTab === 'conflicts')" @click="store.masterTab = 'conflicts'">Conflicts <span class="count" v-if="progress.open">{{ progress.open }}</span></button>
           <button type="button" role="tab" class="tab-btn" :class="{ on: store.masterTab === 'master' }" :aria-selected="String(store.masterTab === 'master')" @click="store.masterTab = 'master'">Master</button>
+          <button type="button" role="tab" class="tab-btn" :class="{ on: store.masterTab === 'conflicts', 'has-alert': progress.open }" :aria-selected="String(store.masterTab === 'conflicts')" @click="store.masterTab = 'conflicts'">Conflicts <span class="count alert" v-if="progress.open">{{ progress.open }}</span></button>
         </div>
       </div>
 
@@ -678,17 +875,17 @@
         <!-- conflicts tab -->
         <template v-if="store.masterTab === 'conflicts'">
           <section class="card empty" v-if="!openConflicts.length">
-            <p><b>No open conflicts</b> — tailoring is unblocked.</p>
+            <p><b>No open conflicts</b>. Tailoring is unblocked.</p>
             <p class="hint" v-if="progress.resolved">You've answered {{ progress.resolved }} {{ progress.resolved === 1 ? 'question' : 'questions' }}.</p>
           </section>
           <section class="card conflict" v-for="c in openConflicts" :key="c.id" :class="{ focus: c.id === focusId }">
             <div class="card-head"><h2>{{ c.question }}</h2><span class="sub">{{ kindLabel(c.kind) }}</span></div>
-            <div class="opt" v-for="(o, i) in c.options" :key="i">
+            <div class="cf-opt" v-for="(o, i) in c.options" :key="i">
               <label><input type="radio" :name="'c-' + c.id" :value="'o' + i" v-model="choice[c.id]" /> <span class="opt-text">{{ o.text }}</span></label>
-              <span class="opt-files hint">in {{ o.count }} {{ o.count === 1 ? 'file' : 'files' }}<template v-if="fileNames(o.file_ids)"> — {{ fileNames(o.file_ids) }}</template></span>
+              <span class="opt-files hint">in {{ o.count }} {{ o.count === 1 ? 'file' : 'files' }}<template v-if="fileNames(o.file_ids)">: {{ fileNames(o.file_ids) }}</template></span>
             </div>
-            <div class="opt"><label><input type="radio" :name="'c-' + c.id" value="both" v-model="choice[c.id]" /> <span class="opt-text">Both are fine</span></label></div>
-            <div class="opt"><label><input type="radio" :name="'c-' + c.id" value="custom" v-model="choice[c.id]" /> <span class="opt-text">Write my own</span></label>
+            <div class="cf-opt"><label><input type="radio" :name="'c-' + c.id" value="both" v-model="choice[c.id]" /> <span class="opt-text">Both are fine</span></label></div>
+            <div class="cf-opt"><label><input type="radio" :name="'c-' + c.id" value="custom" v-model="choice[c.id]" /> <span class="opt-text">Write my own</span></label>
               <textarea v-if="choice[c.id] === 'custom'" v-model="custom[c.id]" rows="2" placeholder="The wording you want to keep" maxlength="2000"></textarea>
             </div>
             <div class="actions">
@@ -699,11 +896,13 @@
 
         <!-- master tab -->
         <template v-else>
-          <section class="card empty" v-if="!sections.length"><p>Nothing here yet — build your master resume first.</p></section>
-          <section class="card" v-for="sec in sections" :key="sec.kind">
-            <div class="card-head"><h2>{{ sec.label }}</h2>
-              <button type="button" class="btn ghost tiny" v-if="sec.kind !== 'position'" @click="addOpen = addOpen === sec.kind ? '' : sec.kind">+ Add a fact</button>
+          <section class="card empty" v-if="!sections.length"><p>Nothing here yet. Build your master resume first.</p></section>
+          <section class="card sec-card" v-for="(sec, si) in sections" :key="sec.kind" :data-tone="si % 4">
+            <div class="card-head">
+              <h2><button type="button" class="sec-caret-btn" :aria-expanded="String(!secCol[sec.kind])" :aria-label="(secCol[sec.kind] ? 'Expand ' : 'Collapse ') + sec.label" @click="toggleSec(sec.kind)"><span class="sec-caret" :class="{ open: !secCol[sec.kind] }" aria-hidden="true">▸</span></button><span class="sec-dot" aria-hidden="true"></span>{{ sec.label }}<span class="sec-count" v-if="secCol[sec.kind]"> · {{ sec.items.length }}</span></h2>
+              <button type="button" class="btn ghost tiny" v-if="sec.kind !== 'position' && !secCol[sec.kind]" @click="addOpen = addOpen === sec.kind ? '' : sec.kind">+ Add a fact</button>
             </div>
+            <div class="sec-body" v-show="!secCol[sec.kind]">
             <div v-if="addOpen === sec.kind" class="paste-box">
               <div class="field"><textarea v-model="addText[sec.kind]" rows="2" :placeholder="'Add to ' + sec.label.toLowerCase()" maxlength="2000"></textarea></div>
               <div class="actions"><button type="button" class="btn tiny" :disabled="!(addText[sec.kind] || '').trim()" @click="addFact(sec.kind, null)">Add</button><button type="button" class="btn ghost tiny" @click="addOpen = ''">Cancel</button></div>
@@ -713,7 +912,7 @@
               <div class="item-row" :class="{ rejected: it.status === 'rejected', head: it.kind === 'position' }">
                 <div class="item-text">
                   <span>{{ it.kind === 'position' ? posLabel(it) : it.canonical }}</span>
-                  <span class="status-chip" v-if="it.userAdded">added by you</span>
+                  <span class="status-chip mine" v-if="it.userAdded">added by you</span>
                   <span class="status-chip ok" v-else-if="it.status === 'confirmed'">confirmed ✓</span>
                   <span class="status-chip muted" v-else-if="it.status === 'rejected'">rejected</span>
                   <span class="status-chip warn" v-if="it.singleSource && it.status !== 'rejected'" title="Only one of your resumes says this">seen in 1 file</span>
@@ -733,7 +932,7 @@
                   <div class="item-row child" :class="{ rejected: b.status === 'rejected' }">
                     <div class="item-text">
                       <span>{{ b.canonical }}</span>
-                      <span class="status-chip" v-if="b.userAdded">added by you</span>
+                      <span class="status-chip mine" v-if="b.userAdded">added by you</span>
                       <span class="status-chip ok" v-else-if="b.status === 'confirmed'">confirmed ✓</span>
                       <span class="status-chip muted" v-else-if="b.status === 'rejected'">rejected</span>
                       <span class="status-chip warn" v-if="b.singleSource && b.status !== 'rejected'" title="Only one of your resumes says this">seen in 1 file</span>
@@ -755,6 +954,7 @@
                 <button type="button" class="linkbtn child" v-else @click="addOpen = 'bullet:' + it.id">+ Add an achievement</button>
               </template>
             </template>
+            </div>
           </section>
         </template>
       </template>
@@ -762,22 +962,69 @@
   </template>
 
   <template id="tpl-tailored">
-    <div class="page">
-      <p><a href="#/resumes" @click.prevent="nav.go('resumes')">← Resumes</a></p>
-      <div v-if="run.status === 'loading'" class="msg info" role="status">Loading…</div>
+    <div class="view tr-screen">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow toned" data-tone="resumes">Tailored resumes</div>
+          <h1>{{ run.row ? 'Tailored for ' + (jdMeta.company || jdMeta.title || 'this role') : 'Tailored resumes' }}</h1>
+          <p class="lede" v-if="masterTotal">Built from your master resume: {{ masterTotal }} facts drawn out of {{ filesWord }} you uploaded.</p>
+        </div>
+      </div>
+
+      <div class="paste-cta" data-tone="resumes">
+        <span class="paste-ic" aria-hidden="true">＋</span>
+        <div class="paste-tx"><b>Applying for a job that isn't in your alerts?</b><span>Paste its job description (from a company site, a referral, a WhatsApp forward) and easyy tailors your resume to it the same way.</span></div>
+        <button type="button" class="btn" @click="actions.openPasteTailor()">Paste a job description</button>
+      </div>
+
+      <ui-sources v-if="features.masterResume"></ui-sources>
+
+      <div v-if="run.status === 'loading' && !run.row" class="msg info" role="status">Loading…</div>
       <div v-else-if="run.status === 'error'" class="msg warn">{{ run.error }}</div>
 
-      <div v-else-if="run.row">
-        <h1>{{ run.row.file_name || "Tailored resume" }}</h1>
-        <p class="hint">{{ [jdMeta.title, jdMeta.company].filter(Boolean).join(" @ ") || "Pasted job description" }}
-          · {{ when(run.row.created_at) }}</p>
+      <div v-if="run.row && run.status !== 'error'" class="tr-main">
+        <!-- This job across easyy: description → this resume → outreach draft -->
+        <div class="thread">
+          <div class="thr-h"><span class="thr-k">This job across easyy</span><b>{{ jdMeta.company || 'Pasted job description' }}</b><span class="thr-r">{{ jdMeta.title }}</span></div>
+          <div class="thr-steps">
+            <button type="button" class="thr-s" data-tone="alerts" @click="openJd()">
+              <span class="thr-n">1</span>
+              <span class="thr-t"><b>View the job description</b><span>{{ [jdMeta.title, ats.score != null ? ats.score + '% match' : ''].filter(Boolean).join(' · ') || 'The posting this resume was built for' }}</span></span>
+            </button>
+            <span class="thr-arr" aria-hidden="true">→</span>
+            <div class="thr-s here" data-tone="resumes" aria-current="step">
+              <span class="thr-n">2</span>
+              <span class="thr-t"><b>Tailored resume</b><span>You're here</span></span>
+            </div>
+            <span class="thr-arr" aria-hidden="true">→</span>
+            <div class="thr-s soon" data-tone="mailbox">
+              <span class="thr-n">3</span>
+              <span class="thr-t"><b>See the draft</b><span>Outreach email in your mailbox <span class="soon-tag sm">Soon</span></span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job switcher: every tailored resume, with its match % -->
+        <div class="ctx" v-if="rows.length > 1">
+          <span class="ctx-k">Job</span>
+          <div class="ctx-chips">
+            <button v-for="t in rows" :key="t.id" type="button" class="ctx-chip" :class="{ on: t.id === store.tailoredId }" @click="nav.go('tailored', t.id)">
+              {{ chipLabel(t) }}<span class="ctx-p" v-if="t.ats && t.ats.score != null"> {{ t.ats.score }}%</span><span class="ctx-p" v-else-if="t.status !== 'ready'"> …</span>
+            </button>
+          </div>
+          <div class="ctx-nav">
+            <button type="button" :disabled="ctxIndex <= 0" @click="step(-1)" aria-label="Previous tailored resume">‹</button>
+            <button type="button" :disabled="ctxIndex >= rows.length - 1" @click="step(1)" aria-label="Next tailored resume">›</button>
+          </div>
+        </div>
 
         <!-- in flight -->
         <section v-if="running" class="card">
+          <div class="card-head"><h3>Tailoring this resume</h3><span class="meta">{{ when(run.row.created_at) }}</span></div>
           <ol class="steps">
             <li v-for="s in stage.steps" :key="s.key" :class="s.state">{{ s.label }}</li>
           </ol>
-          <p v-if="stage.waiting" class="hint">Waiting for our builder — it usually picks up within a couple of minutes.</p>
+          <p v-if="stage.waiting" class="hint">Waiting for our builder. It usually picks up within a couple of minutes.</p>
           <div class="actions" v-if="run.row.status === 'queued'">
             <button type="button" class="btn secondary" @click="actions.cancelTailor()">Cancel</button>
           </div>
@@ -785,21 +1032,97 @@
 
         <!-- failed -->
         <section v-else-if="stage.state === 'failed'" class="card">
+          <div class="card-head"><h3>This one didn't finish</h3><span class="meta">{{ when(run.row.created_at) }}</span></div>
           <div class="msg warn">{{ failCopy }}</div>
           <div class="actions">
             <button type="button" class="btn" @click="actions.regenerateTailor(guide)">Try again</button>
+            <button type="button" class="btn ghost" @click="actions.deleteTailored(run.row)">Delete</button>
           </div>
         </section>
 
         <!-- ready -->
-        <div v-else-if="stage.state === 'ready'">
-          <section class="card">
-            <div class="actions">
-              <button type="button" class="btn" @click="actions.downloadTailored(run.row)">Download PDF</button>
-              <span class="hint" v-if="fitText">{{ fitText }}</span>
+        <div v-else-if="stage.state === 'ready'" class="tr">
+          <div class="res-layout">
+            <div>
+              <div class="paper-bar">
+                <span class="t">{{ paperMeta }}</span>
+                <span class="pb-links">
+                  <button type="button" class="icon-btn lk-jd" @click="openJd()">View the job description</button>
+                  <button type="button" class="icon-btn lk-mail" disabled title="Outreach drafts are coming soon">See the draft → <span class="soon-tag sm">Soon</span></button>
+                  <button type="button" class="icon-btn" :disabled="!pdfUrl" @click="openFull = true">Open full resume ⤢</button>
+                </span>
+              </div>
+              <div class="tr-paper">
+                <div class="pdf-frame" v-if="pdfUrl"><iframe :src="pdfUrl + '#toolbar=0&view=FitH'" title="Tailored resume"></iframe></div>
+                <div class="pdf-empty" v-else-if="pdfLoading"><span class="spinner sm"></span><span>Loading your resume…</span></div>
+                <div class="pdf-empty" v-else>
+                  <p class="hint">The inline preview didn't load here.</p>
+                  <button type="button" class="btn secondary" @click="actions.downloadTailored(run.row)">Download PDF</button>
+                </div>
+              </div>
+              <div class="res-next">
+                <span>Next for this job</span>
+                <button type="button" class="btn ghost lk-jd" @click="openJd()">View the job description</button>
+                <button type="button" class="btn" disabled title="Outreach drafts are coming soon">See the draft → <span class="soon-tag sm">Soon</span></button>
+              </div>
             </div>
-          </section>
 
+            <div class="panels">
+              <section class="panel">
+                <div class="panel-h"><h3>Match against this JD</h3><span class="meta" v-if="ats.score != null">{{ ats.score }}%</span></div>
+                <p class="hint" v-if="ats.must_total">{{ (ats.matched || []).length }} of {{ ats.must_total }} must-have terms</p>
+                <div class="cov is-soon">
+                  <div class="cov-row" v-for="c in ['Requirements matched', 'Tools & platforms', 'Seniority fit']" :key="c"><span>{{ c }}</span><span class="cov-bar"><i></i></span><span class="cov-v">—</span></div>
+                  <span class="soon-tag sm">Soon</span>
+                </div>
+                <div class="kw" v-if="(ats.matched || []).length || (ats.missing || []).length">
+                  <span v-for="k in ats.matched" :key="'m' + k" class="kw-p hit">✓ {{ k }}</span>
+                  <span v-for="k in ats.missing" :key="'x' + k" class="kw-p miss">△ {{ k }}</span>
+                </div>
+              </section>
+              <section class="panel">
+                <div class="panel-h"><h3>What changed</h3><span class="meta">{{ masterInfo.facts }}<template v-if="masterTotal"> / {{ masterTotal }}</template> facts</span></div>
+                <div class="change">
+                  <div class="change-item is-soon"><span class="pip"></span><div>A short list of what easyy rewrote for this job (summary, order of roles, skills) <span class="soon-tag sm">Soon</span></div></div>
+                </div>
+              </section>
+              <section class="panel">
+                <div class="panel-h"><h3>Master resume</h3><span class="meta" v-if="masterInfo.version">v{{ masterInfo.version }}<template v-if="masterBuilt"> · {{ masterBuilt }}</template></span></div>
+                <div class="change">
+                  <div class="change-item" v-if="masterTotal"><span class="pip"></span><div><b>{{ masterTotal }} facts</b>, {{ openQuestions }} {{ openQuestions === 1 ? 'question' : 'questions' }} left to answer</div></div>
+                  <div class="change-item" v-if="sourceNames.length"><span class="pip"></span><div>Built from <b>{{ sourceNames.length }} source {{ sourceNames.length === 1 ? 'file' : 'files' }}</b>: {{ sourceNames.join(', ') }}</div></div>
+                  <div class="change-item"><span class="pip"></span><div>Nothing is invented. Every line traces back to a fact you uploaded.</div></div>
+                </div>
+                <button type="button" class="btn ghost tiny" @click="openMaster = true">Browse what it used →</button>
+              </section>
+              <section class="panel" v-if="gaps.open.length">
+                <div class="panel-h"><h3>Could be stronger</h3><span class="meta">{{ gaps.open.length }}</span></div>
+                <p class="hint">{{ gaps.open.length }} question{{ gaps.open.length === 1 ? '' : 's' }} in the full report could improve this resume.</p>
+                <button type="button" class="btn ghost tiny" @click="openReport = true">Open full report →</button>
+              </section>
+              <section class="panel">
+                <div class="panel-actions">
+                  <button type="button" class="btn secondary" @click="actions.downloadTailored(run.row)">Download PDF</button>
+                  <button type="button" class="btn ghost" @click="openReport = true">Full report</button>
+                  <button type="button" class="btn ghost danger" @click="actions.deleteTailored(run.row)">Delete</button>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <!-- Job description pop-out (pasted JDs, or a quick look without leaving) -->
+          <div v-if="jdOpen" class="tr-modal" @click.self="jdOpen = false">
+            <div class="tr-modal-panel">
+              <div class="tr-modal-bar"><span class="tr-modal-t">{{ [jdMeta.title, jdMeta.company].filter(Boolean).join(' · ') || 'Job description' }}</span><button type="button" class="modal-x" @click="jdOpen = false" aria-label="Close">✕</button></div>
+              <div class="tr-modal-body"><pre class="jd-raw">{{ run.row.jd_text || 'The job description for this resume is not available.' }}</pre></div>
+            </div>
+          </div>
+
+          <!-- Full report pop-out (all the enriched detail) -->
+          <div v-if="openReport" class="tr-modal" @click.self="openReport = false">
+            <div class="tr-modal-panel">
+              <div class="tr-modal-bar"><span class="tr-modal-t">Full report</span><button type="button" class="modal-x" @click="openReport = false" aria-label="Close">✕</button></div>
+              <div class="tr-modal-body">
           <section class="card">
             <h2>ATS keywords · {{ ats.score }}%<span class="hint"> of {{ ats.must_total }} must-have terms</span></h2>
             <div class="chips">
@@ -811,14 +1134,14 @@
           <section v-if="gaps.open.length || gaps.done.length" class="card">
             <h2>{{ gaps.open.length ? gaps.open.length + (gaps.open.length === 1 ? " question" : " questions") + " could strengthen this resume" : "Your answers" }}</h2>
             <div v-for="g in gaps.open" :key="g.keyword" class="gap">
-              <p><b>{{ g.keyword }}</b> — {{ g.question }}</p>
+              <p><b>{{ g.keyword }}</b>: {{ g.question }}</p>
               <div v-if="answering !== g.keyword" class="actions">
                 <button type="button" class="btn tiny" @click="startYes(g)">Yes, I've used it</button>
                 <button type="button" class="btn secondary tiny" :disabled="store.gapBusy[g.keyword]"
                         @click="actions.answerGap(g, 'no')">No</button>
               </div>
               <div v-else class="gap-form">
-                <label class="hint">Where and how? One line — we'll draft a proper bullet (stronger than a bare skill).</label>
+                <label class="hint">Where and how? One line. We'll draft a proper bullet (stronger than a bare skill).</label>
                 <textarea v-model="note" rows="2" placeholder="e.g. migrated 12 data marts to Snowflake at IDFC"></textarea>
                 <select v-model="posKey">
                   <option value="">Which role was it in?</option>
@@ -827,18 +1150,18 @@
                 <div class="actions">
                   <button type="button" class="btn tiny" :disabled="!note.trim() || !posKey || store.gapBusy[g.keyword]"
                           @click="sendYes(g, false)">Draft a bullet</button>
-                  <button type="button" class="btn secondary tiny" @click="sendYes(g, true)">Skip — just add the skill</button>
+                  <button type="button" class="btn secondary tiny" @click="sendYes(g, true)">Skip, just add the skill</button>
                   <button type="button" class="btn secondary tiny" @click="answering = ''">Cancel</button>
                 </div>
               </div>
             </div>
             <div v-for="g in gaps.done" :key="'d' + g.keyword" class="gap">
               <p><b>{{ g.keyword }}</b>
-                <span v-if="g.state === 'declined'" class="hint"> — noted, we won't ask again.</span>
-                <span v-else-if="g.state === 'skill_added'" class="hint"> — added to your skills ✓</span>
-                <span v-else-if="g.state === 'approved'" class="hint"> — added to your master ✓</span>
-                <span v-else-if="g.state === 'discarded'" class="hint"> — draft discarded.</span>
-                <span v-else-if="g.state === 'draft_pending'" class="hint"> — drafting a bullet…</span>
+                <span v-if="g.state === 'declined'" class="hint"> · noted, we won't ask again.</span>
+                <span v-else-if="g.state === 'skill_added'" class="hint"> · added to your skills ✓</span>
+                <span v-else-if="g.state === 'approved'" class="hint"> · added to your master ✓</span>
+                <span v-else-if="g.state === 'discarded'" class="hint"> · draft discarded.</span>
+                <span v-else-if="g.state === 'draft_pending'" class="hint"> · drafting a bullet…</span>
               </p>
               <div v-if="g.state === 'draft_ready'" class="gap-draft">
                 <p v-if="editing !== g.answer.id" class="draft-text">“{{ g.answer.draft_text }}”</p>
@@ -877,12 +1200,43 @@
           <section class="card">
             <h2>Regenerate</h2>
             <p class="hint" v-if="answeredSinceReady">Your new answers will be woven in.</p>
-            <textarea v-model="guide" rows="2" placeholder="Optional guidance — e.g. shorter summary, lead with the RM enablement work"></textarea>
+            <textarea v-model="guide" rows="2" placeholder="Optional guidance, e.g. shorter summary, lead with the RM enablement work"></textarea>
             <div class="actions">
               <button type="button" class="btn" :disabled="store.tailorBusy"
                       @click="actions.regenerateTailor(guide)">Regenerate</button>
             </div>
           </section>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Browse master resume pop-out -->
+          <div v-if="openMaster" class="tr-modal" @click.self="openMaster = false">
+            <div class="tr-modal-panel">
+              <div class="tr-modal-bar"><span class="tr-modal-t">Master resume</span><button type="button" class="modal-x" @click="openMaster = false" aria-label="Close">✕</button></div>
+              <div class="tr-modal-body">
+                <p class="hint">The tailored resume is drawn only from facts already in your master resume. These are the ones it used:</p>
+                <div class="facts-pos" v-for="f in facts" :key="f.position_key">
+                  <div class="facts-pos-h">{{ posLabel(run.positions.find(p => p.position_key === f.position_key) || {}) || f.position_key }}</div>
+                  <ul><li v-for="b in f.bullets" :key="b.id" :class="{ dropped: b.dropped }">{{ b.text.replaceAll('**', '') }}<span v-if="b.dropped" class="hint"> · trimmed to fit</span></li></ul>
+                </div>
+                <div class="actions"><button type="button" class="btn" @click="openMaster = false; nav.go('master')">Open full master review →</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Full-screen resume pop-out -->
+          <div v-if="openFull" class="tr-modal" @click.self="openFull = false">
+            <div class="tr-modal-panel full">
+              <div class="tr-modal-bar">
+                <span class="tr-modal-t">{{ run.row.file_name || 'Tailored resume' }}</span>
+                <button type="button" class="btn secondary tiny" @click="actions.downloadTailored(run.row)">Download</button>
+                <button type="button" class="modal-x" @click="openFull = false" aria-label="Close">✕</button>
+              </div>
+              <div class="tr-modal-body full"><iframe v-if="pdfUrl" :src="pdfUrl" title="Tailored resume"></iframe></div>
+            </div>
+          </div>
 
           <div v-if="run.error" class="msg warn">{{ run.error }}</div>
         </div>
@@ -890,9 +1244,147 @@
     </div>
   </template>
 
+  <template id="tpl-soon">
+    <div class="view soon-view">
+      <div class="eyebrow">{{ page.eyebrow }}</div>
+      <h1 class="soon-title">{{ page.title }}</h1>
+      <p class="soon-lede">{{ page.lede }}</p>
+      <section class="card soon-card">
+        <span class="soon-pill"><span class="dot"></span>Coming soon</span>
+        <h2>We're building this next</h2>
+        <p class="hint">This part of easyy isn't live yet. Your job alerts and tailored resumes keep working in the meantime.</p>
+        <div class="actions">
+          <button type="button" class="btn" @click="nav.go('history')">Go to Job alerts</button>
+          <button type="button" class="btn secondary" @click="nav.go('home')">Back to Overview</button>
+        </div>
+      </section>
+    </div>
+  </template>
+
   <template id="tpl-settings">
     <div class="view">
-      <div class="page-head"><h1>Profile &amp; settings</h1></div>
+      <div class="page-head"><h1>Your profile</h1></div>
+
+      <section class="card id-card">
+        <div class="id-avatar">{{ idInitials }}</div>
+        <div class="id-main">
+          <div class="id-name">{{ store.profile.full_name || 'Your account' }}</div>
+          <div class="id-plan"><span class="plan-badge" :class="{ prem: planKey === 'premium' }">{{ planLabel }} plan</span></div>
+          <div class="id-fields">
+            <div class="id-f"><div class="id-k">Email</div><div class="id-v">{{ store.userEmail || 'Not added' }}</div></div>
+            <div class="id-f"><div class="id-k">Mobile</div><div class="id-v">{{ store.profile.phone || 'Not added' }}</div></div>
+            <div class="id-f"><div class="id-k">Plan</div><div class="id-v">{{ planLabel }}{{ roleLimit ? ' · up to ' + roleLimit + ' roles' : '' }}</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Usage</h2></div>
+        <div class="meters">
+          <div class="meter" v-for="m in usage" :key="m.key">
+            <div class="meter-h"><span class="meter-t">{{ m.label }}</span><span class="meter-c mono"><b>{{ m.used }}</b>{{ m.cap != null ? ' / ' + m.cap : '' }}</span></div>
+            <div class="meter-track" v-if="m.cap != null"><i :class="{ near: m.used / m.cap >= 0.8 }" :style="{ width: Math.min(100, m.cap ? m.used / m.cap * 100 : 0) + '%' }"></i></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="connections">
+        <div class="card-head"><h2>Connections</h2><span class="sub">Where your alerts go</span></div>
+        <div class="list">
+          <div class="li">
+            <span class="ic" aria-hidden="true">TG</span>
+            <div class="t"><b>Telegram</b><span>Instant message the moment a new job matches</span></div>
+            <span v-if="store.telegramLinked" class="pill ok">Connected ✓</span>
+            <div v-else class="li-actions">
+              <button type="button" class="btn secondary tiny" :disabled="!store.profile.id" @click="actions.connectTelegram()">Connect</button>
+              <span v-if="store.polling" class="hint waiting"><span class="spinner sm"></span> waiting for you to press Start…</span>
+              <span v-else-if="store.pollTimedOut" class="hint">Didn't see you press Start. Try Connect again.</span>
+            </div>
+          </div>
+          <div class="li">
+            <span class="ic" aria-hidden="true">@</span>
+            <div class="t"><b>Email digest</b><span>{{ store.userEmail }}</span></div>
+            <ui-switch label="Email digest" :model-value="store.profile.email_enabled" @update:model-value="v => store.profile.email_enabled = v"></ui-switch>
+          </div>
+          <div class="li sub">
+            <div class="t"><span>Also send a Telegram note when a check finds nothing new</span></div>
+            <ui-switch label="Nothing-new note" :model-value="store.profile.notify_when_empty" @update:model-value="v => store.profile.notify_when_empty = v"></ui-switch>
+          </div>
+
+          <!-- Gmail inbox (migration 0010): app password → Vault via the connect-mailbox Edge Function; the worker verifies over IMAP. -->
+          <div class="li">
+            <span class="ic" aria-hidden="true">G</span>
+            <div class="t">
+              <b>Gmail inbox</b>
+              <span v-if="mb.status === 'missing'">Being set up. You'll be able to connect your inbox here soon.</span>
+              <span v-else-if="!mbConn">Lets easyy read replies to your applications and save outreach drafts in your Gmail. Uses a Gmail <b>app password</b>; <button type="button" class="linkbtn" @click="openMb()">see how to create one</button>.</span>
+              <span v-else>{{ mbConn.email }}<template v-if="mbConn.status === 'verified' && mbConn.verified_at"> · verified {{ mbWhen(mbConn.verified_at) }}</template></span>
+            </div>
+            <div class="li-actions" v-if="mb.status === 'ready'">
+              <span v-if="mbConn && mbConn.status === 'pending' && mbStale" class="hint">Saved, waiting for easyy's server to check it. This happens automatically once it's back online.</span>
+              <span v-else-if="mbConn && mbConn.status === 'pending'" class="hint waiting"><span class="spinner sm"></span> Checking with Gmail…</span>
+              <span v-else-if="mbConn && mbConn.status === 'verified'" class="pill ok">Connected ✓</span>
+              <span v-else-if="mbConn && mbConn.status === 'failed'" class="pill warn">Couldn't connect</span>
+              <button v-if="!mbConn && !mbOpen" type="button" class="btn secondary tiny" @click="openMb()">Connect</button>
+              <button v-if="mbConn && !mbOpen" type="button" class="btn ghost tiny" @click="openMb()">{{ mbConn.status === 'failed' ? 'Try again' : 'Replace password' }}</button>
+              <button v-if="mbConn && !mbOpen" type="button" class="btn ghost tiny" :disabled="mbBusy" @click="disconnectMb()">Disconnect</button>
+            </div>
+            <span v-else-if="mb.status === 'error'" class="hint">Couldn't load ({{ mb.error }})</span>
+          </div>
+          <p v-if="mbConn && mbConn.status === 'failed' && mbConn.last_error && !mbOpen" class="note warn mb-note">{{ mbConn.last_error }}</p>
+
+          <div v-if="mbOpen" class="mb-form">
+            <div class="mb-guide">
+              <div class="mb-guide-h">How to create a Gmail app password <span class="hint">· about 2 minutes</span></div>
+              <ol class="mb-steps">
+                <li>
+                  <b>Turn on 2-Step Verification</b> for the Google account you'll connect.
+                  <a href="https://myaccount.google.com/signinoptions/twosv" target="_blank" rel="noopener">Open 2-Step Verification ↗</a>
+                  <span class="mb-sub">Already on? Skip to step 2. Google only offers app passwords once this is on.</span>
+                </li>
+                <li>
+                  <b>Open the app passwords page</b> and sign in again if Google asks.
+                  <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">Open Google app passwords ↗</a>
+                  <span class="mb-sub">Or: Google Account → Security → 2-Step Verification → App passwords (at the bottom).</span>
+                </li>
+                <li>
+                  <b>Type a name</b> such as <code>easyy</code> and press <b>Create</b>.
+                </li>
+                <li>
+                  <b>Copy the 16-letter password</b> Google shows in the yellow box. It looks like <code>abcd efgh ijkl mnop</code>; spaces don't matter.
+                  <span class="mb-sub">Google shows it only once. If you close it, just create a new one.</span>
+                </li>
+                <li><b>Paste it below</b> with the same Gmail address, then press <b>Save and verify</b>.</li>
+              </ol>
+              <details class="mb-help">
+                <summary>Don't see "App passwords"?</summary>
+                <ul>
+                  <li>2-Step Verification is off: turn it on first (step 1), then reload the app passwords page.</li>
+                  <li>It's a work or school Google account: your admin may have turned app passwords off. Use a personal Gmail instead.</li>
+                  <li>Your account uses Advanced Protection or only security keys: app passwords aren't available on it.</li>
+                </ul>
+              </details>
+              <p class="mb-sub">Your normal Gmail password won't work here. You can remove the app password any time on the same Google page, which disconnects easyy immediately.</p>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="mb-email">Gmail address</label>
+                <input id="mb-email" type="email" v-model.trim="mbEmail" placeholder="you@gmail.com" autocomplete="email" maxlength="254" />
+              </div>
+              <div class="field">
+                <div class="labrow"><label for="mb-pw">App password <span class="opt">· 16 letters</span></label><button type="button" class="linkbtn" @click="mbShow = !mbShow">{{ mbShow ? 'Hide' : 'Show' }}</button></div>
+                <input id="mb-pw" :type="mbShow ? 'text' : 'password'" v-model="mbPw" placeholder="abcd efgh ijkl mnop" autocomplete="off" spellcheck="false" maxlength="40" @keyup.enter="saveMb()" />
+              </div>
+            </div>
+            <p class="hint">Stored encrypted and used only by easyy's server to read replies and save drafts, never to send. Disconnect any time and it's deleted; you can also revoke it in your Google account.</p>
+            <p class="err" v-if="mbMsg" role="alert">{{ mbMsg }}</p>
+            <div class="actions">
+              <button type="button" class="btn" :disabled="mbBusy || !mbEmail || !mbPw" @click="saveMb()">{{ mbBusy ? 'Saving…' : 'Save and verify' }}</button>
+              <button type="button" class="btn secondary" :disabled="mbBusy" @click="closeMb()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section class="card">
         <div class="card-head"><h2>Profile</h2></div>
@@ -903,7 +1395,7 @@
             <p class="err" v-if="store.fieldErrors.full_name">{{ store.fieldErrors.full_name }}</p>
           </div>
           <div class="field">
-            <label for="st-email">Email <span class="opt">— sign-in and digests</span></label>
+            <label for="st-email">Email <span class="opt">· sign-in and digests</span></label>
             <input id="st-email" type="email" :value="store.userEmail" readonly />
           </div>
         </div>
@@ -920,7 +1412,7 @@
         <div v-if="pwMsg" class="msg" :class="pwMsgType" role="status">{{ pwMsg }}</div>
         <div v-if="pwOpen">
           <div class="field">
-            <div class="labrow"><label for="st-pw">New password <span class="opt">— 8+ characters</span></label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
+            <div class="labrow"><label for="st-pw">New password <span class="opt">· 8+ characters</span></label><button type="button" class="linkbtn" @click="showPw = !showPw">{{ showPw ? 'Hide' : 'Show' }}</button></div>
             <input id="st-pw" :type="showPw ? 'text' : 'password'" v-model="pw" autocomplete="new-password" @keyup.enter="submitPw" />
           </div>
           <div class="actions">

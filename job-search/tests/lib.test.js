@@ -14,6 +14,7 @@ test("parseRoute: known routes", () => {
     assert.deepEqual(L.parseRoute("#/" + r), { name: r, rewrite: false });
   }
   assert.deepEqual(L.parseRoute("#/history/"), { name: "history", rewrite: false });
+  for (const r of ["outreach", "funnel", "prep", "guide", "community", "plans"]) assert.deepEqual(L.parseRoute("#/" + r), { name: r, rewrite: false });
   assert.deepEqual(L.parseRoute("#/history?x=1"), { name: "history", rewrite: false });
 });
 test("parseRoute: unknown #/ path → home with rewrite", () => {
@@ -215,7 +216,12 @@ test("lastRunInfo", () => {
   const ok = L.lastRunInfo({ status: "success", started_at: "2026-08-28T05:00:00Z", finished_at: "2026-08-28T05:03:00Z" });
   assert.equal(ok.status, "success"); assert.equal(ok.note, ""); assert.ok(ok.at instanceof Date);
   assert.equal(L.lastRunInfo({ status: "partial", started_at: "2026-08-28T05:00:00Z" }).note, "some sites didn't respond");
-  assert.equal(L.lastRunInfo({ status: "failed", started_at: "2026-08-28T05:00:00Z" }).note, "last check failed — we'll retry");
+  assert.equal(L.lastRunInfo({ status: "failed", started_at: "2026-08-28T05:00:00Z" }).note, "last check failed, we'll retry");
+});
+test("lastRunInfo: exposes the run's new-job count (null when the run didn't report one)", () => {
+  assert.equal(L.lastRunInfo({ status: "success", finished_at: "2026-08-28T05:03:00Z", new_jobs: 4 }).newJobs, 4);
+  assert.equal(L.lastRunInfo({ status: "success", finished_at: "2026-08-28T05:03:00Z", new_jobs: 0 }).newJobs, 0);
+  assert.equal(L.lastRunInfo({ status: "success", finished_at: "2026-08-28T05:03:00Z" }).newJobs, null);
 });
 const jobs = [
   { id: "a", title: "A", search: "DS", matched_at: "2026-08-28T05:00:10Z", notified_at: "2026-08-28T05:01:00Z" },
@@ -398,23 +404,23 @@ test("fileCapCheck", () => {
 });
 
 test("masterError maps codes and never leaks raw text", () => {
-  assert.equal(L.masterError({ message: "cap_files" }), "You've reached your file limit — remove one to add another.");
+  assert.equal(L.masterError({ message: "cap_files" }), "You've reached your file limit. Remove one to add another.");
   assert.equal(L.masterError("cap_size"), "Files must be under 5 MB.");
-  assert.equal(L.masterError({ message: "cap_builds" }), "That's 5 builds today — try again tomorrow.");
+  assert.equal(L.masterError({ message: "cap_builds" }), "That's 5 builds today. Try again tomorrow.");
   assert.equal(L.masterError({ message: "duplicate" }), "You've already added this file.");
   assert.equal(L.masterError({ message: "build_active" }), "A build is already running.");
   assert.equal(L.masterError({ message: "bad_kind" }), "We can read DOCX, PDF or pasted text.");
   assert.equal(L.masterError({ message: "no_files" }), "Add at least one resume first.");
   assert.equal(L.masterError({ message: "not_cancellable" }), "This build has already started and can't be cancelled.");
-  assert.equal(L.masterError({ message: "relation does not exist blah" }), "Something went wrong — please try again.");
-  assert.equal(L.masterError(null, "Upload didn't finish — try again."), "Upload didn't finish — try again.");
-  assert.equal(L.masterError({ name: "StorageApiError", message: "x" }, "Upload didn't finish — try again."), "Upload didn't finish — try again.");
+  assert.equal(L.masterError({ message: "relation does not exist blah" }), "Something went wrong. Please try again.");
+  assert.equal(L.masterError(null, "Upload didn't finish. Try again."), "Upload didn't finish. Try again.");
+  assert.equal(L.masterError({ name: "StorageApiError", message: "x" }, "Upload didn't finish. Try again."), "Upload didn't finish. Try again.");
 });
 
 test("buildFailureCopy by error_kind", () => {
-  assert.equal(L.buildFailureCopy({ status: "failed", error_kind: "worker_lost" }), "Our builder went offline mid-way — it will retry automatically.");
-  assert.equal(L.buildFailureCopy({ status: "failed", error_kind: "infra" }), "Something went wrong on our side — we've been notified.");
-  assert.equal(L.buildFailureCopy({ status: "failed", error_kind: null }), "Something went wrong on our side — we've been notified.");
+  assert.equal(L.buildFailureCopy({ status: "failed", error_kind: "worker_lost" }), "Our builder went offline mid-way. It will retry automatically.");
+  assert.equal(L.buildFailureCopy({ status: "failed", error_kind: "infra" }), "Something went wrong on our side. We've been notified.");
+  assert.equal(L.buildFailureCopy({ status: "failed", error_kind: null }), "Something went wrong on our side. We've been notified.");
 });
 
 test("buildStageLabel states and steps", () => {
@@ -568,4 +574,227 @@ test("tailorError maps codes", () => {
   assert.match(L.tailorError({ message: "cap_tailors" }), /today/);
   assert.match(L.tailorError({ message: "conflicts_open" }), /conflict/i);
   assert.equal(L.tailorError({ message: "wat" }, "fallback"), "fallback");
+});
+
+// ---- plan limits ----
+test("planLimit: roles allowed per plan, defaulting to free", () => {
+  assert.equal(L.planLimit("free"), 5);
+  assert.equal(L.planLimit("premium"), 25);
+  assert.equal(L.planLimit("closed"), 0);
+  assert.equal(L.planLimit(undefined), 5);
+  assert.equal(L.planLimit("bogus"), 5);
+});
+
+test("fileCap: premium 20, everyone else 5", () => {
+  assert.equal(L.fileCap("premium"), 20);
+  assert.equal(L.fileCap("free"), 5);
+  assert.equal(L.fileCap("closed"), 5);
+  assert.equal(L.fileCap(undefined), 5);
+});
+
+test("historyWindowDays: premium 30, everyone else 7", () => {
+  assert.equal(L.historyWindowDays("premium"), 30);
+  assert.equal(L.historyWindowDays("free"), 7);
+  assert.equal(L.historyWindowDays("closed"), 7);
+  assert.equal(L.historyWindowDays(undefined), 7);
+});
+
+test("scoreBand: 85+ high, 75+ mid, below mid low; null/NaN pass through", () => {
+  assert.equal(L.scoreBand(92), "high");
+  assert.equal(L.scoreBand(85), "high");
+  assert.equal(L.scoreBand(84), "mid");
+  assert.equal(L.scoreBand(75), "mid");
+  assert.equal(L.scoreBand(74), "low");
+  assert.equal(L.scoreBand(0), "low");
+  assert.equal(L.scoreBand(null), null);
+  assert.equal(L.scoreBand(undefined), null);
+  assert.equal(L.scoreBand(NaN), null);
+});
+
+test("formatDate: absolute date for a valid ISO, empty for missing/bad", () => {
+  assert.equal(L.formatDate(""), "");
+  assert.equal(L.formatDate(null), "");
+  assert.equal(L.formatDate("not-a-date"), "");
+  const s = L.formatDate("2026-09-19T10:00:00Z");
+  assert.ok(s.length > 0 && /2026/.test(s), "expected a dated string containing the year, got: " + s);
+});
+
+test("formatDateTime: date + clock time for a valid ISO, empty for missing/bad", () => {
+  assert.equal(L.formatDateTime(""), "");
+  assert.equal(L.formatDateTime("not-a-date"), "");
+  const s = L.formatDateTime("2026-09-19T22:00:00Z");
+  assert.ok(/2026/.test(s) && /\d{1,2}:\d{2}/.test(s) && s.indexOf(", ") !== -1,
+    "expected 'date, HH:MM', got: " + s);
+});
+
+// ---- relative time ----
+test("timeAgo: humanizes a past timestamp against a fixed now", () => {
+  const now = Date.parse("2026-09-13T12:00:00Z");
+  assert.equal(L.timeAgo("2026-09-13T11:00:00Z", now), "1h ago");
+  assert.equal(L.timeAgo("2026-09-13T06:00:00Z", now), "6h ago");
+  assert.equal(L.timeAgo("2026-09-11T12:00:00Z", now), "2d ago");
+  assert.equal(L.timeAgo("2026-09-13T11:59:40Z", now), "just now");
+  assert.equal(L.timeAgo(null, now), "");
+  assert.equal(L.timeAgo("not-a-date", now), "");
+});
+
+test("timeBucket: buckets a timestamp by recency", () => {
+  const now = Date.parse("2026-09-13T12:00:00Z");
+  assert.equal(L.timeBucket("2026-09-13T06:00:00Z", now), "Today");
+  assert.equal(L.timeBucket("2026-09-12T10:00:00Z", now), "Yesterday");
+  assert.equal(L.timeBucket("2026-09-09T12:00:00Z", now), "This week");
+  assert.equal(L.timeBucket("2026-09-02T12:00:00Z", now), "Last week");
+  assert.equal(L.timeBucket("2026-08-20T12:00:00Z", now), "This month");
+  assert.equal(L.timeBucket("2026-06-01T12:00:00Z", now), "Earlier");
+  assert.equal(L.timeBucket(null, now), "Earlier");
+});
+
+// ---- theme ----
+test("resolveTheme: an explicit saved choice wins over the system preference", () => {
+  assert.equal(L.resolveTheme("light", true), "light");
+  assert.equal(L.resolveTheme("dark", false), "dark");
+});
+test("resolveTheme: with no valid saved choice, follows the system preference", () => {
+  assert.equal(L.resolveTheme(null, true), "dark");
+  assert.equal(L.resolveTheme(null, false), "light");
+  assert.equal(L.resolveTheme("", true), "dark");
+  assert.equal(L.resolveTheme("sepia", false), "light"); // junk ignored
+});
+test("nextTheme: flips between light and dark", () => {
+  assert.equal(L.nextTheme("dark"), "light");
+  assert.equal(L.nextTheme("light"), "dark");
+});
+
+// ---- deterministic match score (master terms vs a JD, no LLM) ----
+test("matchScore: percent of the master's terms the JD mentions", () => {
+  assert.equal(L.matchScore("We use Python and SQL daily.", ["Python", "SQL", "Java"]), 67);
+  assert.equal(L.matchScore("Python everywhere", ["Python"]), 100);
+});
+test("matchScore: word-boundary only — no partial hits, tolerant of spacing", () => {
+  assert.equal(L.matchScore("A JavaScript ninja role", ["Java"]), 0); // not inside 'JavaScript'
+  assert.equal(L.matchScore("cohort   analysis and testing", ["cohort analysis"]), 100); // space variants
+  assert.equal(L.matchScore("deep cohort-analysis work", ["cohort analysis"]), 100); // hyphen variant
+});
+test("matchScore: empties and case-insensitive dedupe", () => {
+  assert.equal(L.matchScore("", ["Python"]), 0);
+  assert.equal(L.matchScore("Python", []), 0);
+  assert.equal(L.matchScore("Python", ["Python", "python"]), 100); // deduped to one term
+});
+
+test("highlightTerms: wraps matched terms, preserving original case", () => {
+  assert.equal(L.highlightTerms("We use Python daily", ["python"]),
+    'We use <mark class="hl">Python</mark> daily');
+});
+test("cleanTerms: drops stopwords (verbs/adjectives/filler), short tokens and dupes; keeps skills", () => {
+  assert.deepEqual(
+    L.cleanTerms(["Python", "and", "a", "build", "strong", "data", "Machine Learning", "python", "SQL"]),
+    ["Python", "Machine Learning", "SQL"]
+  );
+  assert.deepEqual(L.cleanTerms([]), []);
+});
+
+test("cleanTerms: splits compound skill phrases into atomic terms (keeps A/B, drops fillers)", () => {
+  assert.deepEqual(
+    L.cleanTerms(["SQL & Vector Databases", "Machine Learning: XGBoost", "A/B testing", "Python (pandas)"]),
+    ["SQL", "Vector Databases", "Machine Learning", "XGBoost", "A/B testing", "Python", "pandas"]
+  );
+});
+
+test("highlightTerms: escapes HTML and never marks partial words", () => {
+  assert.equal(L.highlightTerms("a < b & Java", ["Java"]),
+    'a &lt; b &amp; <mark class="hl">Java</mark>');
+  assert.equal(L.highlightTerms("JavaScript role", ["Java"]), "JavaScript role"); // no partial hit
+  assert.equal(L.highlightTerms("plain text", []), "plain text"); // no terms → escaped passthrough
+});
+
+// ---- Overview counts (V17 hero eyebrow / headline / funnel window) ----
+test("overviewCounts: today is the local calendar day; week = 7 days, fortnight = 14 days", () => {
+  const now = new Date(2026, 8, 29, 15, 0).getTime();          // 29 Sep 2026, 15:00 local
+  const at = (d, h) => new Date(2026, 8, d, h, 0).toISOString();
+  const jobs = [
+    { matched_at: at(29, 7) }, { matched_at: at(29, 1) },       // today
+    { matched_at: at(28, 23) },                                  // yesterday, within 24h but not today
+    { notified_at: at(24, 9) },                                  // 5 days ago (falls back to notified_at)
+    { matched_at: at(18, 9) },                                   // 11 days ago
+    { matched_at: at(10, 9) },                                   // 19 days ago
+    { matched_at: "not a date" },
+  ];
+  const tailored = [{ created_at: at(29, 8) }, { created_at: at(27, 8) }];
+  assert.deepEqual(L.overviewCounts(jobs, tailored, now), { today: 2, week: 4, fortnight: 5, tailoredToday: 1 });
+  assert.deepEqual(L.overviewCounts(null, null, now), { today: 0, week: 0, fortnight: 0, tailoredToday: 0 });
+});
+
+test("weekOfLabel: names the Monday of the current week", () => {
+  assert.equal(L.weekOfLabel(new Date(2026, 8, 29, 10).getTime()), "Week of 28 September"); // Tue
+  assert.equal(L.weekOfLabel(new Date(2026, 8, 28, 10).getTime()), "Week of 28 September"); // Mon
+  assert.equal(L.weekOfLabel(new Date(2026, 9, 4, 10).getTime()), "Week of 28 September");  // Sun
+});
+
+test("handTimeText: 50 min per application by hand, 2 min to read one", () => {
+  assert.deepEqual(L.handTimeText(5), { byHand: "about 4 hours", reading: "about 10 minutes" });
+  assert.deepEqual(L.handTimeText(1), { byHand: "about 50 minutes", reading: "about 2 minutes" });
+  assert.deepEqual(L.handTimeText(2), { byHand: "about 2 hours", reading: "about 4 minutes" });
+  assert.equal(L.handTimeText(0), null);
+});
+
+test("numberWord: spells out 0–10 (capitalised on request), digits above", () => {
+  assert.equal(L.numberWord(5), "five");
+  assert.equal(L.numberWord(5, true), "Five");
+  assert.equal(L.numberWord(10, true), "Ten");
+  assert.equal(L.numberWord(0), "zero");
+  assert.equal(L.numberWord(11, true), "11");
+  assert.equal(L.numberWord(160), "160");
+});
+
+test("factsUsedCount: bullets kept in the tailored plan, minus ones dropped to fit", () => {
+  const row = { plan: { positions: [{ bullets: [{ id: "a" }, { id: "b" }] }, { bullets: [{ id: "c" }] }] }, fit: { dropped_item_ids: ["b"] } };
+  assert.equal(L.factsUsedCount(row), 2);
+  assert.equal(L.factsUsedCount({ plan: {} }), null);          // nothing planned yet → unknown
+  assert.equal(L.factsUsedCount(null), null);
+});
+
+test("timeBucket: Today / Yesterday are calendar days (agrees with the sidebar's today count)", () => {
+  const now = new Date(2026, 8, 13, 1, 0).getTime();                       // 13 Sep, 01:00 local
+  assert.equal(L.timeBucket(new Date(2026, 8, 13, 0, 30).toISOString(), now), "Today");
+  assert.equal(L.timeBucket(new Date(2026, 8, 12, 23, 0).toISOString(), now), "Yesterday");   // 2h ago, but yesterday
+  assert.equal(L.timeBucket(new Date(2026, 8, 11, 23, 0).toISOString(), now), "This week");   // 26h ago, two days back
+});
+
+// ---- GCC location picker ----
+test("composeGccLocation: GCC / country / city, as the runner expects", () => {
+  assert.equal(L.composeGccLocation("GCC", ""), "GCC");
+  assert.equal(L.composeGccLocation("United Arab Emirates", ""), "United Arab Emirates");
+  assert.equal(L.composeGccLocation("United Arab Emirates", "Dubai"), "Dubai, United Arab Emirates");
+});
+test("parseGccLocation: reads saved locations back, including old free-text ones", () => {
+  assert.deepEqual(L.parseGccLocation("GCC"), { country: "GCC", city: "", known: true });
+  assert.deepEqual(L.parseGccLocation("Dubai, United Arab Emirates"), { country: "United Arab Emirates", city: "Dubai", known: true });
+  assert.deepEqual(L.parseGccLocation("Saudi Arabia"), { country: "Saudi Arabia", city: "", known: true });
+  assert.deepEqual(L.parseGccLocation("dubai"), { country: "United Arab Emirates", city: "Dubai", known: true });   // old free text
+  assert.deepEqual(L.parseGccLocation("London"), { country: "", city: "", known: false });
+  assert.deepEqual(L.parseGccLocation(""), { country: "", city: "", known: false });
+});
+test("locationLabel: short label for chips", () => {
+  assert.equal(L.locationLabel("GCC"), "All GCC");
+  assert.equal(L.locationLabel("Dubai, United Arab Emirates"), "Dubai");
+  assert.equal(L.locationLabel("United Arab Emirates"), "Anywhere in UAE");
+  assert.equal(L.locationLabel("London"), "London");
+});
+
+// ---- role suggestions (any profession: from the user's own master + searches) ----
+test("roleSuggestions: titles from the master resume and past searches, deduped", () => {
+  const items = [
+    { kind: "position", data: { title: "Senior Data Scientist", employer: "X" } },
+    { kind: "position", data: { title: "senior data scientist" } },
+    { kind: "headline", canonical: "Machine Learning Engineer" },
+    { kind: "skill", canonical: "Python" },
+  ];
+  const searches = [{ name: "AI Engineer", query: '"AI Engineer" NOT "data analytics"' }, { name: "", query: "" }];
+  assert.deepEqual(L.roleSuggestions(items, searches), ["Senior Data Scientist", "Machine Learning Engineer", "AI Engineer"]);
+  assert.deepEqual(L.roleSuggestions(null, null), []);
+});
+
+test("roleSuggestions: tidies titles (stray punctuation, extra spaces)", () => {
+  const items = [{ kind: "position", data: { title: "Risk Associate," } }, { kind: "position", data: { title: "  Senior   Manager " } }];
+  assert.deepEqual(L.roleSuggestions(items, []), ["Risk Associate", "Senior Manager"]);
 });

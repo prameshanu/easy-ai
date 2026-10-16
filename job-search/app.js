@@ -33,23 +33,38 @@ const ICONS = {
   history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   resume: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>',
   resumes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v5H4z"/><path d="M4 13h16v5H4z"/></svg>',
+  outreach: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  funnel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="7" rx="1"/></svg>',
+  prep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.8 1c0 1.5-2.3 2-2.3 3.5M12 17h.01"/></svg>',
+  community: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/></svg>',
+  guide: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M9 8h6"/></svg>',
+  profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+  plans: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>',
 };
 const NAV_ITEMS = [
-  { name: "home", label: "Home", short: "Home", hash: "#/", icon: ICONS.home },
-  { name: "history", label: "History", short: "History", hash: "#/history", icon: ICONS.history },
-  { name: "resume", label: "Resume builder", short: "Resume", hash: "#/resume", icon: ICONS.resume },
-  { name: "resumes", label: "Resumes", short: "Resumes", hash: "#/resumes", icon: ICONS.resumes },
+  { name: "home", label: "Overview", short: "Overview", hash: "#/", icon: ICONS.home },
+  { name: "history", label: "Job alerts", short: "Alerts", hash: "#/history", icon: ICONS.history },
+  { name: "resumes", label: "Tailored resumes", short: "Tailored", hash: "#/resumes", icon: ICONS.resumes },
+  // Not built yet — `soon` items render the shared "Coming soon" page (view-soon).
+  // `soon` and `railOnly` items stay out of the 4-slot mobile tab bar.
+  { name: "outreach", label: "Outreach drafts", short: "Outreach", hash: "#/outreach", icon: ICONS.outreach, soon: true },
+  { name: "funnel", label: "Job search funnel", short: "Funnel", hash: "#/funnel", icon: ICONS.funnel, soon: true },
+  { name: "prep", label: "Interview prep", short: "Prep", hash: "#/prep", icon: ICONS.prep, soon: true },
+  { name: "guide", label: "Job search guide", short: "Guide", hash: "#/guide", icon: ICONS.guide, soon: true },
+  { name: "community", label: "Community", short: "Community", hash: "#/community", icon: ICONS.community, soon: true },
+  { name: "settings", label: "Your profile", short: "Profile", hash: "#/settings", icon: ICONS.profile, railOnly: true },
+  { name: "plans", label: "Plans & pricing", short: "Plans", hash: "#/plans", icon: ICONS.plans, soon: true },
 ];
 
 let searchSeq = 0;
 const blankSearch = () => ({
-  id: null, _key: "new-" + (++searchSeq), name: "", query: "", location: "",
+  id: null, _key: "new-" + (++searchSeq), name: "", query: "", location: "Dubai, United Arab Emirates",
   is_remote: false, sites: ["linkedin", "indeed"],
   linkedin_query: "", indeed_query: "", google_search_term: "",
   require_kw: [], is_active: true, _err: "",
 });
 const defaultProfile = () => ({
-  id: null, name: "My job search", full_name: "", phone: "", country_indeed: "united arab emirates",
+  id: null, name: "My job search", plan: "free", full_name: "", phone: "", country_indeed: "united arab emirates",
   email_enabled: true, notify_when_empty: false, is_active: true,
   telegram_chat_id: null, telegram_link_code: null, telegram_linked_at: null,
 });
@@ -130,7 +145,7 @@ const IntlPhone = {
             <span class="cc-name">{{ c.n }}</span>
             <span class="cc-dial">+{{ c.d }}</span>
           </div>
-          <div v-if="!filtered.length" class="cc-empty">No match — try another spelling or code.</div>
+          <div v-if="!filtered.length" class="cc-empty">No match. Try another spelling or code.</div>
         </div>
       </div>
     </div>
@@ -167,13 +182,17 @@ const store = Vue.reactive({
   polling: false, pollTimedOut: false,
   history: emptyHistory(),
   job: emptyJob(),
-  master: emptyMaster(), review: emptyReview(), masterTab: "conflicts",
+  jobJds: {},
+  master: emptyMaster(), review: emptyReview(), masterTab: "master",
   tailored: emptyTailored(), tailorRun: emptyTailorRun(), tailoredId: null,
   tailorModal: null,            // { jobId, title, company, jdText, guidance } — jdText set = pasted-JD mode
   tailorBusy: false, gapBusy: {},
   upload: { busy: false, error: "", notice: "" }, buildBusy: false, buildError: "",
   reviewBusy: {}, reviewError: "",
   checklistDismissed: false,
+  focusSection: null,           // one-shot: scroll a page to this element id after navigating
+  // Gmail inbox connection (migration 0010). status: idle | loading | ready | missing (backend not deployed) | error
+  mailbox: { status: "idle", data: null, error: "" },
   dialog: null,
   deleting: false, deleteError: "",
   signedOutNotice: "",   // shown on the sign-in panel after a sign-out we caused (e.g. account deleted)
@@ -202,6 +221,7 @@ let savedTimer = null;
 let pollTimer = null;
 let buildPollTimer = null;
 let tailorPollTimer = null;
+let mailboxPollTimer = null;
 let pollGiveUp = null;
 let loadPromise = null;
 
@@ -214,10 +234,10 @@ const actions = {
     store.profile = defaultProfile();
     store.salaryInput = ""; store.excludeList = []; store.searches = []; store.dbSearchIds = []; store.lastRow = null;
     store.snapshot = ""; store.saveState = "idle"; store.saveError = ""; store.fieldErrors = noFieldErrors(); store.loadError = "";
-    store.history = emptyHistory(); store.job = emptyJob(); store.jobId = null; store.checklistDismissed = false; store.dialog = null;
+    store.history = emptyHistory(); store.job = emptyJob(); store.jobId = null; store.mailbox = { status: "idle", data: null, error: "" }; clearInterval(mailboxPollTimer); store.checklistDismissed = false; store.dialog = null;
     store.deleting = false; store.deleteError = "";
     actions.stopBuildPolling();
-    store.master = emptyMaster(); store.review = emptyReview(); store.masterTab = "conflicts";
+    store.master = emptyMaster(); store.review = emptyReview(); store.masterTab = "master";
     store.upload = { busy: false, error: "", notice: "" }; store.buildBusy = false; store.buildError = ""; store.reviewBusy = {}; store.reviewError = "";
     actions.stopTailorPolling();
     store.tailored = emptyTailored(); store.tailorRun = emptyTailorRun(); store.tailoredId = null;
@@ -260,6 +280,7 @@ const actions = {
     store.lastRow = row;
     store.profile = {
       id: row.id, name: row.name, country_indeed: row.country_indeed,
+      plan: row.plan || "free",
       full_name: row.full_name || "", phone: row.phone || "",
       telegram_chat_id: row.telegram_chat_id, telegram_link_code: row.telegram_link_code,
       telegram_linked_at: row.telegram_linked_at,
@@ -287,7 +308,7 @@ const actions = {
   },
 
   discard() { if (store.lastRow) actions.mapDbToState(store.lastRow); },
-  addSearch() { if (store.searches.length < 5) store.searches.push(blankSearch()); },
+  addSearch() { if (store.searches.length < L.planLimit(store.profile.plan)) store.searches.push(blankSearch()); },
   removeSearch(i) { store.searches.splice(i, 1); },
 
   async save() {
@@ -354,7 +375,7 @@ const actions = {
   },
   dismissChecklist() {
     store.checklistDismissed = true;
-    try { localStorage.setItem("easyy.checklist." + store.profile.id, "1"); } catch (e) { /* storage unavailable — checklist just shows again next visit */ }
+    try { localStorage.setItem("easyy.checklist." + store.profile.id, "1"); } catch (e) { /* storage unavailable, checklist just shows again next visit */ }
   },
 
   // ---- History (Phase 2a RPC) ----
@@ -387,7 +408,7 @@ const actions = {
     if (jdRes.error) { j.status = "error"; j.error = jdRes.error.message || "Couldn't load this job."; return; }
     if (!j.meta) {
       if ((metaRes && metaRes.error) || !metaRes || !metaRes.data) {
-        j.status = "error"; j.error = "We couldn't find this job — it may have been removed."; return;
+        j.status = "error"; j.error = "We couldn't find this job. It may have been removed."; return;
       }
       const m = metaRes.data;
       j.meta = { id: m.id, title: m.title, company: m.company, location: m.location, url: m.url, site: m.site, search: null };
@@ -410,6 +431,28 @@ const actions = {
     }
   },
 
+  // Bulk match-score support: load JDs for the visible list. One query for already-captured JDs,
+  // then a capped, throttled on-demand fetch for the rest. (At scale this becomes the server-side
+  // auto-tailor stage with a gate + daily cap; here it stays modest for the page view.)
+  async loadJobJds(jobs) {
+    const ids = (jobs || []).map((j) => j && j.id).filter(Boolean);
+    const missing = ids.filter((id) => !(id in store.jobJds));
+    if (!missing.length) return;
+    for (const id of missing) store.jobJds[id] = null;   // placeholder → don't requery
+    const { data } = await sb.from("job_details").select("job_id,jd_text").in("job_id", missing);
+    const stillMissing = new Set(missing);
+    for (const row of data || []) if (row && row.jd_text) { store.jobJds[row.job_id] = row.jd_text; stillMissing.delete(row.job_id); }
+    let budget = 12;
+    for (const id of stillMissing) {
+      if (budget-- <= 0) break;
+      try {
+        const { data: fetched } = await sb.functions.invoke("fetch-jd", { body: { job_id: id } });
+        if (fetched && fetched.jd_text) store.jobJds[id] = fetched.jd_text;
+      } catch (e) { /* leave as null */ }
+      await new Promise((r) => setTimeout(r, 400));
+    }
+  },
+
   // ---- master resume (gated by FEATURES.masterResume) ----
   async loadMaster(force) {
     if (!FEATURES.masterResume) return;
@@ -426,7 +469,7 @@ const actions = {
   },
   startBuildPolling() {
     if (buildPollTimer) return;
-    buildPollTimer = setInterval(() => { if (store.route === "resumes") actions.loadMaster(true); else actions.stopBuildPolling(); }, 5000);
+    buildPollTimer = setInterval(() => { if (store.route === "resumes" || store.route === "tailored") actions.loadMaster(true); else actions.stopBuildPolling(); }, 5000);
   },
   stopBuildPolling() {
     if (buildPollTimer) clearInterval(buildPollTimer);
@@ -457,14 +500,14 @@ const actions = {
       if (up.error) {
         const dis = await sb.rpc("discard_resume_file", { p_file_id: file_id });
         if (dis.error) await actions.loadMaster(true);   // cleanup failed → surface the orphan, don't leave it silent
-        u.error = L.masterError(up.error, "Upload didn't finish — try again.");
+        u.error = L.masterError(up.error, "Upload didn't finish. Try again.");
         return false;
       }
       u.notice = "Added " + filename;
       await actions.loadMaster(true);
       return true;
     } catch (e) {
-      u.error = L.masterError(e, "Upload didn't finish — try again.");
+      u.error = L.masterError(e, "Upload didn't finish. Try again.");
       return false;
     } finally {
       u.busy = false;
@@ -580,6 +623,45 @@ const actions = {
   },
 
   // ---- tailored resumes (gated by FEATURES.tailorResume) ----
+  // ---- Gmail inbox connection (my_mailbox RPC + connect-mailbox Edge Function) ----
+  async loadMailbox(force) {
+    const m = store.mailbox;
+    if (!force && (m.status === "ready" || m.status === "loading" || m.status === "missing")) return;
+    if (m.status !== "ready") m.status = "loading";
+    const { data, error } = await sb.rpc("my_mailbox");
+    if (error) { m.status = L.isRpcMissing(error) ? "missing" : "error"; m.error = error.message || ""; return; }
+    m.data = data || null; m.status = "ready"; m.error = "";
+    actions.pollMailbox();
+  },
+  // While the worker hasn't verified it yet, re-check every 15 s for up to 5 minutes.
+  pollMailbox() {
+    clearInterval(mailboxPollTimer);
+    if (!(store.mailbox.data && store.mailbox.data.status === "pending")) return;
+    let left = 20;
+    mailboxPollTimer = setInterval(() => {
+      if (--left < 0 || !(store.mailbox.data && store.mailbox.data.status === "pending")) { clearInterval(mailboxPollTimer); return; }
+      actions.loadMailbox(true);
+    }, 15000);
+  },
+  // Returns null on success, else a message to show. The password is sent once, to the Edge Function only.
+  async connectMailbox(email, appPassword) {
+    const { error } = await sb.functions.invoke("connect-mailbox", { body: { email, app_password: appPassword } });
+    if (error) {
+      let msg = "Couldn't save the connection. Try again in a minute.";
+      try { const b = await error.context.json(); if (b && b.message) msg = b.message; } catch (_) { /* non-JSON error */ }
+      return msg;
+    }
+    await actions.loadMailbox(true);
+    return null;
+  },
+  async disconnectMailbox() {
+    const { error } = await sb.rpc("my_mailbox_disconnect");
+    if (error) return error.message || "Couldn't disconnect. Try again.";
+    clearInterval(mailboxPollTimer);
+    store.mailbox.data = null;
+    return null;
+  },
+
   async loadTailored(force) {
     if (!FEATURES.tailorResume) return;
     const t = store.tailored;
@@ -587,7 +669,7 @@ const actions = {
     if (t.status !== "ready") t.status = "loading";
     t.error = "";
     const { data, error } = await sb.from("tailored_resumes")
-      .select("id,job_id,jd_meta,status,file_name,pdf_path,created_at")
+      .select("id,job_id,jd_meta,status,file_name,pdf_path,created_at,plan,fit,ats,master_version")
       .order("created_at", { ascending: false }).limit(25);
     if (error) { t.status = "error"; t.error = L.tailorError(error); return; }
     t.rows = data || []; t.status = "ready";
@@ -649,8 +731,8 @@ const actions = {
           confirmLabel: "Review conflicts", cancelLabel: "Not now",
           onConfirm: () => actions.openMaster("conflicts") }
       : { title: "Build your master resume first",
-          body: "It's what every tailored resume is made from — add your old resumes once, build, done.",
-          confirmLabel: "Go to Resumes", cancelLabel: "Not now",
+          body: "It's what every tailored resume is made from. Add your old resumes once, build, done.",
+          confirmLabel: "Go to Tailored resumes", cancelLabel: "Not now",
           onConfirm: () => nav.go("resumes") };
   },
   cancelTailorModal() { store.tailorModal = null; },
@@ -695,12 +777,19 @@ const actions = {
   async downloadTailored(row) {
     if (!row || !row.pdf_path) return;
     const { data, error } = await sb.storage.from("resumes").download(row.pdf_path);
-    if (error) { store.tailorRun.error = "Download didn't start — try again."; return; }
+    if (error) { store.tailorRun.error = "Download didn't start. Try again."; return; }
     const url = URL.createObjectURL(data);
     const a = document.createElement("a");
     a.href = url; a.download = row.file_name || "resume.pdf";
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
+  },
+  // Fetch the stored PDF as a blob object URL for inline viewing. Caller revokes the URL.
+  async tailorPdfUrl(row) {
+    if (!row || !row.pdf_path) return null;
+    const { data, error } = await sb.storage.from("resumes").download(row.pdf_path);
+    if (error || !data) return null;
+    return URL.createObjectURL(data);
   },
   deleteTailored(row) {
     store.dialog = {
@@ -711,8 +800,8 @@ const actions = {
         const { data: path, error } = await sb.rpc("delete_tailored_resume", { p_id: row.id });
         if (error) { store.tailored.error = L.tailorError(error); return; }
         if (path) await sb.storage.from("resumes").remove([path]);   // object removal failure is harmless
+        await actions.loadTailored(true);
         if (store.tailoredId === row.id) nav.go("resumes");
-        actions.loadTailored(true);
       },
     };
   },
@@ -836,8 +925,16 @@ const nav = {
     if (store.isDirty) { actions.confirmLeave(() => { actions.discard(); nav.apply(name, id); }); return; }
     nav.apply(name, id);
   },
+  // Like apply(), but rewrites the current history entry. Used when #/resumes opens the latest
+  // tailored resume, so pressing Back doesn't land on #/resumes and redirect again.
+  replace(name, id) {
+    if (name !== "tailored") actions.stopTailorPolling();
+    store.route = name;
+    if (name === "tailored" && id !== undefined) store.tailoredId = id;
+    history.replaceState(null, "", location.pathname + location.search + L.routeHash(name, name === "tailored" ? store.tailoredId : store.jobId));
+  },
   apply(name, id) {
-    if (name !== "resumes") actions.stopBuildPolling();
+    if (name !== "resumes" && name !== "tailored") actions.stopBuildPolling();
     if (name !== "tailored") actions.stopTailorPolling();
     store.route = name;
     if (name === "job" && id !== undefined) store.jobId = id;
@@ -881,13 +978,19 @@ const app = Vue.createApp({
       // shell
       menuOpen: false,
       navItems: NAV_ITEMS,
+      theme: document.documentElement.getAttribute("data-theme") || ((window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"),
     };
   },
 
   computed: {
     initials() { return L.initials(store.profile.full_name, store.userEmail); },
     shortStatus() { return L.shortStatus(store.status.key); },
-    saveLabel() { return store.route === "home" && store.showChecklist ? "Save and continue" : "Save changes"; },
+    // Rail subtitle under the logo — "Member console · <search country>".
+    brandSub() {
+      const c = COUNTRIES.find((x) => x.v === store.profile.country_indeed);
+      return c && c.v !== "worldwide" ? "Member console · " + c.l : "Member console";
+    },
+    saveLabel() { return store.dbSearchIds.length === 0 ? "Save my first search" : "Save changes"; },
   },
 
   watch: {
@@ -961,6 +1064,28 @@ const app = Vue.createApp({
   },
 
   methods: {
+    // ---- theme ----
+    toggleTheme() {
+      this.theme = L.nextTheme(this.theme);
+      document.documentElement.setAttribute("data-theme", this.theme);
+      try { localStorage.setItem("easyy-theme", this.theme); } catch (e) {}
+    },
+
+    // Rail nav count badge (shown when the data is loaded; null hides it).
+    navOn(name) { return store.route === name || (name === "resumes" && (store.route === "tailored" || store.route === "master")); },
+    navCount(name) {
+      if (name === "history") {
+        // V17: the count is today's new jobs, not everything in the history window.
+        const today = L.overviewCounts(store.history && store.history.data && store.history.data.jobs).today;
+        return today || null;
+      }
+      if (name === "resumes") {
+        const ready = ((store.tailored && store.tailored.rows) || []).filter((r) => r.status === "ready").length;
+        return ready || null;
+      }
+      return null;
+    },
+
     // ---- auth ----
     go(view) {
       this.authView = view;
@@ -1005,7 +1130,7 @@ const app = Vue.createApp({
         // Email confirmation required — no session yet.
         this.authView = "signin";
         this.authPassword = ""; this.showPw = false;
-        this.authMsg = "Account created — check your inbox and click the link to confirm your email, then sign in.";
+        this.authMsg = "Account created. Check your inbox and click the link to confirm your email, then sign in.";
         this.authMsgType = "ok";
       }
       // else onAuthStateChange('SIGNED_IN') takes over
@@ -1020,7 +1145,7 @@ const app = Vue.createApp({
       });
       this.sending = false;
       if (error) this.authErr(this.friendlyAuthError(error));
-      else { this.authMsg = "Check your inbox — we sent a sign-in link to " + this.authEmail + "."; this.authMsgType = "ok"; }
+      else { this.authMsg = "Check your inbox. We sent a sign-in link to " + this.authEmail + "."; this.authMsgType = "ok"; }
     },
 
     async sendReset() {

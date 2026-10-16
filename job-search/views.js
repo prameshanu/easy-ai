@@ -5,7 +5,7 @@
    Loaded after lib.js, before app.js; app.js registers window.EasyyViews. */
 (function () {
   "use strict";
-  const { inject, computed, ref, watch, onMounted } = Vue;
+  const { inject, computed, ref, watch, onMounted, onUnmounted } = Vue;
   const L = window.EasyyLib;
 
   // ------------------------------------------------------------- ui pieces
@@ -15,6 +15,40 @@
     template: `<button type="button" role="switch" class="switch" :class="{ on: modelValue, lg: size === 'lg' }"
       :aria-checked="String(!!modelValue)" :aria-label="label || null" :disabled="disabled"
       @click="$emit('update:modelValue', !modelValue)"><span class="knob"></span></button>`,
+  };
+
+  // Text input + suggestion list styled like the app's menus (the native <datalist> popup can't be themed).
+  const UiSuggest = {
+    props: { modelValue: String, suggestions: { type: Array, default: () => [] }, placeholder: String, inputClass: String, id: String, maxlength: [String, Number], label: String },
+    emits: ["update:modelValue"],
+    data() { return { open: false, hi: -1 }; },
+    computed: {
+      list() {
+        const q = (this.modelValue || "").trim().toLowerCase();
+        const all = this.suggestions.filter((s) => s.toLowerCase() !== q);
+        return (q ? all.filter((s) => s.toLowerCase().indexOf(q) !== -1) : all).slice(0, 8);
+      },
+    },
+    methods: {
+      pick(s) { this.$emit("update:modelValue", s); this.open = false; this.hi = -1; },
+      onKey(e) {
+        if (!this.open || !this.list.length) { if (e.key === "ArrowDown") { this.open = true; e.preventDefault(); } return; }
+        if (e.key === "ArrowDown") { this.hi = (this.hi + 1) % this.list.length; e.preventDefault(); }
+        else if (e.key === "ArrowUp") { this.hi = (this.hi - 1 + this.list.length) % this.list.length; e.preventDefault(); }
+        else if (e.key === "Enter" && this.hi >= 0) { this.pick(this.list[this.hi]); e.preventDefault(); }
+        else if (e.key === "Escape") { this.open = false; }
+      },
+      onBlur() { setTimeout(() => { this.open = false; this.hi = -1; }, 120); },
+    },
+    template: `<div class="suggest">
+      <input :id="id" type="text" :class="inputClass" :value="modelValue" :placeholder="placeholder" :maxlength="maxlength" :aria-label="label || null"
+        autocomplete="off" role="combobox" :aria-expanded="String(open && list.length > 0)"
+        @input="$emit('update:modelValue', $event.target.value.trimStart()); open = true; hi = -1" @focus="open = true" @blur="onBlur" @keydown="onKey" />
+      <div v-if="open && list.length" class="suggest-menu" role="listbox">
+        <div class="suggest-k">From your resume and searches</div>
+        <button v-for="(s, i) in list" :key="s" type="button" role="option" class="suggest-opt" :class="{ hi: i === hi }" :aria-selected="String(i === hi)" @mousedown.prevent="pick(s)">{{ s }}</button>
+      </div>
+    </div>`,
   };
 
   const UiChip = {
@@ -86,14 +120,83 @@
       const store = inject("store");
       const actions = inject("actions");
       const nav = inject("nav");
+      // Overview: pull real counts for the hero, setup cards and flow row.
+      onMounted(() => {
+        actions.loadHistory(false);
+        if (store.features.masterResume) actions.loadMaster(false);
+        if (store.features.tailorResume) actions.loadTailored(false);
+        actions.loadMailbox(false);
+      });
+      const ovJobs = computed(() => ((store.history.data && store.history.data.jobs) || []).length);
+      const ovTailored = computed(() => ((store.tailored && store.tailored.rows) || []).length);
+      const ovFiles = computed(() => ((store.master.data && store.master.data.files) || []).length);
+      const ovFilesCap = computed(() => L.fileCap(store.profile.plan));
+      const ovRoles = computed(() => store.searches.length);
+      const ovRolesCap = computed(() => L.planLimit(store.profile.plan));
+      const ovFacts = computed(() => (store.master.data && store.master.data.item_count) || 0);
+      const telegramLinked = computed(() => !!store.telegramLinked);
+      // Setup step 3 = alert delivery ("Configure connections"): done once any channel is on.
+      // Step 3 opens the Connections card on Your profile.
+      const openConnections = () => { store.focusSection = "connections"; nav.go("settings"); };
+      const connState = computed(() => {
+        const on = [store.telegramLinked && "Telegram", store.profile.email_enabled && "Email digest", store.mailbox.data && store.mailbox.data.status === "verified" && "Gmail"].filter(Boolean);
+        return on.length ? on.join(" + ") + " on" : "Not connected";
+      });
+      const setupDone = computed(() => [ovFiles.value > 0, ovRoles.value > 0, telegramLinked.value || !!store.profile.email_enabled].filter(Boolean).length);
+      // V17 hero: today / this week / last 14 days, all counted off real history + tailored rows.
+      const ov = computed(() => L.overviewCounts(store.history.data && store.history.data.jobs, store.tailored && store.tailored.rows));
+      const weekOf = computed(() => L.weekOfLabel());
+      const plural = (n, one, many) => n + " " + (n === 1 ? one : many);
+      const heroLede = computed(() => {
+        const c = ov.value;
+        if (!c.today) return "Your searches run every morning across LinkedIn, Indeed and Google Jobs. New matches land here ranked by fit, each one a click away from a resume tailored from your master.";
+        const ready = c.tailoredToday;
+        const rest = c.today - ready;
+        return "All of it while you were at work. " +
+          (ready ? plural(ready, "resume is", "resumes are") + " already tailored and ready to read" + (rest > 0 ? "; the other " + plural(rest, "job is", "jobs are") + " one click from theirs." : ".")
+                 : "Open any job to see what easyy read, and tailor a resume for it in one click.");
+      });
+      const handTime = computed(() => L.handTimeText(ov.value.tailoredToday));
+      // V17 headline: "Five jobs found. Five resumes already tailored." Honest zero states instead of "0 jobs found".
+      const headline = computed(() => {
+        const c = ov.value, W = (n) => L.numberWord(n, true);
+        const noun = (n, one, many) => (n === 1 ? one : many);
+        if (c.today) {
+          return { main: W(c.today) + " " + noun(c.today, "job", "jobs") + " found.",
+                   lift: c.tailoredToday ? W(c.tailoredToday) + " " + noun(c.tailoredToday, "resume", "resumes") + " already tailored."
+                                         : "None tailored yet." };
+        }
+        if (c.week) return { main: "No new jobs yet today.", lift: W(c.week) + " found this week." };
+        return { main: "No new jobs yet.", lift: "Your next run is on its way." };
+      });
+      // Run card row 3 detail: "Pulled from master v1 — 63 facts, built 3 Sept from 4 source resumes".
+      const masterLine = computed(() => {
+        const d = store.master.data || {};
+        if (!d.master || !d.master.current_build_id) return "Build your master resume to start tailoring";
+        const files = (d.files || []).filter((f) => f.in_master);
+        const at = d.build && d.build.finished_at ? new Date(d.build.finished_at) : null;
+        return "Pulled from master v" + (d.master.version || 1) + ", " + plural(ovFacts.value, "fact", "facts") +
+          (at && !isNaN(at) ? ", built " + at.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "") +
+          (files.length ? " from " + plural(files.length, "source resume", "source resumes") : "");
+      });
+      // Run card: this run's own new-job count (runs.new_jobs); falls back to today's count.
+      const runJobs = computed(() => (store.lastRun && store.lastRun.newJobs != null ? store.lastRun.newJobs : ov.value.today));
+      const runTitle = computed(() => {
+        const r = store.lastRun;
+        if (!r || !r.at) return "Your latest run";
+        const d = new Date(r.at), n = new Date();
+        return d.toDateString() === n.toDateString() && d.getHours() < 12 ? "This morning's run" : "Your latest run";
+      });
       return {
         store, actions, nav,
         features: store.features,
         countries: store.countries,
         status: computed(() => store.status),
-        showChecklist: computed(() => store.showChecklist),
-        hasSavedSearch: computed(() => store.dbSearchIds.length > 0),
-        maskedPhone: computed(() => L.maskPhone(store.profile.phone)),
+        ovJobs, ovTailored, ovFiles, ovFilesCap, ovRoles, ovRolesCap, ovFacts, telegramLinked, setupDone,
+        ov, weekOf, heroLede, handTime, runTitle, plural, runJobs, masterLine, headline, openConnections, connState,
+        myInitials: computed(() => L.initials(store.profile.full_name, store.userEmail)),
+        lastRun: computed(() => store.lastRun),
+        searchNames: computed(() => store.searches.map((s) => s.name || s.query).filter(Boolean).join(" · ")),
       };
     },
   };
@@ -111,20 +214,151 @@
       const channels = computed(() => L.channelsText(store.telegramLinked, store.profile.email_enabled) || "you");
       const opened = ref({});
       const touched = ref(false);
+      const selectedId = ref(null);
+      const job = computed(() => store.job || {});
+      const windowDays = computed(() => L.historyWindowDays(store.profile.plan));
+      const isPremium = computed(() => store.profile.plan === "premium");
+      const jobs = computed(() => {
+        const g = grouped.value, out = [], seen = new Set();
+        const push = (arr) => { for (const j of arr || []) if (j && !seen.has(j.id)) { seen.add(j.id); out.push(j); } };
+        if (g.pending) push(g.pending.jobs);
+        for (const day of g.days || []) for (const ev of day.events || []) push(ev.jobs);
+        // Plan-gated window (UX mirror of the server clamp in my_alert_history). Keep undated rows.
+        const cut = Date.now() - windowDays.value * 86400000;
+        return out.filter((j) => { const t = Date.parse(j.matched_at || j.notified_at); return isNaN(t) || t >= cut; });
+      });
+      const sel = computed(() => jobs.value.find((j) => j.id === selectedId.value) || null);
+      const jobGroups = computed(() => {
+        const now = Date.now();
+        const order = ["Today", "Yesterday", "This week", "Last week", "This month", "Earlier"];
+        const buckets = {};
+        for (const j of jobs.value) {
+          const label = L.timeBucket(j.matched_at || j.notified_at, now);
+          (buckets[label] = buckets[label] || []).push(j);
+        }
+        return order.filter((l) => buckets[l]).map((l) => ({ label: l, jobs: buckets[l] }));
+      });
+      const bucketFilter = ref("");
+      const visibleGroups = computed(() => bucketFilter.value ? jobGroups.value.filter((g) => g.label === bucketFilter.value) : jobGroups.value);
+      const collapsed = ref({});
+      const bucketsTouched = ref(false);
+      watch(jobGroups, (groups) => {
+        if (bucketsTouched.value) return;
+        const c = {};
+        (groups || []).forEach((g, i) => { if (i > 0) c[g.label] = true; });   // collapse all but the newest
+        collapsed.value = c;
+      }, { immediate: true });
+      const toggleBucket = (label) => { bucketsTouched.value = true; collapsed.value = Object.assign({}, collapsed.value, { [label]: !collapsed.value[label] }); };
+      const isCollapsed = (label) => !!collapsed.value[label] && !bucketFilter.value;
+      const masterTerms = computed(() => {
+        const items = (store.review && store.review.items) || [];
+        const raw = [];
+        for (const it of items) if (it && it.kind === "skill" && it.text) raw.push(it.text);
+        return L.cleanTerms(raw);   // splits compound phrases + drops filler/one-char/dupes
+      });
+      const select = (j) => { if (!j) return; selectedId.value = j.id; if (store.features.jdView) actions.loadJob(j.id); };
+      watch(jobs, (list) => { if (!selectedId.value && list.length) select(list[0]); if (list.length) actions.loadJobJds(list); }, { immediate: true });
+
+      // "What you're targeting" — saved searches as role chips; "Manage roles" opens the full
+      // search editor + filters (moved here from the Overview). Opens by itself until a search is saved.
+      const targetOpen = ref(store.dbSearchIds.length === 0);
+      watch(() => store.dbSearchIds.length, (n, was) => { if (n === 0) targetOpen.value = true; else if (!was) targetOpen.value = false; });
+      const planLimit = computed(() => L.planLimit(store.profile.plan));
+      // "Done" saves (with the same validation as the save bar) and only closes when everything is valid,
+      // so a half-filled search can't be hidden behind the collapsed card.
+      async function toggleManage() {
+        if (!targetOpen.value) { targetOpen.value = true; return; }
+        if (store.isDirty) {
+          await actions.save();
+          if (store.saveState === "invalid" || store.saveState === "error") {
+            setTimeout(() => { const el = document.querySelector(".target-editor .search.invalid"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); }, 30);
+            return;
+          }
+        }
+        targetOpen.value = false;
+      }
+      // A failed save (from the save bar too) re-opens the editor so the highlighted fields are visible.
+      watch(() => store.searches.some((s) => s._err), (bad) => { if (bad) targetOpen.value = true; });
+      // GCC location picker + role suggestions for the search editor.
+      const locOf = (s) => L.parseGccLocation(s.location);
+      const gccOf = (s) => L.GCC.find((c) => c.name === locOf(s).country);
+      const setCountry = (s, country) => { s.location = country ? L.composeGccLocation(country, "") : s.location; };
+      const setCity = (s, city) => { const p = locOf(s); if (p.country && p.country !== "GCC") s.location = L.composeGccLocation(p.country, city); };
+      // Job description preview: first ~12 lines, "View the full job description ▾" expands (no LLM).
+      const jdOpen = ref(false);
+      const jdLong = computed(() => {
+        const t = (job.value.jd && job.value.jd.text) || "";
+        return t.split("\n").length > 12 || t.length > 1100;
+      });
+      watch(selectedId, () => { jdOpen.value = false; });
+      const roleSuggest = computed(() => L.roleSuggestions(store.review && store.review.items, store.searches));
+      const removeTarget = (i) => actions.removeSearch(i);
       watch(grouped, (g) => {
         if (touched.value) return;
         const first = g.pending ? "pending" : (g.days[0] && g.days[0].events[0] ? g.days[0].events[0].key : null);
         opened.value = first ? { [first]: true } : {};
       }, { immediate: true });
-      onMounted(() => { actions.loadHistory(false); });
+      onMounted(() => { actions.loadHistory(false); if (store.features.masterResume) actions.loadReview(false); if (store.features.tailorResume) actions.loadTailored(false); });
       const SITES = { linkedin: "LinkedIn", indeed: "Indeed", google: "Google" };
+      const scoreFor = (j) => {
+        if (!j) return null;
+        const terms = masterTerms.value;
+        if (!terms.length) return null;
+        const jd = (j.id === selectedId.value && job.value.jd && job.value.jd.text) || store.jobJds[j.id];
+        return jd ? L.matchScore(jd, terms) : null;
+      };
       return {
         store, actions, nav, filter, h, grouped, lastRun, channels,
         features: store.features,
+        jobs, jobGroups, visibleGroups, bucketFilter, toggleBucket, isCollapsed, sel, job, selectedId, select, masterTerms, targetOpen, planLimit, removeTarget, toggleManage,
+        gcc: L.GCC, locOf, setCountry, setCity, roleSuggest, jdOpen, jdLong, locLabel: L.locationLabel,
+        citiesOf: (s) => (gccOf(s) ? gccOf(s).cities : []), cityLabel: (s) => (gccOf(s) ? gccOf(s).label : "City"), countryShort: (s) => (gccOf(s) ? gccOf(s).short : "the country"),
+        freeLimit: L.planLimit("free"), premiumLimit: L.planLimit("premium"), freeDays: L.historyWindowDays("free"), premiumDays: L.historyWindowDays("premium"), premiumPrice: L.PREMIUM_PRICE, countries: store.countries, windowDays, isPremium,
+        scoreFor,
+        scoreBand: (j) => L.scoreBand(scoreFor(j)),
+        postedAgo: (j) => L.timeAgo(j && (j.matched_at || j.notified_at)),
+        postedOn: (j) => L.formatDateTime(j && (j.matched_at || j.notified_at)),
+        jdHtml: () => {
+          const jd = job.value.jd && job.value.jd.text;
+          return jd ? L.highlightTerms(jd, masterTerms.value) : "";
+        },
+        resumeFor: (j) => {
+          if (!j) return null;
+          const rows = (store.tailored && store.tailored.rows) || [];
+          return rows.find((r) => r.job_id === j.id) || null;
+        },
+        checklist: (j) => {
+          const rows = (store.tailored && store.tailored.rows) || [];
+          const tailored = j ? rows.find((r) => r.job_id === j.id) : null;
+          const jdReady = !!(j && j.id === selectedId.value && job.value.jd);
+          const facts = tailored ? L.factsUsedCount(tailored) : null;
+          const st = tailored && tailored.status;
+          const open = () => nav.go("tailored", tailored.id);
+          // The resume row is the action: tailor / follow progress / open the result.
+          let resume;
+          if (!tailored) {
+            resume = store.features.tailorResume
+              ? { key: "resume", label: "Tailor resume", cta: "→", done: false, act: () => actions.tailorFromJob(j), primary: true }
+              : { key: "resume", label: "Tailor resume (being connected)", done: false };
+          } else if (st === "ready") {
+            resume = { key: "resume", label: "Resume tailored" + (facts != null ? " · " + facts + " facts" : ""), cta: "See →", done: true, act: open };
+          } else if (st === "failed" || st === "cancelled") {
+            resume = { key: "resume", label: "Tailoring stopped", cta: "See why →", done: false, act: open, warn: true };
+          } else {
+            resume = { key: "resume", label: "Tailoring your resume…", cta: "Progress →", done: false, act: open, busy: true };
+          }
+          return [
+            { key: "jd", label: "Full JD read and parsed", done: jdReady },
+            resume,
+            { key: "pdf", label: "PDF ready to attach", done: !!(tailored && tailored.pdf_path), act: tailored && tailored.pdf_path ? open : null, cta: tailored && tailored.pdf_path ? "Open →" : "" },
+            { key: "mail", label: "Outreach email drafted", done: false, soon: true },
+          ];
+        },
         isOpen: (k) => !!opened.value[k],
         toggle(k) { touched.value = true; opened.value = Object.assign({}, opened.value, { [k]: !opened.value[k] }); },
         salary: (j) => L.formatSalary(j.salary_min, j.salary_max, j.currency),
         siteLabel: (s) => SITES[s] || (s || ""),
+        srcClass: (s) => ({ linkedin: "src-li", indeed: "src-in" }[s] || ""),
         meta: (j) => [j.company, j.location, L.formatSalary(j.salary_min, j.salary_max, j.currency)].filter(Boolean).join(" · "),
         chanParts: (ev) => L.channelParts(ev.channels),
         eventTitle: (ev) => ev.kind === "daily"
@@ -161,37 +395,65 @@
     },
   };
 
-  const ViewResumes = {
-    template: "#tpl-resumes",
+  // Shared "Source resumes" card (Tailored resumes screen, empty and filled): upload / paste /
+  // drag-drop + plan cap + master build status. Logic moved unchanged from the old Resumes page.
+  const UiSources = {
+    template: "#tpl-sources",
     setup() {
-      const store = inject("store"), actions = inject("actions"), nav = inject("nav");
+      const store = inject("store"), actions = inject("actions");
       const pasteOpen = ref(false), pasteText = ref(""), pasteName = ref("");
       const picker = ref(null);
-      const m = computed(() => store.master);
       const ov = computed(() => store.master.data || {});
       const files = computed(() => (store.master.data && store.master.data.files) || []);
       const stage = computed(() => L.buildStageLabel(store.master.data && store.master.data.build));
       const building = computed(() => stage.value.state === "queued" || stage.value.state === "running");
       const failCopy = computed(() => L.buildFailureCopy(store.master.data && store.master.data.build));
-      onMounted(() => {
-        if (store.features.masterResume) actions.loadMaster(true);
-        if (store.features.tailorResume) actions.loadTailored(false);
-      });
+      const dragging = ref(false);
       async function onPick(e) {
         const list = Array.from(e.target.files || []);
         e.target.value = "";
         for (const f of list) { const ok = await actions.uploadResumeFile(f); if (!ok) break; }
       }
+      async function onDrop(e) {
+        dragging.value = false;
+        if (building.value || store.upload.busy) return;
+        const list = Array.from((e.dataTransfer && e.dataTransfer.files) || []);
+        for (const f of list) { const ok = await actions.uploadResumeFile(f); if (!ok) break; }
+      }
+      const planKey = computed(() => store.profile.plan || "free");
+      const fileCap = computed(() => L.fileCap(planKey.value));
       async function doPaste() {
         const ok = await actions.pasteResumeText(pasteText.value, pasteName.value);
         if (ok) { pasteOpen.value = false; pasteText.value = ""; pasteName.value = ""; }
       }
       return {
-        store, actions, nav, features: store.features, m, ov, files, stage, building, failCopy,
-        pasteOpen, pasteText, pasteName, picker, onPick, doPaste,
+        store, actions, ov, files, stage, building, failCopy, pasteOpen, pasteText, pasteName, picker,
+        onPick, onDrop, dragging, planKey, fileCap, doPaste, premiumPrice: L.PREMIUM_PRICE,
         size: (b) => L.fileSizeText(b || 0),
         when: (iso) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""),
-        tWhen: (iso) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""),
+      };
+    },
+  };
+
+  // Tailored resumes landing: opens the latest tailored resume (one-screen model, latest prototype).
+  // With none yet it shows the paste card, the source resumes and an empty state.
+  const ViewResumes = {
+    template: "#tpl-resumes",
+    setup() {
+      const store = inject("store"), actions = inject("actions"), nav = inject("nav");
+      const ov = computed(() => store.master.data || {});
+      const masterFiles = computed(() => ((store.master.data && store.master.data.files) || []).filter((f) => f.in_master).length);
+      onMounted(() => {
+        if (store.features.masterResume) actions.loadMaster(true);
+        if (store.features.tailorResume) actions.loadTailored(true);
+      });
+      watch(() => [store.tailored.status, store.tailored.rows.length], () => {
+        const rows = store.tailored.rows || [];
+        if (store.route === "resumes" && store.tailored.status === "ready" && rows.length) nav.replace("tailored", rows[0].id);
+      }, { immediate: true });
+      return {
+        store, actions, nav, features: store.features, ov, masterFiles,
+        plural: (n, one, many) => (n === 1 ? "one " + one : (L.numberWord(n) + " " + many)),
       };
     },
   };
@@ -230,9 +492,11 @@
         const ok = await actions.addUserItem(kind, parent ? parent.position_key : null, addText.value[key]);
         if (ok) { addText.value[key] = ""; addOpen.value = ""; }
       }
+      const secCol = ref({});   // per-section collapse (keyed by sec.kind); default expanded
       return {
         store, actions, nav, r, choice, custom, open, addOpen, addText, focusId, openConflicts, progress, sections, factCount,
-        rulingFor, save, addFact,
+        rulingFor, save, addFact, secCol,
+        toggleSec(k) { secCol.value = Object.assign({}, secCol.value, { [k]: !secCol.value[k] }); },
         toggle(id) { open.value = Object.assign({}, open.value, { [id]: !open.value[id] }); },
         kindLabel: (k) => KIND_LABELS[k] || k,
         fileName: (id) => filesById.value[id] || "a removed file",
@@ -276,11 +540,59 @@
       const answeredSinceReady = computed(() =>
         (store.tailorRun.answers || []).some((a) => a.tailor_id === (store.tailorRun.row || {}).id
           && (a.status === "approved" || (a.status === "recorded" && a.answer === "yes"))));
+
+      // Inline PDF viewer (blob object URL) + pop-out modals.
+      const pdfUrl = ref(null), pdfLoading = ref(false);
+      const openReport = ref(false), openMaster = ref(false), openFull = ref(false);
+      function revokePdf() { if (pdfUrl.value) { URL.revokeObjectURL(pdfUrl.value); pdfUrl.value = null; } }
+      watch(() => [store.tailoredId, stage.value.state], async ([id, st]) => {
+        if (st !== "ready" || !store.tailorRun.row || pdfUrl.value || pdfLoading.value) return;
+        pdfLoading.value = true;
+        const u = await actions.tailorPdfUrl(store.tailorRun.row);
+        pdfLoading.value = false;
+        if (store.tailorRun.row && store.tailorRun.row.id === id) pdfUrl.value = u;
+        else if (u) URL.revokeObjectURL(u);
+      }, { immediate: true });
+      watch(() => store.tailoredId, () => { revokePdf(); openReport.value = false; openMaster.value = false; openFull.value = false; });
+      onUnmounted(revokePdf);
+      function openResumeInTab() { if (pdfUrl.value) window.open(pdfUrl.value, "_blank", "noopener"); }
+      // One-screen model (latest prototype): source card, job switcher, JD pop-out, master panel.
+      onMounted(() => {
+        if (store.features.masterResume) actions.loadMaster(false);
+        actions.loadTailored(false);
+      });
+      const rows = computed(() => (store.tailored && store.tailored.rows) || []);
+      const ctxIndex = computed(() => rows.value.findIndex((t) => t.id === store.tailoredId));
+      const step = (d) => { const t = rows.value[ctxIndex.value + d]; if (t) nav.go("tailored", t.id); };
+      const chipLabel = (t) => { const m = t.jd_meta || {}; return m.company || m.title || "Pasted job"; };
+      const jdOpen = ref(false);
+      watch(() => store.tailoredId, () => { jdOpen.value = false; });
+      // Job-linked resumes open the job (highlighted JD, actions); pasted ones show the JD in a pop-out.
+      const openJd = () => { const r = store.tailorRun.row || {}; if (r.job_id) nav.go("job", r.job_id); else jdOpen.value = true; };
+      const masterData = computed(() => store.master.data || {});
+      const masterTotal = computed(() => masterData.value.item_count || 0);
+      const openQuestions = computed(() => masterData.value.open_conflicts || 0);
+      const sourceNames = computed(() => ((masterData.value.files || []).filter((f) => f.in_master)).map((f) => String(f.filename || "").replace(/\.(pdf|docx|txt)$/i, "")));
+      const filesWord = computed(() => { const n = sourceNames.value.length; return n === 1 ? "one resume" : L.numberWord(n) + " resumes"; });
+      const masterBuilt = computed(() => { const b = masterData.value.build; return b && b.finished_at ? new Date(b.finished_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""; });
+      // Compact master summary for the right rail / browse modal.
+      const masterInfo = computed(() => {
+        const r = store.tailorRun.row || {};
+        return { version: r.master_version, facts: (facts.value || []).reduce((n, p) => n + (p.bullets || []).length, 0) };
+      });
+
       return {
         store, actions, nav, features: store.features, run, stage, running, failCopy, fitText, ats,
         gaps, facts, jdMeta, answering, note, posKey, editing, editText, guide,
         startYes, sendYes, startEdit, approve, answeredSinceReady,
-        posLabel: (p) => { const d = p.data || {}; return [d.employer, d.title].filter(Boolean).join(" — ") || p.text; },
+        pdfUrl, pdfLoading, openReport, openMaster, openFull, openResumeInTab, masterInfo,
+        rows, ctxIndex, step, chipLabel, jdOpen, openJd, masterTotal, openQuestions, sourceNames, filesWord, masterBuilt,
+        paperMeta: computed(() => {
+          const fit = (store.tailorRun.row || {}).fit || {};
+          const pages = fit.pages ? fit.pages + (fit.pages === 1 ? " page" : " pages") : "";
+          return [masterInfo.value.facts + (masterTotal.value ? " of " + masterTotal.value : "") + " facts used", pages, "ready to attach"].filter(Boolean).join(" · ");
+        }),
+        posLabel: (p) => { const d = p.data || {}; return [d.employer, d.title].filter(Boolean).join(" · ") || p.text; },
         when: (iso) => (iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""),
       };
     },
@@ -306,12 +618,97 @@
         pw.value = ""; pwOpen.value = false;
       }
       function cancelPw() { pwOpen.value = false; pw.value = ""; pwMsg.value = ""; }
-      return { store, actions, features: store.features, pwOpen, pw, showPw, pwBusy, pwMsg, pwMsgType, submitPw, cancelPw, dialCountries: window.EASYY_DIAL_COUNTRIES || [] };
+
+      // Identity + usage (prototype "Your profile" ID card + meters).
+      onMounted(() => {
+        if (store.features.masterResume) actions.loadMaster(false);
+        if (store.features.tailorResume) actions.loadTailored(false);
+        actions.loadMailbox(false);
+        if (store.focusSection) {           // e.g. Overview step 3 → the Connections card
+          const id = store.focusSection; store.focusSection = null;
+          setTimeout(() => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
+        }
+      });
+      // Gmail inbox connection form (Connections card).
+      const mb = computed(() => store.mailbox);
+      const mbConn = computed(() => store.mailbox.data);
+      const mbOpen = ref(false), mbEmail = ref(""), mbPw = ref(""), mbShow = ref(false), mbBusy = ref(false), mbMsg = ref("");
+      function openMb() {
+        mbEmail.value = (mbConn.value && mbConn.value.email) || (/@(gmail|googlemail)\.com$/i.test(store.userEmail || "") ? store.userEmail : "");
+        mbPw.value = ""; mbMsg.value = ""; mbShow.value = false; mbOpen.value = true;
+      }
+      function closeMb() { mbOpen.value = false; mbPw.value = ""; mbMsg.value = ""; }
+      async function saveMb() {
+        if (mbBusy.value || !mbEmail.value || !mbPw.value) return;
+        mbBusy.value = true; mbMsg.value = "";
+        const err = await actions.connectMailbox(mbEmail.value, mbPw.value);
+        mbBusy.value = false;
+        if (err) { mbMsg.value = err; return; }
+        closeMb();
+      }
+      async function disconnectMb() {
+        mbBusy.value = true;
+        const err = await actions.disconnectMailbox();
+        mbBusy.value = false;
+        if (err) mbMsg.value = err;
+      }
+      // A pending check older than 10 min means the worker is offline — say so instead of spinning.
+      const mbStale = computed(() => {
+        const c = mbConn.value, t = c && Date.parse(c.updated_at);
+        return !!(c && c.status === "pending" && t && Date.now() - t > 10 * 60 * 1000);
+      });
+      const mbWhen = (iso) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+      const planKey = computed(() => store.profile.plan || "free");
+      const planLabel = computed(() => ({ premium: "Premium", closed: "Closed" }[planKey.value] || "Free"));
+      const idInitials = computed(() => L.initials(store.profile.full_name, store.userEmail));
+      const roleLimit = computed(() => L.planLimit(planKey.value));
+      const usage = computed(() => {
+        const files = (store.master.data && store.master.data.files) || [];
+        const rawFileCap = L.fileCap(store.profile.plan);
+        const filesCap = isFinite(rawFileCap) ? rawFileCap : null;
+        const tailored = (store.tailored && store.tailored.rows) || [];
+        return [
+          { key: "roles", label: "Roles", used: store.searches.length, cap: roleLimit.value },
+          { key: "files", label: "Source files", used: files.length, cap: filesCap },
+          { key: "tailored", label: "Tailored resumes", used: tailored.length, cap: null },
+        ];
+      });
+
+      return { store, actions, features: store.features, pwOpen, pw, showPw, pwBusy, pwMsg, pwMsgType, submitPw, cancelPw, dialCountries: window.EASYY_DIAL_COUNTRIES || [],
+        planKey, planLabel, idInitials, roleLimit, usage,
+        mb, mbConn, mbOpen, mbEmail, mbPw, mbShow, mbBusy, mbMsg, openMb, closeMb, saveMb, disconnectMb, mbWhen, mbStale };
+    },
+  };
+
+  // Placeholder for prototype sections that aren't built yet. Copy is the
+  // prototype's (V17) eyebrow / title / lede for each section.
+  const SOON_PAGES = {
+    outreach: { eyebrow: "Outreach drafts", title: "Written, attached, waiting in your drafts",
+      lede: "easyy writes the note and saves it to your own mailbox. It never sends anything. You read it over coffee and press send when you're ready." },
+    funnel: { eyebrow: "After the send", title: "Your job search funnel",
+      lede: "Every application easyy wrote, from the ones still waiting to go out to the offer. Move a card as things happen. The reply rate on your Overview is calculated from this board." },
+    prep: { eyebrow: "Between the reply and the offer", title: "Interview prep",
+      lede: "Practise against the actual interviewer, the actual job description and the resume they'll be holding. One question at a time, scored out of 5, with what to fix before the next one." },
+    guide: { eyebrow: "Job search guide", title: "Habits that get replies",
+      lede: "Here's where you stand, and the quickest thing to do next." },
+    community: { eyebrow: "Community", title: "The part software can't do",
+      lede: "Members searching the same roles in the same market, plus people already inside the companies your alerts keep surfacing." },
+    plans: { eyebrow: "Plans & pricing", title: "Start free. Upgrade when the replies start coming.",
+      lede: "Every feature is on both plans. Premium lifts the limits." },
+  };
+  const ViewSoon = {
+    template: "#tpl-soon",
+    setup() {
+      const store = inject("store");
+      const nav = inject("nav");
+      const page = computed(() => SOON_PAGES[store.route] || { eyebrow: "", title: "Coming soon", lede: "" });
+      return { store, nav, page };
     },
   };
 
   window.EasyyViews = {
-    "ui-switch": UiSwitch, "ui-chip": UiChip, "ui-tags": UiTags, "ui-dialog": UiDialog,
+    "ui-switch": UiSwitch, "ui-suggest": UiSuggest, "ui-sources": UiSources, "ui-chip": UiChip, "ui-tags": UiTags, "ui-dialog": UiDialog,
     "view-home": ViewHome, "view-history": ViewHistory, "view-job": ViewJob, "view-resume": ViewResume, "view-resumes": ViewResumes, "view-master": ViewMaster, "view-tailored": ViewTailored, "view-settings": ViewSettings,
+    "view-outreach": ViewSoon, "view-funnel": ViewSoon, "view-prep": ViewSoon, "view-guide": ViewSoon, "view-community": ViewSoon, "view-plans": ViewSoon,
   };
 })();
