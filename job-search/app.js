@@ -2,7 +2,7 @@
    Pure functions live in lib.js (window.EasyyLib); views in views.js (window.EasyyViews).
    No build step: Vue 3 + supabase-js from CDN (pinned in index.html). */
 const CFG = window.EASYY_CONFIG;
-const FEATURES = Object.assign({ searchPause: false, deleteAccount: false, jdView: false, masterResume: false, tailorResume: false }, CFG.FEATURES || {});
+const FEATURES = Object.assign({ searchPause: false, deleteAccount: false, jdView: false, masterResume: false, tailorResume: false, feedback: false }, CFG.FEATURES || {});
 const L = window.EasyyLib;
 const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
 
@@ -653,6 +653,17 @@ const actions = {
     }
     await actions.loadMailbox(true);
     return null;
+  },
+  // Staging feedback → GitHub issue (submit-feedback Edge Function, staging project only).
+  // Returns { url } on success, else { error: message }.
+  async submitFeedback(form) {
+    const { data, error } = await sb.functions.invoke("submit-feedback", { body: form });
+    if (error) {
+      let msg = "Couldn't send your feedback. Please try again in a minute.";
+      try { const b = await error.context.json(); if (b && b.message) msg = b.message; } catch (_) { /* non-JSON error */ }
+      return { error: msg };
+    }
+    return { url: data && data.url, number: data && data.number };
   },
   async disconnectMailbox() {
     const { error } = await sb.rpc("my_mailbox_disconnect");

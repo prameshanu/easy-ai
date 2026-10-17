@@ -798,3 +798,23 @@ test("roleSuggestions: tidies titles (stray punctuation, extra spaces)", () => {
   const items = [{ kind: "position", data: { title: "Risk Associate," } }, { kind: "position", data: { title: "  Senior   Manager " } }];
   assert.deepEqual(L.roleSuggestions(items, []), ["Risk Associate", "Senior Manager"]);
 });
+
+// ---- staging feedback helpers ----
+test("pushCapped keeps the newest N", () => {
+  const a = [];
+  for (let i = 0; i < 13; i++) L.pushCapped(a, i, 10);
+  assert.deepEqual(a, [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+});
+test("clickLabel: aria-label, then text, then title, then tag", () => {
+  const el = (o) => ({ getAttribute: (k) => (o.attrs || {})[k] || null, textContent: o.text || "", tagName: o.tag || "DIV" });
+  assert.equal(L.clickLabel(el({ attrs: { "aria-label": "Close" }, text: "✕" })), "Close");
+  assert.equal(L.clickLabel(el({ text: "  Save   and\n close " })), "Save and close");
+  assert.equal(L.clickLabel(el({ attrs: { title: "Theme" } })), "Theme");
+  assert.equal(L.clickLabel(el({ tag: "SVG" })), "<svg>");
+  assert.equal(L.clickLabel(el({ text: "x".repeat(300) })).length, 120);
+  assert.equal(L.clickLabel(null), "");
+});
+test("errorText flattens console.error args", () => {
+  assert.equal(L.errorText([new Error("boom"), "at load", { a: 1 }]), 'boom at load {"a":1}');
+  assert.equal(L.errorText(["x".repeat(900)]).length, 500);
+});

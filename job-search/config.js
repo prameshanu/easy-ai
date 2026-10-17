@@ -58,6 +58,9 @@
       // true only after 0007 is applied AND the tailor worker update is deployed
       // (see the 2026-09-01 tailor-resume runbooks). Ships false.
       tailorResume: true,
+      // Floating "Send feedback" button → GitHub issue in prameshanu/easyy-feedback via the
+      // submit-feedback Edge Function, which exists on the staging project only. Never on production.
+      feedback: env === "staging",
     },
   });
 })();

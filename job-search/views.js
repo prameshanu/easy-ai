@@ -113,6 +113,161 @@
     </div>`,
   };
 
+  // ------------------------------------------------------- staging feedback
+  // Port of maverix-agentic FeedbackCapture.vue + composables/useScreenCapture.js +
+  // utils/pageContext.js, minus voice dictation, duplicate detection and the retry queue.
+  // Mounted only when FEATURES.feedback (config.js turns it on for the staging backend only).
+  const FB_HTML_TO_IMAGE = "https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/+esm";
+  const fbActions = [];   // last 10 clicks / page changes
+  const fbErrors = [];    // last 10 console.error calls
+  let fbTrackerInstalled = false;
+
+  function fbInstallTracker() {
+    if (fbTrackerInstalled) return;
+    fbTrackerInstalled = true;
+    const at = () => Date.now();
+    window.addEventListener("hashchange", () => {
+      L.pushCapped(fbActions, { kind: "navigate", label: location.hash || "#/", route: location.hash || "#/", at: at() });
+    });
+    // Clicks only — never typed text (inputs may hold secrets).
+    window.addEventListener("click", (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement) || t.closest(".fb-dialog")) return;
+      if (t.matches("input, textarea, select, [contenteditable='true']")) return;
+      const label = L.clickLabel(t.closest("button, a, [role='button'], label") || t);
+      if (label) L.pushCapped(fbActions, { kind: "click", label, route: location.hash || "#/", at: at() });
+    }, true);
+    const originalError = console.error.bind(console);
+    console.error = (...args) => {
+      try { L.pushCapped(fbErrors, { message: L.errorText(args), at: at() }); } catch (_) { /* never break console.error */ }
+      originalError(...args);
+    };
+  }
+
+  function fbPageContext() {
+    const dlg = document.querySelector(".dialog-backdrop .dialog h2, .tr-modal-t, .modal-x");
+    return {
+      route: location.hash || "#/",
+      activeModal: dlg ? (dlg.textContent || "").trim().slice(0, 120) || "dialog" : null,
+      viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 },
+      theme: document.documentElement.getAttribute("data-theme") || "auto",
+      lastUserActions: fbActions.slice(),
+      consoleErrors: fbErrors.slice(),
+      userAgent: navigator.userAgent,
+      capturedAt: new Date().toISOString(),
+    };
+  }
+
+  // Viewport → PNG blob, with `exclude` elements hidden (visibility, so layout doesn't shift).
+  // Google Fonts <link>s are filtered out: Safari refuses to read their cross-origin rules and the
+  // whole capture fails (Maverix's fix). Returns { blob } or { error }.
+  async function fbCaptureViewport(exclude) {
+    const prior = exclude.map((el) => [el, el.style.visibility]);
+    exclude.forEach((el) => { el.style.visibility = "hidden"; });
+    try {
+      const { toBlob } = await import(FB_HTML_TO_IMAGE);
+      const blob = await toBlob(document.documentElement, {
+        backgroundColor: getComputedStyle(document.body).backgroundColor || "#ffffff",
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        width: window.innerWidth,
+        height: window.innerHeight,
+        cacheBust: false,
+        filter: (node) => {
+          if (!(node instanceof HTMLElement)) return true;
+          if (node.tagName === "LINK") {
+            const href = node.getAttribute("href") || "";
+            if (href.includes("fonts.googleapis.com") || href.includes("fonts.gstatic.com")) return false;
+          }
+          return true;
+        },
+      });
+      if (!blob) throw new Error("html-to-image returned no image");
+      return { blob };
+    } catch (e) {
+      return { error: (e && e.message) || String(e) };
+    } finally {
+      prior.forEach(([el, v]) => { el.style.visibility = v; });
+    }
+  }
+
+  const UiFeedback = {
+    setup() {
+      const actions = inject("actions");
+      const open = ref(false), capturing = ref(false), sending = ref(false);
+      const text = ref(""), severity = ref("bug");
+      const shotUrl = ref(""), shotError = ref(""), sendError = ref(""), sent = ref(null);
+      const wrap = ref(null);
+      let shotBlob = null;
+      onMounted(fbInstallTracker);
+      const revoke = () => { if (shotUrl.value) URL.revokeObjectURL(shotUrl.value); shotUrl.value = ""; };
+
+      async function show() {
+        // Keep typed text across an accidental close; reset everything else.
+        severity.value = "bug"; sendError.value = ""; shotError.value = ""; sent.value = null;
+        shotBlob = null; revoke();
+        open.value = true; capturing.value = true;
+        await Vue.nextTick();
+        const r = await fbCaptureViewport(wrap.value ? [wrap.value] : []);
+        capturing.value = false;
+        if (r.blob) { shotBlob = r.blob; shotUrl.value = URL.createObjectURL(r.blob); } else shotError.value = r.error || "";
+      }
+      function close() { open.value = false; revoke(); if (sent.value) text.value = ""; }
+
+      async function submit() {
+        const t = text.value.trim();
+        if (!t) { sendError.value = "Tell us what's going on first."; return; }
+        if (t.length > 4000) { sendError.value = "Please keep it under 4000 characters."; return; }
+        sending.value = true; sendError.value = "";
+        const fd = new FormData();
+        fd.append("text", t);
+        fd.append("severity", severity.value);
+        fd.append("page_context", JSON.stringify(fbPageContext()));
+        fd.append("reporter_url", location.href);
+        if (shotBlob) fd.append("screenshot", shotBlob, "feedback-" + Date.now() + ".png");
+        const r = await actions.submitFeedback(fd);
+        sending.value = false;
+        if (r.error) { sendError.value = r.error; return; }
+        sent.value = r;
+        text.value = "";
+      }
+      return { open, capturing, sending, text, severity, shotUrl, shotError, sendError, sent, wrap, show, close, submit };
+    },
+    template: `<div class="fb-root">
+      <button v-if="!open" type="button" class="fb-fab" title="Send feedback to the team" aria-label="Send feedback" @click="show">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      </button>
+      <div ref="wrap" v-show="open" class="dialog-backdrop fb-backdrop" @click.self="close" @keydown.esc="close">
+        <div class="dialog fb-dialog" role="dialog" aria-modal="true" aria-label="Send feedback">
+          <h2>Send feedback</h2>
+          <template v-if="sent">
+            <p>Thanks, that's with the team.<template v-if="sent.number"> Filed as #{{ sent.number }}.</template></p>
+            <div class="dialog-actions"><button type="button" class="btn" @click="close">Close</button></div>
+          </template>
+          <template v-else>
+            <p class="fb-helper">What's broken or confusing? A sentence or two is plenty. We attach a screenshot and the page you're on automatically.</p>
+            <label class="fb-label" for="fb-text">What happened <span class="fb-count">{{ text.length }} / 4000</span></label>
+            <textarea id="fb-text" v-model="text" rows="5" maxlength="4000" placeholder="e.g. Save and close did nothing after I added a role."></textarea>
+            <label class="fb-label" for="fb-sev">How bad is it?</label>
+            <select id="fb-sev" v-model="severity">
+              <option value="minor">Minor: confusing, but I worked around it</option>
+              <option value="bug">Bug: something doesn't behave right</option>
+              <option value="broken">Broken: I can't do what I came to do</option>
+            </select>
+            <span class="fb-label">Screen capture</span>
+            <div v-if="capturing" class="fb-shot-state">Capturing…</div>
+            <img v-else-if="shotUrl" :src="shotUrl" alt="Screenshot of the page you're on" class="fb-shot-img" />
+            <div v-else class="fb-shot-state fb-shot-warn">Couldn't capture a screenshot. Sending without one is fine.<code v-if="shotError">{{ shotError }}</code></div>
+            <p v-if="sendError" class="fb-error" role="alert">{{ sendError }}</p>
+            <div class="dialog-actions">
+              <button type="button" class="btn secondary" :disabled="sending" @click="close">Cancel</button>
+              <button type="button" class="btn" :disabled="sending || capturing || !text.trim()" @click="submit">{{ sending ? 'Sending…' : 'Send feedback' }}</button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>`,
+  };
+
   // ------------------------------------------------------------------ views
   const ViewHome = {
     template: "#tpl-home",
@@ -707,7 +862,7 @@
   };
 
   window.EasyyViews = {
-    "ui-switch": UiSwitch, "ui-suggest": UiSuggest, "ui-sources": UiSources, "ui-chip": UiChip, "ui-tags": UiTags, "ui-dialog": UiDialog,
+    "ui-switch": UiSwitch, "ui-suggest": UiSuggest, "ui-sources": UiSources, "ui-chip": UiChip, "ui-tags": UiTags, "ui-dialog": UiDialog, "ui-feedback": UiFeedback,
     "view-home": ViewHome, "view-history": ViewHistory, "view-job": ViewJob, "view-resume": ViewResume, "view-resumes": ViewResumes, "view-master": ViewMaster, "view-tailored": ViewTailored, "view-settings": ViewSettings,
     "view-outreach": ViewSoon, "view-funnel": ViewSoon, "view-prep": ViewSoon, "view-guide": ViewSoon, "view-community": ViewSoon, "view-plans": ViewSoon,
   };

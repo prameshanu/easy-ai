@@ -980,3 +980,21 @@ button.thr-s .thr-t b::after { content: " \2192"; }
 .env-badge { display: none; }
 html[data-env="staging"] .env-badge { display: block; position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 1000; pointer-events: none; padding: 3px 12px; border-radius: 999px; font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--sup-ink); background: var(--sup-soft); border: 1px dashed var(--sup); }
 @media (max-width: 719px) { html[data-env="staging"] .env-badge { bottom: 76px; } }
+
+/* Staging feedback (UiFeedback) — floating button + dialog. Port of maverix FeedbackCapture styles. */
+.fb-fab { position: fixed; right: 24px; bottom: 24px; z-index: 70; width: 48px; height: 48px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; background: var(--acc); color: var(--acc-ink); border: 1px solid rgba(0,0,0,.06); box-shadow: 0 8px 24px rgba(26,21,18,.18), 0 2px 6px rgba(26,21,18,.12); transition: transform .12s ease, box-shadow .12s ease; }
+.fb-fab:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(26,21,18,.22), 0 2px 8px rgba(26,21,18,.16); }
+.fb-fab:focus-visible { outline: 2px solid var(--acc-strong); outline-offset: 2px; }
+.fb-backdrop { z-index: 80; }
+.fb-dialog { max-width: 520px; max-height: calc(100vh - 40px); overflow: auto; }
+.fb-dialog textarea { width: 100%; min-height: 100px; }
+.fb-dialog select { width: 100%; }
+.fb-helper { font-size: 13px; line-height: 1.5; }
+.fb-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; font-weight: 600; color: var(--mut); margin-top: 4px; }
+.fb-count { font-weight: 400; color: var(--ink-3); }
+.fb-shot-img { width: 100%; max-height: 220px; object-fit: contain; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.fb-shot-state { padding: 10px; border-radius: 8px; background: var(--surface-2); font-size: 12px; color: var(--mut); text-align: center; }
+.fb-shot-warn { background: var(--sup-soft); color: var(--sup-ink); border: 1px dashed var(--sup); }
+.fb-shot-warn code { display: block; margin-top: 6px; font-family: var(--font-mono); font-size: 11px; text-align: left; word-break: break-word; }
+.fb-error { color: var(--danger); font-size: 13px; }
+@media (max-width: 719px) { .fb-fab { right: 14px; bottom: 76px; } }

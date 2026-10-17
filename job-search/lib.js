@@ -836,6 +836,37 @@
     return { byHand, reading: "about " + n * 2 + " minutes" };
   }
 
+  // ---- staging feedback (port of maverix-agentic utils/pageContext.js) ----
+  const FB_MAX_ITEMS = 10;
+  const FB_MAX_LABEL = 120;
+  // Push into a ring buffer, keeping the newest `cap` items.
+  function pushCapped(arr, item, cap) {
+    arr.push(item);
+    while (arr.length > (cap || FB_MAX_ITEMS)) arr.shift();
+    return arr;
+  }
+  // Best human-readable label for a clicked element: aria-label > text > title > <tag>.
+  // Takes anything with getAttribute/textContent/tagName so node tests can pass plain objects.
+  function clickLabel(el) {
+    if (!el) return "";
+    const attr = (k) => (el.getAttribute && el.getAttribute(k)) || "";
+    const aria = attr("aria-label");
+    if (aria) return aria.slice(0, FB_MAX_LABEL);
+    const text = String(el.textContent || "").trim().replace(/\s+/g, " ");
+    if (text) return text.slice(0, FB_MAX_LABEL);
+    const title = attr("title");
+    if (title) return title.slice(0, FB_MAX_LABEL);
+    return el.tagName ? "<" + String(el.tagName).toLowerCase() + ">" : "";
+  }
+  // console.error arguments → one short string (Errors become their message, objects JSON, capped).
+  function errorText(args) {
+    return Array.from(args || []).map((a) => {
+      if (a && typeof a === "object" && typeof a.message === "string") return a.message;
+      if (typeof a === "string") return a;
+      try { return JSON.stringify(a).slice(0, 240); } catch (e) { return String(a); }
+    }).join(" ").slice(0, 500);
+  }
+
   return {
     ROUTES, parseRoute, routeHash, parseHashError,
     parseIsoZ, formatTime, dayLabel, formatDate, formatDateTime, dayKey, formatSalary, initials, maskPhone, cleanList, parseList, uniq,
@@ -849,5 +880,6 @@
     resolveTheme, nextTheme, matchScore, highlightTerms, cleanTerms, timeAgo, planLimit, timeBucket, scoreBand, historyWindowDays, fileCap, PREMIUM_PRICE,
     GCC, composeGccLocation, parseGccLocation, locationLabel, roleSuggestions,
     overviewCounts, weekOfLabel, handTimeText, numberWord,
+    pushCapped, clickLabel, errorText,
   };
 });

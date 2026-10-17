@@ -194,6 +194,9 @@
         </div>
       </main>
 
+      <!-- Staging only (FEATURES.feedback): floating feedback button → GitHub issue. -->
+      <ui-feedback v-if="features.feedback"></ui-feedback>
+
       <nav class="tabbar" aria-label="Main">
         <a v-for="it in navItems.filter(n => !n.soon && !n.railOnly)" :key="it.name" :href="it.hash" class="tab" :class="{ on: navOn(it.name) }"
            :aria-current="navOn(it.name) ? 'page' : null" @click.prevent="nav.go(it.name)">
