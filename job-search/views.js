@@ -121,6 +121,7 @@
   const fbActions = [];   // last 10 clicks / page changes
   const fbErrors = [];    // last 10 console.error calls
   let fbTrackerInstalled = false;
+  let fbCapturing = false;  // html-to-image logs harmless Google-Fonts cssRules errors while capturing; don't record those
 
   function fbInstallTracker() {
     if (fbTrackerInstalled) return;
@@ -132,20 +133,25 @@
     // Clicks only — never typed text (inputs may hold secrets).
     window.addEventListener("click", (e) => {
       const t = e.target;
-      if (!(t instanceof HTMLElement) || t.closest(".fb-dialog")) return;
+      if (!(t instanceof HTMLElement) || t.closest(".fb-root")) return;
       if (t.matches("input, textarea, select, [contenteditable='true']")) return;
-      const label = L.clickLabel(t.closest("button, a, [role='button'], label") || t);
+      // Only real controls — a click on a container would log the whole page's text as the label.
+      const ctl = t.closest("button, a, [role='button'], [role='tab'], label, summary, select");
+      if (!ctl) return;
+      const label = L.clickLabel(ctl);
       if (label) L.pushCapped(fbActions, { kind: "click", label, route: location.hash || "#/", at: at() });
     }, true);
     const originalError = console.error.bind(console);
     console.error = (...args) => {
-      try { L.pushCapped(fbErrors, { message: L.errorText(args), at: at() }); } catch (_) { /* never break console.error */ }
+      try { if (!fbCapturing) L.pushCapped(fbErrors, { message: L.errorText(args), at: at() }); } catch (_) { /* never break console.error */ }
       originalError(...args);
     };
   }
 
   function fbPageContext() {
-    const dlg = document.querySelector(".dialog-backdrop .dialog h2, .tr-modal-t, .modal-x");
+    // First open dialog that isn't the feedback dialog itself.
+    const dlg = Array.from(document.querySelectorAll(".dialog-backdrop .dialog h2, .tr-modal-t, .modal-x"))
+      .find((el) => !el.closest(".fb-backdrop") && el.offsetParent !== null);
     // Signed out: the auth card's heading ("Sign in", "Create your account", …); signed in: the page title.
     const head = document.querySelector(".auth-card h1, .auth-card h2, .content-inner h1");
     return {
@@ -167,6 +173,7 @@
   async function fbCaptureViewport(exclude) {
     const prior = exclude.map((el) => [el, el.style.visibility]);
     exclude.forEach((el) => { el.style.visibility = "hidden"; });
+    fbCapturing = true;
     try {
       const { toBlob } = await import(FB_HTML_TO_IMAGE);
       const blob = await toBlob(document.documentElement, {
@@ -189,6 +196,7 @@
     } catch (e) {
       return { error: (e && e.message) || String(e) };
     } finally {
+      fbCapturing = false;
       prior.forEach(([el, v]) => { el.style.visibility = v; });
     }
   }
