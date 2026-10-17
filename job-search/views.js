@@ -146,8 +146,11 @@
 
   function fbPageContext() {
     const dlg = document.querySelector(".dialog-backdrop .dialog h2, .tr-modal-t, .modal-x");
+    // Signed out: the auth card's heading ("Sign in", "Create your account", …); signed in: the page title.
+    const head = document.querySelector(".auth-card h1, .auth-card h2, .content-inner h1");
     return {
       route: location.hash || "#/",
+      screen: head ? (head.textContent || "").trim().replace(/\s+/g, " ").slice(0, 120) : null,
       activeModal: dlg ? (dlg.textContent || "").trim().slice(0, 120) || "dialog" : null,
       viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 },
       theme: document.documentElement.getAttribute("data-theme") || "auto",
