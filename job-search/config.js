@@ -20,7 +20,7 @@
       // Fill in from the staging project (runbook step 1) and the staging bot (step 6).
       SUPABASE_URL: "https://cmigyrkhcgwkoqzwdnnk.supabase.co",
       SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtaWd5cmtoY2d3a29xendkbm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNjUwNzEsImV4cCI6MjEwNzc0MTA3MX0.n5q8duTilyOsIapEI6a9jqYMshtuQKJa7A8mRzjGM9k",
-      TELEGRAM_BOT_USERNAME: "EasyyJobAlertsStaging_bot",
+      TELEGRAM_BOT_USERNAME: "EassyJobAlertsStaging_bot",
     },
   };
 
