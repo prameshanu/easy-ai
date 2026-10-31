@@ -177,7 +177,7 @@
     if (!state.searches || !state.searches.length) { errors.summary = "Add at least one search."; ok = false; }
     for (const s of state.searches || []) {
       let e = "";
-      if (!(s.name || "").trim() || !(s.query || "").trim() || !(s.location || "").trim()) {
+      if (!(s.name || "").trim() || !normalizeQuery(s.query) || !(s.location || "").trim()) {
         e = "Give this search a name, search terms and a location.";
       } else if (!s.sites || !s.sites.length) {
         e = "Pick at least one site to look on.";
@@ -226,13 +226,13 @@
       const row = {
         profile_id: state.profileId,
         name: (s.name || "").trim(),
-        query: (s.query || "").trim(),
+        query: normalizeQuery(s.query),
         location: (s.location || "").trim(),
         is_remote: !!s.is_remote,
         sites: sites,
-        linkedin_query: (s.linkedin_query || "").trim() || null,
-        indeed_query: (s.indeed_query || "").trim() || null,
-        google_search_term: sites.indexOf("google") !== -1 ? ((s.google_search_term || "").trim() || null) : null,
+        linkedin_query: normalizeQuery(s.linkedin_query) || null,
+        indeed_query: normalizeQuery(s.indeed_query) || null,
+        google_search_term: sites.indexOf("google") !== -1 ? (normalizeQuery(s.google_search_term) || null) : null,
         require_title_keywords: cleanList(s.require_kw),
         position: i,
       };
@@ -836,6 +836,30 @@
     return { byHand, reading: "about " + n * 2 + " minutes" };
   }
 
+  // ---- search-term normalization (easyy-feedback #3) ----
+  // One standard form for whatever the user types, so "data analyst or bi analyst not intern",
+  // "Data Analyst Or BI analyst Not intern" and "“data analyst”  OR …" all search the same way.
+  // LinkedIn/Indeed only treat UPPERCASE AND/OR/NOT as operators; lowercase is searched as a word.
+  // Mirrored server-side in easyy-job-alerts config.normalize_query (keep the two in step).
+  const QUERY_OPS = { and: "AND", or: "OR", not: "NOT" };
+  function normalizeQuery(raw) {
+    let s = String(raw == null ? "" : raw)
+      .replace(/[“”„‟″]/g, '"')
+      .replace(/[‘’‚‛′]/g, "'")
+      .replace(/\s+/g, " ").trim();
+    // an unmatched double quote would swallow the rest of the query — drop the last one
+    if ((s.match(/"/g) || []).length % 2 === 1) { const i = s.lastIndexOf('"'); s = (s.slice(0, i) + s.slice(i + 1)).replace(/\s+/g, " ").trim(); }
+    const tokens = (s.match(/"[^"]*"|\S+/g) || []).map((t) => (t[0] !== '"' && QUERY_OPS[t.toLowerCase()]) || t);
+    const isOp = (t) => t === "AND" || t === "OR" || t === "NOT";
+    const out = [];
+    for (const t of tokens) {
+      if ((t === "AND" || t === "OR") && (!out.length || isOp(out[out.length - 1]))) continue; // leading or doubled AND/OR
+      out.push(t);
+    }
+    while (out.length && isOp(out[out.length - 1])) out.pop();                                // trailing operator
+    return out.join(" ");
+  }
+
   // ---- staging feedback (port of maverix-agentic utils/pageContext.js) ----
   const FB_MAX_ITEMS = 10;
   const FB_MAX_LABEL = 120;
@@ -880,6 +904,6 @@
     resolveTheme, nextTheme, matchScore, highlightTerms, cleanTerms, timeAgo, planLimit, timeBucket, scoreBand, historyWindowDays, fileCap, PREMIUM_PRICE,
     GCC, composeGccLocation, parseGccLocation, locationLabel, roleSuggestions,
     overviewCounts, weekOfLabel, handTimeText, numberWord,
-    pushCapped, clickLabel, errorText,
+    pushCapped, clickLabel, errorText, normalizeQuery,
   };
 });

@@ -818,3 +818,37 @@ test("errorText flattens console.error args", () => {
   assert.equal(L.errorText([new Error("boom"), "at load", { a: 1 }]), 'boom at load {"a":1}');
   assert.equal(L.errorText(["x".repeat(900)]).length, 500);
 });
+
+// ---- search-term normalization (easyy-feedback #3) ----
+test("normalizeQuery: operators become uppercase only outside quotes", () => {
+  assert.equal(L.normalizeQuery("data analyst or business analyst not intern"), "data analyst OR business analyst NOT intern");
+  assert.equal(L.normalizeQuery("CRM Or Lifecycle and retention"), "CRM OR Lifecycle AND retention");
+  assert.equal(L.normalizeQuery('"head of sales and marketing" or "growth lead"'), '"head of sales and marketing" OR "growth lead"');
+  assert.equal(L.normalizeQuery("operations ordering notary"), "operations ordering notary"); // whole words only
+});
+test("normalizeQuery: smart quotes, spaces, stray quotes, dangling operators", () => {
+  assert.equal(L.normalizeQuery("  “Product   Manager”   OR  ‘PM’ "), '"Product Manager" OR \'PM\'');
+  assert.equal(L.normalizeQuery('"data analyst'), "data analyst");                 // unmatched quote dropped
+  assert.equal(L.normalizeQuery("or data analyst or"), "data analyst");            // leading/trailing operator
+  assert.equal(L.normalizeQuery("data analyst OR OR bi analyst"), "data analyst OR bi analyst");
+  assert.equal(L.normalizeQuery("sales NOT"), "sales");
+  assert.equal(L.normalizeQuery(""), "");
+  assert.equal(L.normalizeQuery(null), "");
+});
+test("normalizeQuery is idempotent", () => {
+  const once = L.normalizeQuery("“a b” or c not d");
+  assert.equal(L.normalizeQuery(once), once);
+});
+test("buildPayload: every search-term field is normalized (easyy-feedback #3)", () => {
+  const st = { ...payloadState, searches: [{ ...payloadState.searches[0],
+    query: " data analyst or  “BI analyst” not intern ", linkedin_query: "crm or lifecycle", indeed_query: "or", google_search_term: "data   scientist jobs" }] };
+  const { searches } = L.buildPayload(st, { searchPause: false });
+  assert.equal(searches[0].query, 'data analyst OR "BI analyst" NOT intern');
+  assert.equal(searches[0].linkedin_query, "crm OR lifecycle");
+  assert.equal(searches[0].indeed_query, null);          // nothing left after normalizing → no override
+  assert.equal(searches[0].google_search_term, "data scientist jobs");
+});
+test("validate: a search term that normalizes to nothing counts as empty", () => {
+  const v = L.validate({ ...goodState, searches: [{ ...goodState.searches[0], query: " or " }] });
+  assert.equal(v.ok, false);
+});
